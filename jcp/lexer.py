@@ -45,7 +45,7 @@ tokens = [
         'TERNARY', 'XOR'
         ] + [k.upper() for k in keywords]
 
-t_NUMBER        = r'\.?[0-9][0-9eE_1LdDa-fA-F.xXpP]'
+t_NUMBER        = r'\d+'
 t_CHARACTER     = r'\'([^\\\n]|(\\.))*?\''
 t_STRING        = r'\"([^\\\n]|(\\.))*?\"'
 t_LINE_COMMENT  = '//.*'
@@ -101,7 +101,7 @@ t_OR_ASSIGN         = r'\|='
 t_XOR_ASSIGN        = '\^='
 
 # Ignore indentation
-#t_IGNORE    = ' \t\f'
+t_ignore    = ' \t'
 
 # VARIABLES & NEWLINES
 def t_VARIABLE(t):
