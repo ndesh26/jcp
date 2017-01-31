@@ -20,7 +20,7 @@ keywords = ('abstract', 'assert', 'boolean', 'break', 'byte'
 # Reference: https://docs.oracle.com/javase/tutorial/java/nutsandbolts/operators.html
 # Tokens definitions
 tokens = [
-        'VARIABLE',
+        'IDENTIFIER',
         'NUMBER',
         'CHARACTER',
         'STRING',
@@ -31,6 +31,7 @@ tokens = [
 
         'PLUS', 'MINUS', 'LPAREN', 'RPAREN',
         'TIMES', 'BY', 'GT', 'LT', 'REMAINDER',
+        'RBRACE', 'LBRACE','LSQRBRACKET', 'RSQRBRACKET',
 
         'LSHIFT', 'RSHIFT', 'RRSHIFT',
 
@@ -100,11 +101,19 @@ t_AND_ASSIGN        = '&='
 t_OR_ASSIGN         = r'\|='
 t_XOR_ASSIGN        = '\^='
 
+# BRACKETS
+t_LPAREN = r'\('
+t_RPAREN = r'\)'
+t_LBRACE  = r'\{'
+t_RBRACE = r'\}'
+t_LSQRBRACKET = r'\['
+t_RSQRBRACKET = r'\]'
+
 # Ignore indentation
 t_ignore    = ' \t'
 
 # VARIABLES & NEWLINES
-def t_VARIABLE(t):
+def t_IDENTIFIER(t):
     '[A-Za-z_$][A-Za-z0-9_$]*'
     if t.value in keywords:
         t.type = t.value.upper()
