@@ -60,6 +60,7 @@ t_OR        = r'\|\|'
 t_AND       = r'&&'
 t_BIT_OR    = r'\|'
 t_BIT_AND   = r'&'
+t_XOR       = r'\^'
 
 # COMPARISIONS
 t_GT    = '>'
