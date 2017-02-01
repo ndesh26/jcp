@@ -4,8 +4,31 @@ import ast
 from lexer import tokens
 
 def p_expression(p):
-    '''expression : additive_expression'''
+    '''expression : logical_expression
+                  | logical_expression assignment_operator expression'''
+    if len(p) == 2:
+        p[0] = p[1]
+    else:
+        p[0] =  ast.binary_op(p[2], p[1], p[3])
     ast.end()
+
+def p_constant_expression(p):
+    '''constant_expression : expression'''
+    p[0] = p[1]
+
+def p_assignment_operator(p):
+    '''assignment_operator : EQ
+                           | PLUS_ASSIGN
+                           | MINUS_ASSIGN
+                           | TIMES_ASSIGN
+                           | BY_ASSIGN
+                           | REMAINDER_ASSIGN
+                           | LSHIFT_ASSIGN
+                           | RSHIFT_ASSIGN
+                           | RRSHIFT_ASSIGN
+                           | AND_ASSIGN
+                           | OR_ASSIGN
+                           | XOR_ASSIGN'''
     p[0] = p[1]
 
 def p_par_expression(p):
