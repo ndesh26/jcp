@@ -10,8 +10,60 @@ def p_expression(p):
 
 def p_par_expression(p):
     '''par_expression : LPAREN expression RPAREN'''
-    p[0] = p[1] + p[2] + p[3]
+    p[0] = p[2]
 
+# Ternary expression grammar not implemented
+
+def p_logical_expression(p):
+    '''logical_expression : bitwise_expression
+                          | logical_expression AND bitwise_expression
+                          | logical_expression OR bitwise_expression'''
+    if len(p) == 2:
+        p[0] = p[1]
+    else:
+        p[0] = ast.binary_op(p[2], p[1], p[3])
+
+def p_bitwise_expression(p):
+    '''bitwise_expression : equality_expression
+                          | bitwise_expression BIT_AND equality_expression
+                          | bitwise_expression BIT_OR equality_expression
+                          | bitwise_expression XOR equality_expression'''
+    if len(p) == 2:
+        p[0] = p[1]
+    else:
+        p[0] = ast.binary_op(p[2], p[1], p[3])
+
+
+def p_equality_expression(p):
+    '''equality_expression : comparision_expression
+                           | equality_expression EQUALITY comparision_expression
+                           | equality_expression NE comparision_expression'''
+    if len(p) == 2:
+        p[0] = p[1]
+    else:
+        p[0] = ast.binary_op(p[2], p[1], p[3])
+
+
+def p_comparision_expression(p):
+    '''comparision_expression : shift_expression
+                              | comparision_expression LE shift_expression
+                              | comparision_expression GE shift_expression
+                              | comparision_expression LT shift_expression
+                              | comparision_expression GT shift_expression'''
+    if len(p) == 2:
+        p[0] = p[1]
+    else:
+        p[0] = ast.binary_op(p[2], p[1], p[3])
+
+def p_shift_expression(p):
+    '''shift_expression : additive_expression
+                        | shift_expression LSHIFT additive_expression
+                        | shift_expression RSHIFT additive_expression
+                        | shift_expression RRSHIFT additive_expression'''
+    if len(p) == 2:
+        p[0] = p[1]
+    else:
+        p[0] = ast.binary_op(p[2], p[1], p[3])
 
 def p_additive_expression(p):
     '''additive_expression : multiplicative_expression
