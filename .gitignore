@@ -92,3 +92,8 @@ ENV/
 
 # vim swap files
 *.swp
+
+# Ignoring output files
+jcp/parser.out
+jcp/parsetab.py
+example1_graph.png
