@@ -7,14 +7,15 @@ def p_expression(p):
     '''expression : logical_expression
                   | logical_expression assignment_operator expression'''
     if len(p) == 2:
-        p[0] = p[1]
+        p[0] = ast.unary_op("expression", p[1])
     else:
         p[0] =  ast.binary_op(p[2], p[1], p[3])
     ast.end()
 
 def p_constant_expression(p):
     '''constant_expression : expression'''
-    p[0] = p[1]
+    p[0] = ast.unary_op("constant_expression", tmp)
+
 
 def p_assignment_operator(p):
     '''assignment_operator : EQ
@@ -42,7 +43,7 @@ def p_logical_expression(p):
                           | logical_expression AND bitwise_expression
                           | logical_expression OR bitwise_expression'''
     if len(p) == 2:
-        p[0] = p[1]
+        p[0] = ast.unary_op("bitwise_expression", p[1])
     else:
         p[0] = ast.binary_op(p[2], p[1], p[3])
 
@@ -52,7 +53,7 @@ def p_bitwise_expression(p):
                           | bitwise_expression BIT_OR equality_expression
                           | bitwise_expression XOR equality_expression'''
     if len(p) == 2:
-        p[0] = p[1]
+        p[0] = ast.unary_op("bitwise_expression", p[1])
     else:
         p[0] = ast.binary_op(p[2], p[1], p[3])
 
@@ -62,7 +63,7 @@ def p_equality_expression(p):
                            | equality_expression EQUALITY comparision_expression
                            | equality_expression NE comparision_expression'''
     if len(p) == 2:
-        p[0] = p[1]
+        p[0] = ast.unary_op("equality_expression", p[1])
     else:
         p[0] = ast.binary_op(p[2], p[1], p[3])
 
@@ -74,7 +75,7 @@ def p_comparision_expression(p):
                               | comparision_expression LT shift_expression
                               | comparision_expression GT shift_expression'''
     if len(p) == 2:
-        p[0] = p[1]
+        p[0] = ast.unary_op("comparison_expression", p[1])
     else:
         p[0] = ast.binary_op(p[2], p[1], p[3])
 
@@ -84,7 +85,7 @@ def p_shift_expression(p):
                         | shift_expression RSHIFT additive_expression
                         | shift_expression RRSHIFT additive_expression'''
     if len(p) == 2:
-        p[0] = p[1]
+        p[0] = ast.unary_op("shift_expression", p[1])
     else:
         p[0] = ast.binary_op(p[2], p[1], p[3])
 
@@ -94,7 +95,7 @@ def p_additive_expression(p):
                            | additive_expression MINUS multiplicative_expression'''
 
     if len(p) == 2:
-        p[0] = p[1]
+        p[0] = ast.unary_op("additive_expression", p[1])
     else:
         p[0] = ast.binary_op(p[2], p[1], p[3])
 
@@ -104,7 +105,7 @@ def p_multiplicative_expression(p):
                                  | multiplicative_expression BY unary_expression'''
 
     if len(p) == 2:
-        p[0] = p[1]
+        p[0] = ast.unary_op("multiplicative_expression", p[1])
     else:
         p[0] = ast.binary_op(p[2], p[1], p[3])
 
@@ -113,19 +114,25 @@ def p_unary_expression(p):
                         | MINUS unary_expression
                         | primary'''
     if len(p) == 2:
-        p[0] = p[1]
+        p[0] = ast.unary_op("unary_expression", p[1])
     else:
-        p[0] = p[1] + p[2]
+        tmp = ast.unary_op(p[1], p[2])
+        p[0] = ast.unary_op("unary_expression", tmp)
 
 def p_primary(p):
     '''primary : literal
-               | IDENTIFIER
                | par_expression'''
-    p[0] = p[1]
+    p[0] = ast.unary_op("primary", p[1])
+
+def p_primary_identifier(p):
+    '''primary : IDENTIFIER'''
+    tmp = ast.single_node(p[1])
+    p[0] = ast.unary_op("primary", tmp)
 
 def p_literal(p):
     '''literal : NUMBER'''
-    p[0] = ast.single_node(p[1])
+    tmp = ast.single_node(p[1])
+    p[0] = ast.unary_op("literal", tmp)
 
 # Error rule for syntax errors
 def p_error(p):
