@@ -43,7 +43,7 @@ tokens = [
         'REMAINDER_ASSIGN', 'LSHIFT_ASSIGN', 'RSHIFT_ASSIGN', 'RRSHIFT_ASSIGN',
         'AND_ASSIGN', 'OR_ASSIGN', 'XOR_ASSIGN',
 
-        'TERNARY', 'XOR'
+        'TERNARY', 'XOR', 'SEMICOLON', 'COMMA', 'DOT'
         ] + [k.upper() for k in keywords]
 
 t_NUMBER        = r'\d+'
@@ -109,6 +109,11 @@ t_LBRACE  = r'\{'
 t_RBRACE = r'\}'
 t_LSQRBRACKET = r'\['
 t_RSQRBRACKET = r'\]'
+
+# DELIMITER
+t_SEMICOLON = r';'
+t_COMMA = r','
+t_DOT = r'\.'
 
 # Ignore indentation
 t_ignore    = ' \t'
