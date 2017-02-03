@@ -27,5 +27,16 @@ def single_node(label):
 
     return k
 
+def unary_op(op_label, node_id):
+    global k
+    node = pydot.Node(node_id)
+    k+=1
+    node_op = pydot.Node(k,label=op_label)
+
+    graph.add_node(node_op)
+    graph.add_edge(pydot.Edge(node_op, node))
+
+    return k
+
 def end():
     graph.write_png('example1_graph.png')
