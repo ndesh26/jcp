@@ -32,8 +32,8 @@ def p_local_variable_declaration_statement(p):
 def p_local_variable_declaration(p):
     '''local_variable_declaration : type variable_declarators
                                   | variable_modifiers type variable_declarators'''
-    if len(p) == 2:
-        p[0] = ast.one_child_node("local_variable_declaration", p[1])
+    if len(p) == 3:
+        p[0] = ast.two_child_node("local_variable_declaration", p[1], p[2])
     else:
         p[0] = ast.three_child_node("local_variable_declaration", p[1], p[2], p[3])
 
@@ -72,18 +72,18 @@ def p_variable_declarators(p):
     '''variable_declarators : variable_declarator
                             | variable_declarators COMMA variable_declarator'''
     if len(p) == 2:
-        p[0] = ast.one_child_node("variable_declarators", p[2])
+        p[0] = ast.one_child_node("variable_declarators", p[1])
     else:
-        tmp = ast.node_create(p[1])
+        tmp = ast.node_create("\,")
         p[0] = ast.three_child_node("variable_declarators", p[1], tmp, p[3])
 
 def p_variable_declarator(p):
     '''variable_declarator : variable_declarator_id
                            | variable_declarator_id EQ variable_initializer'''
     if len(p) == 2:
-        p[0] = ast.one_child_node("variable_declarator", p[2])
+        p[0] = ast.one_child_node("variable_declarator", p[1])
     else:
-        tmp = ast.node_create(p[1])
+        tmp = ast.node_create(p[2])
         p[0] = ast.three_child_node("variable_declarator", p[1], tmp, p[3])
 
 def p_variable_declarator_id(p):
