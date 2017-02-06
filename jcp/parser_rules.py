@@ -3,44 +3,19 @@ import ast
 
 from lexer import tokens
 
-# Exceptions
-def p_exception_throw(p):
-    '''exception_throw : THROWS qualified_name_list'''
-    tmp = ast.node_create("throws")
-    p[0] = ast.two_child_node("exception_throw", p[1], tmp, p[3])
-
-def p_qualified_name_list(p):
-    '''qualified_name_list : qualified_name 
-                           | qualified_name COMMA qualified_name_list'''
-    tmp = ast.node_create("\,")
-    if len(p) == 2:
-        p[0] = ast.one_child_node("qualified_name_list", p[1])
-    else:
-        p[0] = ast.three_child_node("qualified_name_list", p[1], tmp, p[3])
-
-def p_qualified_name(p):
-    '''qualified_name : IDENTIFIER
-                      | IDENTIFIER DOT qualified_name'''
-    if len(p) == 2:
-        p[0] = ast.one_child_node("qualified_name", p[1])
-    else:
-        tmp = ast.node_create(".")
-        p[0] = ast.three_child_node("qualified_name", p[1], tmp, p[3])
-
 # Methods
 def p_method_type_declaration(p):
     '''method_type_declaration : type method_declaration'''
-    p[0] = ast.two_child_node(p[1], p[2])
+    p[0] = ast.two_child_node("method_type_declaration", p[1], p[2])
+    ast.end()
 
 def p_method_declaration(p):
     '''method_declaration : IDENTIFIER method_declarator_rest'''
     tmp = ast.node_create(p[1])
     p[0] = ast.two_child_node("method_declaration", tmp, p[2])
 
-def p_method_declarator_rest(p):
-    '''method_declarator_rest : formal_parameters method_body
-                              | formal_parameters exception_throw method_body
-                              | formal_parameters SEMICOLON
+def p_method_declarator_rest1(p):
+    '''method_declarator_rest : formal_parameters SEMICOLON
                               | formal_parameters exception_throw SEMICOLON'''
     if len(p) == 3:
         tmp = ast.node_create(p[2])
@@ -48,6 +23,14 @@ def p_method_declarator_rest(p):
     else:
         tmp = ast.node_create(p[3])
         p[0] = ast.three_child_node("method_declarator_rest", p[1], p[2], tmp)
+
+def p_method_declarator_rest2(p):
+    '''method_declarator_rest : formal_parameters method_body
+                              | formal_parameters exception_throw method_body'''
+    if len(p) == 3:
+        p[0] = ast.two_child_node("method_declarator_rest", p[1], p[2])
+    else:
+        p[0] = ast.three_child_node("method_declarator_rest", p[1], p[2], p[3])
 
 def p_formal_pararmeters(p):
     '''formal_parameters : LPAREN formal_parameter_decls RPAREN
@@ -65,7 +48,7 @@ def p_formal_parameter_decls(p):
     p[0] = ast.three_child_node("formal_parameter_decls", p[1], p[2], p[3])
 
 def p_formal_parameter_decls_rest(p):
-    '''formal_parameter_decls_rest : variable_declarator_id 
+    '''formal_parameter_decls_rest : variable_declarator_id
                                    | variable_declarator_id COMMA formal_parameter_decls
                                    | DOT DOT DOT variable_declarator_id'''
     if len(p) == 2:
@@ -85,13 +68,36 @@ def p_constructor_body(p):
     '''constructor_body : block'''
     p[0] = ast.one_child_node("constructor_body", p[1])
 
+# Exceptions
+def p_exception_throw(p):
+    '''exception_throw : THROWS qualified_name_list'''
+    tmp = ast.node_create("throws")
+    p[0] = ast.two_child_node("exception_throw", p[1], tmp, p[3])
+
+def p_qualified_name_list(p):
+    '''qualified_name_list : qualified_name
+                           | qualified_name COMMA qualified_name_list'''
+    tmp = ast.node_create("\,")
+    if len(p) == 2:
+        p[0] = ast.one_child_node("qualified_name_list", p[1])
+    else:
+        p[0] = ast.three_child_node("qualified_name_list", p[1], tmp, p[3])
+
+def p_qualified_name(p):
+    '''qualified_name : IDENTIFIER
+                      | IDENTIFIER DOT qualified_name'''
+    if len(p) == 2:
+        p[0] = ast.one_child_node("qualified_name", p[1])
+    else:
+        tmp = ast.node_create(".")
+        p[0] = ast.three_child_node("qualified_name", p[1], tmp, p[3])
+
 # Statements
 def p_block(p):
     '''block : LBRACE block_statements RBRACE'''
     lbrace = ast.node_create(p[1])
     rbrace = ast.node_create(p[3])
     p[0] = ast.three_child_node("block", lbrace, p[2], rbrace)
-    ast.end()
 
 def p_block_statements(p):
     '''block_statements : block_statement
