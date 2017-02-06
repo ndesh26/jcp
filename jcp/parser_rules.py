@@ -4,33 +4,59 @@ import ast
 from lexer import tokens
 
 # Methods
+def p_method_type_declaration(p):
+    '''method_type_declaration : type method_declaration'''
+    p[0] = ast.two_child_node(p[1], p[2])
+
 def p_method_declaration(p):
-    '''method_declaration : Identifier method_declarator_rest'''
+    '''method_declaration : IDENTIFIER method_declarator_rest'''
+    tmp = ast.node_create(p[1])
+    p[0] = ast.two_child_node("method_declaration", tmp, p[2])
 
 def p_method_declarator_rest(p):
-    '''method_declarator_rest : formalParameters
-        ('throws' qualifiedNameList)?
-        (   methodBody
+    '''method_declarator_rest : formal_parameters
+        ('throws' qualified_name_list)?
+        (   method_body
         |   ';'
         )'''
+    if len(p) == 3:
+        tmp = ast.node_create(p[2])
+        p[0] = ast.two_child_node("method_declarator_rest", p[1], tmp)
+    # TODO: Implement graph for Exceptions
 
 def p_formal_pararmeters(p):
-    '''formalParameters : LPAREN formalParameterDecls RPAREN
-                        | LPAREN RPAREN'''
+    '''formal_parameters : LPAREN formal_parameter_decls RPAREN
+                         | LPAREN RPAREN'''
+    lparen = ast.node_create(p[1])
+    if len(p) == 4:
+        rparen = ast.node_create(p[3])
+        p[0] = ast.three_child_node("formal_parameters", lparen, p[2], rparen)
+    else:
+        rparen = ast.node_create(p[2])
+        p[0] = ast.two_child_node("formal_parameters", lparen, rparen)
 
 def p_formal_parameter_decls(p):
-    '''formalParameterDecls : variableModifiers type formalParameterDeclsRest'''
+    '''formal_parameter_decls : variable_modifiers type formal_parameter_decls_rest'''
+    p[0] = ast.three_child_node("formal_parameter_decls", p[1], p[2], p[3])
 
 def p_formal_parameter_decls_rest(p):
-    '''formalParameterDeclsRest : variableDeclaratorId 
-                                | variableDeclaratorId COMMA formalParameterDecls
-                                | DOT DOT DOT variableDeclaratorId'''
+    '''formal_parameter_decls_rest : variable_declarator_id 
+                                   | variable_declarator_id COMMA formal_parameter_decls
+                                   | DOT DOT DOT variable_declarator_id'''
+    if len(p) == 2:
+        p[0] = ast.one_child_node("formal_parameter_decls_rest", p[0])
+    else if len(p) == 4:
+        tmp = ast.node_create(p[2])
+        p[0] = ast.three_child.node("formal_parameter_decls_rest", p[1], tmp, p[3])
+    # TODO: ... variabledeclaratorid
 
 def p_method_body(p):
-    '''methodBody : block'''
+    '''method_body : block'''
+    p[0] = ast.one_child_node("method_body", p[1])
 
 def p_constructor_body(p):
-    '''constructorBody : block'''
+    '''constructor_body : block'''
+    p[0] = ast.one_child_node("constructor_body", p[1])
 
 # Statements
 def p_block(p):
