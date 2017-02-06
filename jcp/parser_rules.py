@@ -44,17 +44,21 @@ def p_formal_pararmeters(p):
         p[0] = ast.two_child_node("formal_parameters", lparen, rparen)
 
 def p_formal_parameter_decls(p):
-    '''formal_parameter_decls : variable_modifiers type formal_parameter_decls_rest'''
-    p[0] = ast.three_child_node("formal_parameter_decls", p[1], p[2], p[3])
+    '''formal_parameter_decls : variable_modifiers type formal_parameter_decls_rest
+                              | type formal_parameter_decls_rest'''
+    if len(p) == 3:
+        p[0] = ast.two_child_node("formal_paramter_decls", p[1], p[2])
+    else:
+        p[0] = ast.three_child_node("formal_parameter_decls", p[1], p[2], p[3])
 
 def p_formal_parameter_decls_rest(p):
     '''formal_parameter_decls_rest : variable_declarator_id
                                    | variable_declarator_id COMMA formal_parameter_decls
                                    | DOT DOT DOT variable_declarator_id'''
     if len(p) == 2:
-        p[0] = ast.one_child_node("formal_parameter_decls_rest", p[0])
+        p[0] = ast.one_child_node("formal_parameter_decls_rest", p[1])
     elif len(p) == 4:
-        tmp = ast.node_create(p[2])
+        tmp = ast.node_create("\,")
         p[0] = ast.three_child_node("formal_parameter_decls_rest", p[1], tmp, p[3])
     else:
         tmp = ast.node_create("...")
@@ -148,13 +152,14 @@ def p_statement_rule1(p):
         p[0] = ast.two_child_node("statement", p[1], tmp)
 
 def p_statement_rule2(p):
-    '''statement : RETURN
-                 | RETURN expression'''
-    if len(p) == 2:
-        p[0] = ast.one_child_node("statement", p[1])
+    '''statement : RETURN SEMICOLON
+                 | RETURN expression SEMICOLON'''
+    tmp1 = ast.node_create(p[1])
+    tmp2 = ast.node_create(";")
+    if len(p) == 3:
+        p[0] = ast.two_child_node("statement", tmp1, tmp2)
     else:
-        tmp = ast.node_create(p[1])
-        p[0] = ast.three_child_node("statement", tmp, p[2])
+        p[0] = ast.three_child_node("statement", tmp1, p[2], tmp2)
 
 def p_variable_declarators(p):
     '''variable_declarators : variable_declarator
