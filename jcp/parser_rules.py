@@ -3,6 +3,35 @@ import ast
 
 from lexer import tokens
 
+# Methods
+def p_method_declaration(p):
+    '''method_declaration : Identifier method_declarator_rest'''
+
+def p_method_declarator_rest(p):
+    '''method_declarator_rest : formalParameters
+        ('throws' qualifiedNameList)?
+        (   methodBody
+        |   ';'
+        )'''
+
+def p_formal_pararmeters(p):
+    '''formalParameters : LPAREN formalParameterDecls RPAREN
+                        | LPAREN RPAREN'''
+
+def p_formal_parameter_decls(p):
+    '''formalParameterDecls : variableModifiers type formalParameterDeclsRest'''
+
+def p_formal_parameter_decls_rest(p):
+    '''formalParameterDeclsRest : variableDeclaratorId 
+                                | variableDeclaratorId COMMA formalParameterDecls
+                                | DOT DOT DOT variableDeclaratorId'''
+
+def p_method_body(p):
+    '''methodBody : block'''
+
+def p_constructor_body(p):
+    '''constructorBody : block'''
+
 # Statements
 def p_block(p):
     '''block : LBRACE block_statements RBRACE'''
