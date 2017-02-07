@@ -237,8 +237,8 @@ class StatementParser(object):
 class ExpressionParser(object):
 
     def p_expression(self, p):
-        '''expression : logical_expression
-                      | logical_expression assignment_operator expression'''
+        '''expression : ternary_expression
+                      | ternary_expression assignment_operator expression'''
         if len(p) == 2:
             p[0] = ptg.one_child_node("expression", p[1])
         else:
@@ -270,7 +270,15 @@ class ExpressionParser(object):
         rparen = ptg.node_create(p[3])
         p[0] = ptg.three_child_node("par_expression", lparen, p[2], rparen)
 
-    # Ternary expression grammar not implemented
+    def p_ternary_expression(self, p):
+        '''ternary_expression : logical_expression
+                              | logical_expression QUESTION expression COLON expression'''
+        if len(p) == 2:
+            p[0] = ptg.one_child_node("ternary_expression", p[1])
+        else:
+            tmp1 = ptg.node_create("\?")
+            tmp2 = ptg.node_create(":")
+            p[0] = ptg.five_child_node("ternary_expression", p[1], p[2], p[3], p[4], p[5])
 
     def p_logical_expression(self, p):
         '''logical_expression : bitwise_expression
