@@ -1,7 +1,7 @@
 import sys
 import ply.yacc as yacc
 from parser_rules import JavaParser
-import ast
+import ptg
 
 if len(sys.argv) != 3:
     print("Usage: {} parser filename".format(sys.argv[0]))
@@ -24,4 +24,4 @@ else:
     exit()
    
 result = parser.parse(prefix+content, debug=1)
-ast.end()
+ptg.end()
