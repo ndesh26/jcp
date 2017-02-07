@@ -150,12 +150,23 @@ class StatementParser(object):
 
     def p_statement_rule1(self, p):
         '''statement : block
-                     | expression SEMICOLON'''
+                     | expression SEMICOLON
+                     | WHILE par_expression statement
+                     | IF par_expression statement
+                     | DO statement WHILE par_expression SEMICOLON'''
         if len(p) == 2:
             p[0] = ptg.one_child_node("statement", p[1])
-        else:
+        elif len(p) == 3:
             tmp = ptg.node_create(p[2])
             p[0] = ptg.two_child_node("statement", p[1], tmp)
+        elif len(p) == 4:
+            tmp = ptg.node_create(p[1])
+            p[0] = ptg.three_child_node("statement", tmp, p[2], p[3])
+        elif len(p) == 6:
+            tmp1 = ptg.node_create(p[1])
+            tmp2 = ptg.node_create(p[3])
+            tmp3 = ptg.node_create(p[5])
+            p[0] = ptg.five_child_node("statement", tmp1, p[2], tmp2, p[4], tmp3)
 
     def p_statement_rule2(self, p):
         '''statement : RETURN SEMICOLON
@@ -164,14 +175,21 @@ class StatementParser(object):
         tmp2 = ptg.node_create(";")
         if len(p) == 3:
             p[0] = ptg.two_child_node("statement", tmp1, tmp2)
-        else:
+        elif len(p) == 4:
             p[0] = ptg.three_child_node("statement", tmp1, p[2], tmp2)
 
     def p_statement_rule3(self, p):
         '''statement : SEMICOLON'''
         tmp = ptg.node_create(";")
         p[0] = ptg.two_child_node("statement", tmp)
- 
+
+    def p_statement_rule4(self, p):
+        '''statement : IF par_expression statement ELSE statement'''
+        if len(p) == 6:
+            tmp1 = ptg.node_create(p[1])
+            tmp2 = ptg.node_create(p[4])
+            p[0] = ptg.five_child_node("statement", tmp1, p[2], p[3], tmp2, p[5])
+
     def p_variable_declarators(self, p):
         '''variable_declarators : variable_declarator
                                 | variable_declarators COMMA variable_declarator'''
