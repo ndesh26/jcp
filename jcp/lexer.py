@@ -84,7 +84,7 @@ t_RRSHIFT   = '>>>'
 
 # INCREMENT & DECREMENT
 t_INCR      = r'\+\+'
-t_DECR      = r'\+\+'
+t_DECR      = r'\-\-'
 
 # EQUALITY
 t_EQUALITY  = '=='
