@@ -170,6 +170,8 @@ class StatementParser(object):
 
     def p_statement_rule2(self, p):
         '''statement : RETURN SEMICOLON
+                     | BREAK SEMICOLON
+                     | CONTINUE SEMICOLON
                      | RETURN expression SEMICOLON'''
         tmp1 = ptg.node_create(p[1])
         tmp2 = ptg.node_create(";")
@@ -189,6 +191,118 @@ class StatementParser(object):
             tmp1 = ptg.node_create(p[1])
             tmp2 = ptg.node_create(p[4])
             p[0] = ptg.five_child_node("statement", tmp1, p[2], p[3], tmp2, p[5])
+
+    def p_statement_rule5(self, p):
+        '''statement : FOR LPAREN for_control RPAREN statement'''
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create("(")
+        tmp3 = ptg.node_create(")")
+        p[0] = ptg.five_child_node("statement", tmp1, tmp2, p[3], tmp3, p[5])
+
+    def p_statement_rule6(self, p):
+        '''statement : SWITCH par_expression LBRACE switch_block RBRACE'''
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create("(")
+        tmp3 = ptg.node_create(")")
+        p[0] = ptg.five_child_node("statement", tmp1, p[2], tmp2, p[4], tmp3)
+
+    def p_for_control1(self, p):
+        '''for_control : enhanced_for_control
+                       |          SEMICOLON            SEMICOLON
+                       | for_init SEMICOLON expression SEMICOLON for_update
+                       | for_init SEMICOLON expression SEMICOLON
+                       | for_init SEMICOLON            SEMICOLON           '''
+        tmp1 = ptg.node_create(";")
+        tmp2 = ptg.node_create(";")
+        if len(p) == 2:
+            p[0] = ptg.one_child_node("for_control", p[1])
+        elif len(p) == 3:
+            p[0] = ptg.two_child_node("for_control", tmp1, tmp2)
+        elif len(p) == 4:
+            p[0] = ptg.three_child_node("for_control", p[1], tmp1, tmp2)
+        elif len(p) == 5:
+            p[0] = ptg.four_child_node("for_control", p[1], tmp1, p[3], tmp2)
+        else:
+            p[0] = ptg.five_child_node("for_control", p[1], tmp1, p[3], tmp2, p[5])
+
+    def p_for_control2(self, p):
+        '''for_control :          SEMICOLON expression SEMICOLON for_update
+                       |          SEMICOLON expression SEMICOLON           '''
+        tmp1 = ptg.node_create(";")
+        tmp2 = ptg.node_create(";")
+        if len(p) == 4:
+            p[0] = ptg.three_child_node("for_control", p[1], tmp1, tmp2)
+        else:
+            p[0] = ptg.four_child_node("for_control", p[1], tmp1, p[3], tmp2)
+
+    def p_for_control3(self, p):
+        '''for_control :          SEMICOLON            SEMICOLON for_update
+                       | for_init SEMICOLON            SEMICOLON for_update'''
+        tmp1 = ptg.node_create(";")
+        tmp2 = ptg.node_create(";")
+        if len(p) == 4:
+            p[0] = ptg.three_child_node("for_control", tmp1, tmp2, p[3])
+        else:
+            p[0] = ptg.four_child_node("for_control", p[1], tmp1, tmp2, p[5])
+
+    def p_enhanced_for_control(self, p):
+        '''enhanced_for_control : variable_modifiers type IDENTIFIER COLON expression'''
+        tmp1 = ptg.node_create(p[3])
+        tmp2 = ptg.node_create(":")
+        p[0] = ptg.five_child_node("enhanced_for_control", p[1], p[2], tmp1, tmp2, p[5])
+
+    def p_for_init1(self, p):
+        '''for_init : local_variable_declaration'''
+        p[0] = ptg.one_child_node("for_init", p[1])
+
+    def p_for_init2(self, p):
+        '''for_init : expression_list'''
+        p[0] = ptg.one_child_node("for_init", p[1])
+
+    def p_for_update(self, p):
+        '''for_update : expression_list'''
+        p[0] = ptg.one_child_node("for_update", p[1])
+
+    def p_expression_list(self, p):
+        '''expression_list : expression
+                           | expression COMMA expression_list'''
+        if len(p) == 2:
+            p[0] = ptg.one_child_node("expression_list", p[1])
+        else:
+            tmp = ptg.node_create(",")
+            p[0] = ptg.three_child_node("expression_list", p[1], tmp, p[3])
+
+    def p_switch_block1(self, p):
+        '''switch_block : empty'''
+        tmp = ptg.node_create("empty")
+        p[0] = ptg.one_child_node("switch_block", tmp)
+
+    def p_switch_block2(self, p):
+        '''switch_block : switch_block_statements
+                        | switch_block_statements switch_block'''
+        if len(p) == 2:
+            p[0] = ptg.one_child_node("switch_block", p[1])
+        else:
+            p[0] = ptg.two_child_node("switch_block", p[1], p[2])
+
+    def p_switch_block_statements(self, p):
+        '''switch_block_statements : switch_label
+                                   | switch_label block_statements'''
+        if len(p) == 2:
+            p[0] = ptg.one_child_node("switch_block_statements", p[1])
+        else:
+            p[0] = ptg.two_child_node("switch_block_statements", p[1], p[2])
+
+    # TODO: switch_label - define for enum constant expressions
+    def p_switch_label(self, p):
+        '''switch_label : CASE constant_expression COLON
+                        | DEFAULT COLON'''
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(":")
+        if len(p) == 3:
+            p[0] = ptg.two_child_node("switch_label", tmp1, tmp2)
+        else:
+            p[0] = ptg.three_child_node("switch_label", tmp1, p[2], tmp2)
 
     def p_variable_declarators(self, p):
         '''variable_declarators : variable_declarator
@@ -246,7 +360,7 @@ class ExpressionParser(object):
 
     def p_constant_expression(self, p):
         '''constant_expression : expression'''
-        p[0] = ptg.one_child_node("constant_expression", tmp)
+        p[0] = ptg.one_child_node("constant_expression", p[1])
 
     def p_assignment_operator(self, p):
         '''assignment_operator : EQ
