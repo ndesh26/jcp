@@ -200,7 +200,8 @@ class StatementParser(object):
         p[0] = ptg.five_child_node("statement", tmp1, tmp2, p[3], tmp3, p[5])
 
     def p_statement_rule6(self, p):
-        '''statement : SWITCH par_expression LBRACE switch_block RBRACE'''
+        '''statement : SWITCH par_expression LBRACE switch_block RBRACE
+                     | SWITCH par_expression LBRACE RBRACE'''
         tmp1 = ptg.node_create(p[1])
         tmp2 = ptg.node_create("(")
         tmp3 = ptg.node_create(")")
@@ -272,12 +273,7 @@ class StatementParser(object):
             tmp = ptg.node_create(",")
             p[0] = ptg.three_child_node("expression_list", p[1], tmp, p[3])
 
-    def p_switch_block1(self, p):
-        '''switch_block : empty'''
-        tmp = ptg.node_create("empty")
-        p[0] = ptg.one_child_node("switch_block", tmp)
-
-    def p_switch_block2(self, p):
+    def p_switch_block(self, p):
         '''switch_block : switch_block_statements
                         | switch_block_statements switch_block'''
         if len(p) == 2:
