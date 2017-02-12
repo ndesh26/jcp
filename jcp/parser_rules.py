@@ -5,25 +5,25 @@ class ExpressionParser(object):
 
     def p_expression(self, p):
         '''expression : assignment_expression'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("expression", p[1])
 
     def p_expression_not_name(self, p):
         '''expression_not_name : assignment_expression_not_name'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("expression_not_name", p[1])
 
     def p_assignment_expression(self, p):
         '''assignment_expression : assignment
                                  | conditional_expression'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("assignment_expression", p[1])
 
     def p_assignment_expression_not_name(self, p):
         '''assignment_expression_not_name : assignment
                                           | conditional_expression_not_name'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("assignment_expression_not_name", p[1])
 
     def p_assignment(self, p):
         '''assignment : postfix_expression assignment_operator assignment_expression'''
-        p[0] = Assignment(p[2], p[1], p[3])
+        p[0] = ptg.three_child_node("assignment", p[1], p[2], p[3])
 
     def p_assignment_operator(self, p):
         '''assignment_operator : '='
@@ -38,91 +38,134 @@ class ExpressionParser(object):
                                | AND_ASSIGN
                                | OR_ASSIGN
                                | XOR_ASSIGN'''
-        p[0] = p[1]
+        tmp = ptg.node_create(p[1])
+        p[0] = ptg.one_child_node("assignment_operator", tmp)
 
     def p_conditional_expression(self, p):
         '''conditional_expression : conditional_or_expression
                                   | conditional_or_expression '?' expression ':' conditional_expression'''
         if len(p) == 2:
-            p[0] = p[1]
-        else:
-            p[0] = Conditional(p[1], p[3], p[5])
+            p[0] = ptg.one_child_node("conditional_expression", p[1])
+        elif len(p) == 6:
+            tmp1 = ptg.node_create(p[2])
+            tmp2 = ptg.node_create(p[4])
+            p[0] = ptg.five_child_node("conditional_expression", p[1], tmp1, p[3], tmp2, p[5])
 
     def p_conditional_expression_not_name(self, p):
         '''conditional_expression_not_name : conditional_or_expression_not_name
                                            | conditional_or_expression_not_name '?' expression ':' conditional_expression
                                            | name '?' expression ':' conditional_expression'''
         if len(p) == 2:
-            p[0] = p[1]
-        else:
-            p[0] = Conditional(p[1], p[3], p[5])
-
-    def binop(self, p, ctor):
-        if len(p) == 2:
-            p[0] = p[1]
-        else:
-            p[0] = ctor(p[2], p[1], p[3])
+            p[0] = ptg.one_child_node("conditional_expression_not_name", p[1])
+        elif len(p) == 6:
+            tmp1 = ptg.node_create(p[2])
+            tmp2 = ptg.node_create(p[4])
+            p[0] = ptg.five_child_node("conditional_expression_not_name", p[1], tmp1, p[3], tmp2, p[5])
 
     def p_conditional_or_expression(self, p):
         '''conditional_or_expression : conditional_and_expression
                                      | conditional_or_expression OR conditional_and_expression'''
-        self.binop(p, ConditionalOr)
+        if len(p) == 2:
+            p[0] = ptg.one_child_node("conditional_or_expression", p[1])
+        elif len(p) == 4:
+            tmp = ptg.node_create(p[2])
+            p[0] = ptg.four_child_node("conditional_or_expression", p[1], tmp, p[3])
 
     def p_conditional_or_expression_not_name(self, p):
         '''conditional_or_expression_not_name : conditional_and_expression_not_name
                                               | conditional_or_expression_not_name OR conditional_and_expression
                                               | name OR conditional_and_expression'''
-        self.binop(p, ConditionalOr)
+        if len(p) == 2:
+            p[0] = ptg.one_child_node("conditional_or_expression_not_name", p[1])
+        elif len(p) == 4:
+            tmp = ptg.node_create(p[2])
+            p[0] = ptg.four_child_node("conditional_or_expression_not_name", p[1], tmp, p[3])
 
     def p_conditional_and_expression(self, p):
         '''conditional_and_expression : inclusive_or_expression
                                       | conditional_and_expression AND inclusive_or_expression'''
-        self.binop(p, ConditionalAnd)
+        if len(p) == 2:
+            p[0] = ptg.one_child_node("conditional_and_expression", p[1])
+        elif len(p) == 4:
+            tmp = ptg.node_create(p[2])
+            p[0] = ptg.four_child_node("conditional_and_expression", p[1], tmp, p[3])
 
     def p_conditional_and_expression_not_name(self, p):
         '''conditional_and_expression_not_name : inclusive_or_expression_not_name
                                                | conditional_and_expression_not_name AND inclusive_or_expression
                                                | name AND inclusive_or_expression'''
-        self.binop(p, ConditionalAnd)
+        if len(p) == 2:
+            p[0] = ptg.one_child_node("conditional_and_expression_not_name", p[1])
+        elif len(p) == 4:
+            tmp = ptg.node_create(p[2])
+            p[0] = ptg.four_child_node("conditional_and_expression_not_name", p[1], tmp, p[3])
 
     def p_inclusive_or_expression(self, p):
         '''inclusive_or_expression : exclusive_or_expression
                                    | inclusive_or_expression '|' exclusive_or_expression'''
-        self.binop(p, Or)
+        if len(p) == 2:
+            p[0] = ptg.one_child_node("inclusive_or_expression", p[1])
+        elif len(p) == 4:
+            tmp = ptg.node_create(p[2])
+            p[0] = ptg.four_child_node("inclusive_or_expression", p[1], tmp, p[3])
 
     def p_inclusive_or_expression_not_name(self, p):
         '''inclusive_or_expression_not_name : exclusive_or_expression_not_name
                                             | inclusive_or_expression_not_name '|' exclusive_or_expression
                                             | name '|' exclusive_or_expression'''
-        self.binop(p, Or)
+        if len(p) == 2:
+            p[0] = ptg.one_child_node("inclusive_or_expression_not_name", p[1])
+        elif len(p) == 4:
+            tmp = ptg.node_create(p[2])
+            p[0] = ptg.four_child_node("inclusive_or_expression_not_name", p[1], tmp, p[3])
 
     def p_exclusive_or_expression(self, p):
         '''exclusive_or_expression : and_expression
                                    | exclusive_or_expression '^' and_expression'''
-        self.binop(p, Xor)
+        if len(p) == 2:
+            p[0] = ptg.one_child_node("exclusive_or_expression", p[1])
+        elif len(p) == 4:
+            tmp = ptg.node_create(p[2])
+            p[0] = ptg.four_child_node("exclusive_or_expression", p[1], tmp, p[3])
 
     def p_exclusive_or_expression_not_name(self, p):
         '''exclusive_or_expression_not_name : and_expression_not_name
                                             | exclusive_or_expression_not_name '^' and_expression
                                             | name '^' and_expression'''
-        self.binop(p, Xor)
+        if len(p) == 2:
+            p[0] = ptg.one_child_node("exclusive_or_expression_not_name", p[1])
+        elif len(p) == 4:
+            tmp = ptg.node_create(p[2])
+            p[0] = ptg.four_child_node("exclusive_or_expression_not_name", p[1], tmp, p[3])
 
     def p_and_expression(self, p):
         '''and_expression : equality_expression
                           | and_expression '&' equality_expression'''
-        self.binop(p, And)
+        if len(p) == 2:
+            p[0] = ptg.one_child_node("and_expression", p[1])
+        elif len(p) == 4:
+            tmp = ptg.node_create(p[2])
+            p[0] = ptg.four_child_node("and_expression", p[1], tmp, p[3])
 
     def p_and_expression_not_name(self, p):
         '''and_expression_not_name : equality_expression_not_name
                                    | and_expression_not_name '&' equality_expression
                                    | name '&' equality_expression'''
-        self.binop(p, And)
+        if len(p) == 2:
+            p[0] = ptg.one_child_node("and_expression_not_name", p[1])
+        elif len(p) == 4:
+            tmp = ptg.node_create(p[2])
+            p[0] = ptg.four_child_node("and_expression_not_name", p[1], tmp, p[3])
 
     def p_equality_expression(self, p):
         '''equality_expression : instanceof_expression
                                | equality_expression EQ instanceof_expression
                                | equality_expression NEQ instanceof_expression'''
-        self.binop(p, Equality)
+        if len(p) == 2:
+            p[0] = ptg.one_child_node("equality_expression", p[1])
+        elif len(p) == 4:
+            tmp = ptg.node_create(p[2])
+            p[0] = ptg.four_child_node("equality_expression", p[1], tmp, p[3])
 
     def p_equality_expression_not_name(self, p):
         '''equality_expression_not_name : instanceof_expression_not_name
@@ -130,18 +173,30 @@ class ExpressionParser(object):
                                         | name EQ instanceof_expression
                                         | equality_expression_not_name NEQ instanceof_expression
                                         | name NEQ instanceof_expression'''
-        self.binop(p, Equality)
+        if len(p) == 2:
+            p[0] = ptg.one_child_node("equality_expression_not_name", p[1])
+        elif len(p) == 4:
+            tmp = ptg.node_create(p[2])
+            p[0] = ptg.four_child_node("equality_expression_not_name", p[1], tmp, p[3])
 
     def p_instanceof_expression(self, p):
         '''instanceof_expression : relational_expression
                                  | instanceof_expression INSTANCEOF reference_type'''
-        self.binop(p, InstanceOf)
+        if len(p) == 2:
+            p[0] = ptg.one_child_node("instanceof_expression", p[1])
+        elif len(p) == 4:
+            tmp = ptg.node_create(p[2])
+            p[0] = ptg.four_child_node("instanceof_expression", p[1], tmp, p[3])
 
     def p_instanceof_expression_not_name(self, p):
         '''instanceof_expression_not_name : relational_expression_not_name
                                           | name INSTANCEOF reference_type
                                           | instanceof_expression_not_name INSTANCEOF reference_type'''
-        self.binop(p, InstanceOf)
+        if len(p) == 2:
+            p[0] = ptg.one_child_node("instanceof_expression_not_name", p[1])
+        elif len(p) == 4:
+            tmp = ptg.node_create(p[2])
+            p[0] = ptg.four_child_node("instanceof_expression_not_name", p[1], tmp, p[3])
 
     def p_relational_expression(self, p):
         '''relational_expression : shift_expression
@@ -149,7 +204,11 @@ class ExpressionParser(object):
                                  | relational_expression '<' shift_expression
                                  | relational_expression GTEQ shift_expression
                                  | relational_expression LTEQ shift_expression'''
-        self.binop(p, Relational)
+        if len(p) == 2:
+            p[0] = ptg.one_child_node("relational_expression", p[1])
+        elif len(p) == 4:
+            tmp = ptg.node_create(p[2])
+            p[0] = ptg.four_child_node("relational_expression", p[1], tmp, p[3])
 
     def p_relational_expression_not_name(self, p):
         '''relational_expression_not_name : shift_expression_not_name
@@ -161,14 +220,22 @@ class ExpressionParser(object):
                                           | name GTEQ shift_expression
                                           | shift_expression_not_name LTEQ shift_expression
                                           | name LTEQ shift_expression'''
-        self.binop(p, Relational)
+        if len(p) == 2:
+            p[0] = ptg.one_child_node("relational_expression_not_name", p[1])
+        elif len(p) == 4:
+            tmp = ptg.node_create(p[2])
+            p[0] = ptg.four_child_node("relational_expression_not_name", p[1], tmp, p[3])
 
     def p_shift_expression(self, p):
         '''shift_expression : additive_expression
                             | shift_expression LSHIFT additive_expression
                             | shift_expression RSHIFT additive_expression
                             | shift_expression RRSHIFT additive_expression'''
-        self.binop(p, Shift)
+        if len(p) == 2:
+            p[0] = ptg.one_child_node("shift_expression", p[1])
+        elif len(p) == 4:
+            tmp = ptg.node_create(p[2])
+            p[0] = ptg.four_child_node("shift_expression", p[1], tmp, p[3])
 
     def p_shift_expression_not_name(self, p):
         '''shift_expression_not_name : additive_expression_not_name
@@ -178,13 +245,21 @@ class ExpressionParser(object):
                                      | name RSHIFT additive_expression
                                      | shift_expression_not_name RRSHIFT additive_expression
                                      | name RRSHIFT additive_expression'''
-        self.binop(p, Shift)
+        if len(p) == 2:
+            p[0] = ptg.one_child_node("shift_expression_not_name", p[1])
+        elif len(p) == 4:
+            tmp = ptg.node_create(p[2])
+            p[0] = ptg.four_child_node("shift_expression_not_name", p[1], tmp, p[3])
 
     def p_additive_expression(self, p):
         '''additive_expression : multiplicative_expression
                                | additive_expression '+' multiplicative_expression
                                | additive_expression '-' multiplicative_expression'''
-        self.binop(p, Additive)
+        if len(p) == 2:
+            p[0] = ptg.one_child_node("additive_expression", p[1])
+        elif len(p) == 4:
+            tmp = ptg.node_create(p[2])
+            p[0] = ptg.four_child_node("additive_expression", p[1], tmp, p[3])
 
     def p_additive_expression_not_name(self, p):
         '''additive_expression_not_name : multiplicative_expression_not_name
@@ -192,14 +267,22 @@ class ExpressionParser(object):
                                         | name '+' multiplicative_expression
                                         | additive_expression_not_name '-' multiplicative_expression
                                         | name '-' multiplicative_expression'''
-        self.binop(p, Additive)
+        if len(p) == 2:
+            p[0] = ptg.one_child_node("additive_expression_not_name", p[1])
+        elif len(p) == 4:
+            tmp = ptg.node_create(p[2])
+            p[0] = ptg.four_child_node("additive_expression_not_name", p[1], tmp, p[3])
 
     def p_multiplicative_expression(self, p):
         '''multiplicative_expression : unary_expression
                                      | multiplicative_expression '*' unary_expression
                                      | multiplicative_expression '/' unary_expression
                                      | multiplicative_expression '%' unary_expression'''
-        self.binop(p, Multiplicative)
+        if len(p) == 2:
+            p[0] = ptg.one_child_node("multiplicative_expression", p[1])
+        elif len(p) == 4:
+            tmp = ptg.node_create(p[2])
+            p[0] = ptg.four_child_node("multiplicative_expression", p[1], tmp, p[3])
 
     def p_multiplicative_expression_not_name(self, p):
         '''multiplicative_expression_not_name : unary_expression_not_name
@@ -209,6 +292,11 @@ class ExpressionParser(object):
                                               | name '/' unary_expression
                                               | multiplicative_expression_not_name '%' unary_expression
                                               | name '%' unary_expression'''
+        if len(p) == 2:
+            p[0] = ptg.one_child_node("multiplicative_expression_not_name", p[1])
+        elif len(p) == 4:
+            tmp = ptg.node_create(p[2])
+            p[0] = ptg.four_child_node("multiplicative_expression_not_name", p[1], tmp, p[3])
         self.binop(p, Multiplicative)
 
     def p_unary_expression(self, p):
@@ -218,9 +306,10 @@ class ExpressionParser(object):
                             | '-' unary_expression
                             | unary_expression_not_plus_minus'''
         if len(p) == 2:
-            p[0] = p[1]
-        else:
-            p[0] = Unary(p[1], p[2])
+            p[0] = ptg.one_child_node("unary_expression", p[1])
+        elif len(p) == 3:
+            tmp = ptg.node_create(p[1])
+            p[0] = ptg.two_child_node("unary_expression", tmp, p[2])
 
     def p_unary_expression_not_name(self, p):
         '''unary_expression_not_name : pre_increment_expression
@@ -229,17 +318,20 @@ class ExpressionParser(object):
                                      | '-' unary_expression
                                      | unary_expression_not_plus_minus_not_name'''
         if len(p) == 2:
-            p[0] = p[1]
-        else:
-            p[0] = Unary(p[1], p[2])
+            p[0] = ptg.one_child_node("unary_expression_not_name", p[1])
+        elif len(p) == 3:
+            tmp = ptg.node_create(p[1])
+            p[0] = ptg.two_child_node("unary_expression_not_name", tmp, p[2])
 
     def p_pre_increment_expression(self, p):
         '''pre_increment_expression : PLUSPLUS unary_expression'''
-        p[0] = Unary('++x', p[2])
+        tmp = ptg.node_create(p[1])
+        p[0] = ptg.two_child_node("pre_increment_expression", tmp, p[2])
 
     def p_pre_decrement_expression(self, p):
         '''pre_decrement_expression : MINUSMINUS unary_expression'''
-        p[0] = Unary('--x', p[2])
+        tmp = ptg.node_create(p[1])
+        p[0] = ptg.two_child_node("pre_decrement_expression", tmp, p[2])
 
     def p_unary_expression_not_plus_minus(self, p):
         '''unary_expression_not_plus_minus : postfix_expression
@@ -247,9 +339,10 @@ class ExpressionParser(object):
                                            | '!' unary_expression
                                            | cast_expression'''
         if len(p) == 2:
-            p[0] = p[1]
-        else:
-            p[0] = Unary(p[1], p[2])
+            p[0] = ptg.one_child_node("unary_expression_not_plus_minus", p[1])
+        elif len(p) == 3:
+            tmp = ptg.node_create(p[1])
+            p[0] = ptg.two_child_node("unary_expression_not_plus_minus", tmp, p[2])
 
     def p_unary_expression_not_plus_minus_not_name(self, p):
         '''unary_expression_not_plus_minus_not_name : postfix_expression_not_name
@@ -257,136 +350,154 @@ class ExpressionParser(object):
                                                     | '!' unary_expression
                                                     | cast_expression'''
         if len(p) == 2:
-            p[0] = p[1]
-        else:
-            p[0] = Unary(p[1], p[2])
+            p[0] = ptg.one_child_node("unary_expression_not_plus_minus_not_name", p[1])
+        elif len(p) == 3:
+            tmp = ptg.node_create(p[1])
+            p[0] = ptg.two_child_node("unary_expression_not_plus_minus_not_name", tmp, p[2])
 
     def p_postfix_expression(self, p):
         '''postfix_expression : primary
                               | name
                               | post_increment_expression
                               | post_decrement_expression'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("postfix_expression", p[1])
 
     def p_postfix_expression_not_name(self, p):
         '''postfix_expression_not_name : primary
                                        | post_increment_expression
                                        | post_decrement_expression'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("postfix_expression_not_name", p[1])
 
     def p_post_increment_expression(self, p):
         '''post_increment_expression : postfix_expression PLUSPLUS'''
-        p[0] = Unary('x++', p[1])
+        tmp = ptg.node_create(p[2])
+        p[0] = ptg.two_child_node("post_increment_expression", p[1], tmp)
 
     def p_post_decrement_expression(self, p):
         '''post_decrement_expression : postfix_expression MINUSMINUS'''
-        p[0] = Unary('x--', p[1])
+        tmp = ptg.node_create(p[2])
+        p[0] = ptg.two_child_node("post_decrement_expression", p[1], tmp)
 
     def p_primary(self, p):
         '''primary : primary_no_new_array
                    | array_creation_with_array_initializer
                    | array_creation_without_array_initializer'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("primary", p[1])
 
     def p_primary_no_new_array(self, p):
         '''primary_no_new_array : literal
-                                | THIS
                                 | class_instance_creation_expression
                                 | field_access
                                 | method_invocation
                                 | array_access'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("primary_no_new_array", p[1])
 
     def p_primary_no_new_array2(self, p):
         '''primary_no_new_array : '(' name ')'
+                                | THIS
                                 | '(' expression_not_name ')' '''
-        p[0] = p[2]
+        if len(p) == 2:
+            tmp = ptg.node_create(p[1])
+            p[0] = ptg.one_child_node("primary_no_new_array", tmp)
+        elif len(p) == 4:
+            tmp1 = ptg.node_create(p[1])
+            tmp2 = ptg.node_create(p[3])
+            p[0] = ptg.three_child_node("primary_no_new_array", tmp1, p[2], tmp2)
 
     def p_primary_no_new_array3(self, p):
         '''primary_no_new_array : name '.' THIS
                                 | name '.' SUPER'''
-        p[1].append_name(p[3])
-        p[0] = p[1]
+        tmp = ptg.node_create(p[2])
+        p[0] = ptg.three_child_node("primary_no_new_array", p[1], tmp, p[3])
 
     def p_primary_no_new_array4(self, p):
         '''primary_no_new_array : name '.' CLASS
                                 | name dims '.' CLASS
                                 | primitive_type dims '.' CLASS
                                 | primitive_type '.' CLASS'''
-        if len(p) == 4:
-            p[0] = ClassLiteral(Type(p[1]))
-        else:
-            p[0] = ClassLiteral(Type(p[1], dimensions=p[2]))
+        tmp = ptg.node_create(p[2])
+        p[0] = ptg.three_child_node("primary_no_new_array", p[1], tmp, p[3])
 
     def p_dims_opt(self, p):
         '''dims_opt : dims'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("dims_opt", p[1])
 
     def p_dims_opt2(self, p):
         '''dims_opt : empty'''
-        p[0] = 0
+        p[0] = ptg.one_child_node("dims_opt", p[1])
 
     def p_dims(self, p):
         '''dims : dims_loop'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("dims", p[1])
 
     def p_dims_loop(self, p):
         '''dims_loop : one_dim_loop
                      | dims_loop one_dim_loop'''
         if len(p) == 2:
-            p[0] = 1
-        else:
-            p[0] = 1 + p[1]
+            p[0] = ptg.one_child_node("dims_loop", p[1]) 
+        elif len(p) == 3:
+            p[0] = ptg.two_child_node("dims_loop", p[1], p[2])
 
     def p_one_dim_loop(self, p):
         '''one_dim_loop : '[' ']' '''
-        # ignore
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[2])
+        p[0] = ptg.two_child_node("one_dim_loop", tmp1, tmp2)
 
     def p_cast_expression(self, p):
         '''cast_expression : '(' primitive_type dims_opt ')' unary_expression'''
-        p[0] = Cast(Type(p[2], dimensions=p[3]), p[5])
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[4])
+        p[0] = ptg.five_child_node("cast_expression", tmp1, p[2], p[3], tmp2, p[5])
 
     def p_cast_expression2(self, p):
         '''cast_expression : '(' name type_arguments dims_opt ')' unary_expression_not_plus_minus'''
-        p[0] = Cast(Type(p[2], type_arguments=p[3], dimensions=p[4]), p[6])
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[5])
+        p[0] = ptg.six_child_node("cast_expression", tmp1, p[2], p[3], p[4], tmp2, p[6])
 
     def p_cast_expression3(self, p):
         '''cast_expression : '(' name type_arguments '.' class_or_interface_type dims_opt ')' unary_expression_not_plus_minus'''
-        p[5].dimensions = p[6]
-        p[5].enclosed_in = Type(p[2], type_arguments=p[3])
-        p[0] = Cast(p[5], p[8])
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[4])
+        tmp3 = ptg.node_create(p[7])
+        p[0] = ptg.eight_child_node("cast_expression", tmp1, p[2], p[3], tmp2, p[5], p[6], tmp3, p[8])
 
     def p_cast_expression4(self, p):
         '''cast_expression : '(' name ')' unary_expression_not_plus_minus'''
-        # technically it's not necessarily a type but could be a type parameter
-        p[0] = Cast(Type(p[2]), p[4])
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[3])
+        p[0] = ptg.four_child_node("cast_expression", tmp1, p[2], tmp2, p[4])
 
     def p_cast_expression5(self, p):
         '''cast_expression : '(' name dims ')' unary_expression_not_plus_minus'''
-        # technically it's not necessarily a type but could be a type parameter
-        p[0] = Cast(Type(p[2], dimensions=p[3]), p[5])
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[4])
+        p[0] = ptg.five_child_node("cast_expression", tmp1, p[2], p[3], tmp2, p[5])
 
 class StatementParser(object):
 
     def p_block(self, p):
         '''block : '{' block_statements_opt '}' '''
-        p[0] = Block(p[2])
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[4])
+        p[0] = ptg.three_child_node("block", tmp1, p[2], tmp2)
 
     def p_block_statements_opt(self, p):
         '''block_statements_opt : block_statements'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("block_statements_opt", p[1])
 
     def p_block_statements_opt2(self, p):
         '''block_statements_opt : empty'''
-        p[0] = []
+        p[0] = ptg.one_child_node("block_statements_opt", p[1])
 
     def p_block_statements(self, p):
         '''block_statements : block_statement
                             | block_statements block_statement'''
         if len(p) == 2:
-            p[0] = [p[1]]
-        else:
-            p[0] = p[1] + [p[2]]
+            p[0] = ptg.one_child_node("block_statements", p[1])
+        elif len(p) == 3:
+            p[0] = ptg.two_child_node("block_statements", p[1], p[2])
 
     def p_block_statement(self, p):
         '''block_statement : local_variable_declaration_statement
@@ -395,44 +506,48 @@ class StatementParser(object):
                            | interface_declaration
                            | annotation_type_declaration
                            | enum_declaration'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("block_statement", p[1])
 
     def p_local_variable_declaration_statement(self, p):
         '''local_variable_declaration_statement : local_variable_declaration ';' '''
-        p[0] = p[1]
+        tmp = ptg.node_create(p[2])
+        p[0] = ptg.two_child_node("local_variable_declaration_statement", p[1], tmp)
 
     def p_local_variable_declaration(self, p):
         '''local_variable_declaration : type variable_declarators'''
-        p[0] = VariableDeclaration(p[1], p[2])
+        p[0] = ptg.two_child_node("local_variable_declaration", p[1], p[2])
 
     def p_local_variable_declaration2(self, p):
         '''local_variable_declaration : modifiers type variable_declarators'''
-        p[0] = VariableDeclaration(p[2], p[3], modifiers=p[1])
+        p[0] = ptg.three_child_node("local_variable_declaration", p[1], p[2], p[3])
 
     def p_variable_declarators(self, p):
         '''variable_declarators : variable_declarator
                                 | variable_declarators ',' variable_declarator'''
         if len(p) == 2:
-            p[0] = [p[1]]
-        else:
-            p[0] = p[1] + [p[3]]
+            p[0] = ptg.one_child_node("variable_declarators", p[1])
+        elif len(p) == 4:
+            tmp = ptg.node_create("\,")
+            p[0] = ptg.three_child_node("variable_declarators", p[1], tmp, p[3])
 
     def p_variable_declarator(self, p):
         '''variable_declarator : variable_declarator_id
                                | variable_declarator_id '=' variable_initializer'''
         if len(p) == 2:
-            p[0] = VariableDeclarator(p[1])
-        else:
-            p[0] = VariableDeclarator(p[1], initializer=p[3])
+            p[0] = ptg.one_child_node("variable_declarator", p[1])
+        elif len(p) == 4:
+            tmp = ptg.node_create(p[2])
+            p[0] = ptg.three_child_node("variable_declarator", p[1], tmp, p[3])
 
     def p_variable_declarator_id(self, p):
         '''variable_declarator_id : NAME dims_opt'''
-        p[0] = Variable(p[1], dimensions=p[2])
+        tmp = ptg.node_create(p[1])
+        p[0] = ptg.two_child_node("variable_declarator_id", tmp, p[2])
 
     def p_variable_initializer(self, p):
         '''variable_initializer : expression
                                 | array_initializer'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("variable_initializer", p[1])
 
     def p_statement(self, p):
         '''statement : statement_without_trailing_substatement
@@ -442,7 +557,7 @@ class StatementParser(object):
                      | while_statement
                      | for_statement
                      | enhanced_for_statement'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("statement", p[1])
 
     def p_statement_without_trailing_substatement(self, p):
         '''statement_without_trailing_substatement : block
@@ -458,15 +573,16 @@ class StatementParser(object):
                                                    | throw_statement
                                                    | try_statement
                                                    | try_statement_with_resources'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("statement_without_trailing_substatement", p[1])
 
     def p_expression_statement(self, p):
         '''expression_statement : statement_expression ';'
                                 | explicit_constructor_invocation'''
         if len(p) == 2:
-            p[0] = p[1]
-        else:
-            p[0] = ExpressionStatement(p[1])
+            p[0] = ptg.one_child_node("expression_statement", p[1])
+        elif len(p) == 3:
+            tmp = ptg.node_create(p[2])
+            p[0] = ptg.two_child_node("expression_statement", p[1], tmp)
 
     def p_statement_expression(self, p):
         '''statement_expression : assignment
@@ -476,140 +592,218 @@ class StatementParser(object):
                                 | post_decrement_expression
                                 | method_invocation
                                 | class_instance_creation_expression'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("statement_expression", p[1])
 
     def p_comma_opt(self, p):
         '''comma_opt : ','
                      | empty'''
-        # ignore
+        if p[1] == ",":
+            tmp = ptg.node_create("\,")
+            p[0] = ptg.one_child_node("comma_opt", tmp)
+        else:
+            p[0] = ptg.one_child_node("comma_opt", tmp)
 
     def p_array_initializer(self, p):
         '''array_initializer : '{' comma_opt '}' '''
-        p[0] = ArrayInitializer()
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[3])
+        p[0] = ptg.three_child_node("array_initializer", tmp1, p[2], tmp2)
 
     def p_array_initializer2(self, p):
         '''array_initializer : '{' variable_initializers '}'
                              | '{' variable_initializers ',' '}' '''
-        p[0] = ArrayInitializer(p[2])
+        if len(p) == 4:
+            tmp1 = ptg.node_create(p[1])
+            tmp2 = ptg.node_create(p[3])
+            p[0] = ptg.three_child_node("array_initializer", tmp1, p[2], tmp2)
+        elif len(p) == 5:
+            tmp1 = ptg.node_create(p[1])
+            tmp2 = ptg.node_create("\,")
+            tmp3 = ptg.node_create(p[4])
+            p[0] = ptg.four_child_node("array_initializer", tmp1, p[2], tmp2, tmp3)
 
     def p_variable_initializers(self, p):
         '''variable_initializers : variable_initializer
                                  | variable_initializers ',' variable_initializer'''
         if len(p) == 2:
-            p[0] = [p[1]]
-        else:
-            p[0] = p[1] + [p[3]]
+            p[0] = ptg.one_child_node("variable_initializers", p[1])
+        elif len(p) == 4:
+            tmp = ptg.node_create("\,")
+            p[0] = ptg.three_child_node("variable_initializers", p[1], tmp, p[3])
 
     def p_method_invocation(self, p):
         '''method_invocation : NAME '(' argument_list_opt ')' '''
-        p[0] = MethodInvocation(p[1], arguments=p[3])
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[2])
+        tmp3 = ptg.node_create(p[4])
+        p[0] = ptg.four_child_node("method_invocation", tmp1, p[2], tmp2, tmp3)
 
     def p_method_invocation2(self, p):
         '''method_invocation : name '.' type_arguments NAME '(' argument_list_opt ')'
-                             | primary '.' type_arguments NAME '(' argument_list_opt ')'
-                             | SUPER '.' type_arguments NAME '(' argument_list_opt ')' '''
-        p[0] = MethodInvocation(p[4], target=p[1], type_arguments=p[3], arguments=p[6])
+                             | primary '.' type_arguments NAME '(' argument_list_opt ')' '''
+        tmp1 = ptg.node_create(p[2])
+        tmp2 = ptg.node_create(p[4])
+        tmp3 = ptg.node_create(p[5])
+        tmp4 = ptg.node_create(p[7])
+        p[0] = ptg.seven_child_node("method_invocation", p[1], tmp1, p[3], tmp2, tmp3, p[6], tmp4)
 
     def p_method_invocation3(self, p):
-        '''method_invocation : name '.' NAME '(' argument_list_opt ')'
-                             | primary '.' NAME '(' argument_list_opt ')'
-                             | SUPER '.' NAME '(' argument_list_opt ')' '''
-        p[0] = MethodInvocation(p[3], target=p[1], arguments=p[5])
+        '''method_invocation : SUPER '.' type_arguments NAME '(' argument_list_opt ')' '''
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[2])
+        tmp3 = ptg.node_create(p[4])
+        tmp4 = ptg.node_create(p[5])
+        tmp5 = ptg.node_create(p[7])
+        p[0] = ptg.seven_child_node("method_invocation", tmp1, tmp2, p[3], tmp3, tmp4, p[6], tmp5)
 
-    def p_labeled_statement(self, p):
+    def p_method_invocation4(self, p):
+        '''method_invocation : name '.' NAME '(' argument_list_opt ')'
+                             | primary '.' NAME '(' argument_list_opt ')' '''
+        tmp1 = ptg.node_create(p[2])
+        tmp2 = ptg.node_create(p[3])
+        tmp3 = ptg.node_create(p[4])
+        tmp4 = ptg.node_create(p[6])
+        p[0] = ptg.six_child_node("method_invocation", p[1], tmp1,tmp2, tmp3, p[5], tmp4)
+     
+     def p_method_invocation5(self, p):
+        '''method_invocation : SUPER '.' NAME '(' argument_list_opt ')' '''
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[2])
+        tmp3 = ptg.node_create(p[3])
+        tmp4 = ptg.node_create(p[4])
+        tmp5 = ptg.node_create(p[6])
+        p[0] = ptg.six_child_node("method_invocation", tmp1, tmp2, tmp3, tmp4, p[5], tmp5)
+
+   def p_labeled_statement(self, p):
         '''labeled_statement : label ':' statement'''
-        p[3].label = p[1]
-        p[0] = p[3]
+        tmp = ptg.node_create(p[2])
+        p[0] = ptg.three_child_node("labeled_statement", p[1], tmp, p[3])
 
     def p_labeled_statement_no_short_if(self, p):
         '''labeled_statement_no_short_if : label ':' statement_no_short_if'''
-        p[3].label = p[1]
-        p[0] = p[3]
+        tmp = ptg.node_create(p[2])
+        p[0] = ptg.three_child_node("label_statement_no_short_if", p[1], tmp, p[3])
 
     def p_label(self, p):
         '''label : NAME'''
-        p[0] = p[1]
+        tmp = ptg.node_create(p[1])
+        p[0] = ptg.one_child_node("label", tmp)
 
     def p_if_then_statement(self, p):
         '''if_then_statement : IF '(' expression ')' statement'''
-        p[0] = IfThenElse(p[3], p[5])
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[2])
+        tmp3 = ptg.node_create(p[4])
+        p[0] = ptg.five_child_node("if_then_statement", tmp1, tmp2, p[3], tmp3, p[5])
 
     def p_if_then_else_statement(self, p):
         '''if_then_else_statement : IF '(' expression ')' statement_no_short_if ELSE statement'''
-        p[0] = IfThenElse(p[3], p[5], p[7])
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[2])
+        tmp3 = ptg.node_create(p[4])
+        tmp4 = ptg.node_create(p[6])
+        p[0] = ptg.seven_child_node("if_then_else_statement", tmp1, tmp2, p[3], tmp3, p[5], tmp4, p[7])
 
     def p_if_then_else_statement_no_short_if(self, p):
         '''if_then_else_statement_no_short_if : IF '(' expression ')' statement_no_short_if ELSE statement_no_short_if'''
-        p[0] = IfThenElse(p[3], p[5], p[7])
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[2])
+        tmp3 = ptg.node_create(p[4])
+        tmp4 = ptg.node_create(p[6])
+        p[0] = ptg.seven_child_node("if_then_else_statement_no_short_if", tmp1, tmp2, p[3], tmp3, p[5], tmp4, p[7])
 
     def p_while_statement(self, p):
         '''while_statement : WHILE '(' expression ')' statement'''
-        p[0] = While(p[3], p[5])
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[2])
+        tmp3 = ptg.node_create(p[4])
+        p[0] = ptg.five_child_node("while_statement", tmp1, tmp2, p[3], tmp3, p[5])
 
     def p_while_statement_no_short_if(self, p):
         '''while_statement_no_short_if : WHILE '(' expression ')' statement_no_short_if'''
-        p[0] = While(p[3], p[5])
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[2])
+        tmp3 = ptg.node_create(p[4])
+        p[0] = ptg.five_child_node("while_statement_no_short_if", tmp1, tmp2, p[3], tmp3, p[5])
 
     def p_for_statement(self, p):
         '''for_statement : FOR '(' for_init_opt ';' expression_opt ';' for_update_opt ')' statement'''
-        p[0] = For(p[3], p[5], p[7], p[9])
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[2])
+        tmp3 = ptg.node_create(p[4])
+        tmp4 = ptg.node_create(p[6])
+        tmp5 = ptg.node_create(p[8])
+        p[0] = ptg.nine_child_node("for_statement", tmp1, tmp2, p[3], tmp3, p[5], tmp4, p[7], tmp5, p[9])
 
     def p_for_statement_no_short_if(self, p):
         '''for_statement_no_short_if : FOR '(' for_init_opt ';' expression_opt ';' for_update_opt ')' statement_no_short_if'''
-        p[0] = For(p[3], p[5], p[7], p[9])
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[2])
+        tmp3 = ptg.node_create(p[4])
+        tmp4 = ptg.node_create(p[6])
+        tmp5 = ptg.node_create(p[8])
+        p[0] = ptg.nine_child_node("for_statement_no_short_if", tmp1, tmp2, p[3], tmp3, p[5], tmp4, p[7], tmp5, p[9])
 
     def p_for_init_opt(self, p):
         '''for_init_opt : for_init
                         | empty'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("for_init_opt", p[1])
 
     def p_for_init(self, p):
         '''for_init : statement_expression_list
                     | local_variable_declaration'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("for_init", p[1])
 
     def p_statement_expression_list(self, p):
         '''statement_expression_list : statement_expression
                                      | statement_expression_list ',' statement_expression'''
         if len(p) == 2:
-            p[0] = [p[1]]
-        else:
-            p[0] = p[1] + [p[3]]
+            p[0] = ptg.one_child_node("statement_expression_list", p[1])
+        elif len(p) == 4:
+            tmp = ptg.node_create("\,")
+            p[0] = ptg.three_child_node("statement_expression_list", p[1], tmp, p[3])
 
     def p_expression_opt(self, p):
         '''expression_opt : expression
                           | empty'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("expression_opt", p[1])
 
     def p_for_update_opt(self, p):
         '''for_update_opt : for_update
                           | empty'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("for_update_opt", p[1])
 
     def p_for_update(self, p):
         '''for_update : statement_expression_list'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("for_update", p[1])
 
     def p_enhanced_for_statement(self, p):
         '''enhanced_for_statement : enhanced_for_statement_header statement'''
-        p[0] = ForEach(p[1]['type'], p[1]['variable'], p[1]['iterable'], p[2], modifiers=p[1]['modifiers'])
+        p[0] = ptg.two_child_node("enhanced_for_statement", p[1], p[2])
 
     def p_enhanced_for_statement_no_short_if(self, p):
         '''enhanced_for_statement_no_short_if : enhanced_for_statement_header statement_no_short_if'''
-        p[0] = ForEach(p[1]['type'], p[1]['variable'], p[1]['iterable'], p[2], modifiers=p[1]['modifiers'])
+        p[0] = ptg.two_child_node("enhanced_for_statement_no_short_if", p[1], p[2])
 
     def p_enhanced_for_statement_header(self, p):
         '''enhanced_for_statement_header : enhanced_for_statement_header_init ':' expression ')' '''
-        p[1]['iterable'] = p[3]
-        p[0] = p[1]
+        tmp1 = ptg.node_create(p[2])
+        tmp2 = ptg.node_create(p[4])
+        p[0] = ptg.two_child_node("enhanced_for_statement_header", p[1], tmp1, p[3], tmp2)
 
     def p_enhanced_for_statement_header_init(self, p):
         '''enhanced_for_statement_header_init : FOR '(' type NAME dims_opt'''
-        p[0] = {'modifiers': [], 'type': p[3], 'variable': Variable(p[4], dimensions=p[5])}
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[2])
+        tmp3 = ptg.node_create(p[4])
+        p[0] = ptg.five_child_node("enhanced_for_statement_header_init", tmp1, tmp2, p[3], tmp3, p[5])
 
     def p_enhanced_for_statement_header_init2(self, p):
         '''enhanced_for_statement_header_init : FOR '(' modifiers type NAME dims_opt'''
-        p[0] = {'modifiers': p[3], 'type': p[4], 'variable': Variable(p[5], dimensions=p[6])}
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[2])
+        tmp3 = ptg.node_create(p[5])
+        p[0] = ptg.six_child_node("enhanced_for_statement_header_init", tmp1, tmp2, p[3], p[4], tmp3, p[6])
 
     def p_statement_no_short_if(self, p):
         '''statement_no_short_if : statement_without_trailing_substatement
@@ -618,302 +812,416 @@ class StatementParser(object):
                                  | while_statement_no_short_if
                                  | for_statement_no_short_if
                                  | enhanced_for_statement_no_short_if'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("statement_no_short_if", p[1])
 
     def p_assert_statement(self, p):
         '''assert_statement : ASSERT expression ';'
                             | ASSERT expression ':' expression ';' '''
         if len(p) == 4:
-            p[0] = Assert(p[2])
-        else:
-            p[0] = Assert(p[2], message=p[4])
+            tmp1 = ptg.node_create(p[1])
+            tmp2 = ptg.node_create(p[3])
+            p[0] = ptg.three_child_node("assert_statement", tmp1, p[2], tmp2)
+        elif len(p) == 6:
+            tmp1 = ptg.node_create(p[1])
+            tmp2 = ptg.node_create(p[3])
+            tmp3 = ptg.node_create(p[5])
+            p[0] = ptg.five_child_node("assert_statement", tmp1, p[2], tmp2, p[4], tmp3)
 
     def p_empty_statement(self, p):
         '''empty_statement : ';' '''
-        p[0] = Empty()
+        tmp = ptg.node_create(p[1])
+        p[0] = ptg.one_child_node("empty_statement", tmp)
 
     def p_switch_statement(self, p):
         '''switch_statement : SWITCH '(' expression ')' switch_block'''
-        p[0] = Switch(p[3], p[5])
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[2])
+        tmp3 = ptg.node_create(p[4])
+        p[0] = ptg.five_child_node("switch_statement", tmp1, tmp2, p[3], tmp3, p[5])
 
     def p_switch_block(self, p):
         '''switch_block : '{' '}' '''
-        p[0] = []
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[2])
+        p[0] = ptg.two_child_node("switch_block", tmp1, tmp2)
 
     def p_switch_block2(self, p):
         '''switch_block : '{' switch_block_statements '}' '''
-        p[0] = p[2]
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[3])
+        p[0] = ptg.three_child_node("switch_block", tmp1, p[2], tmp2)
 
     def p_switch_block3(self, p):
         '''switch_block : '{' switch_labels '}' '''
-        p[0] = [SwitchCase(p[2])]
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[3])
+        p[0] = ptg.three_child_node("switch_block", tmp1, p[2], tmp2)
 
     def p_switch_block4(self, p):
         '''switch_block : '{' switch_block_statements switch_labels '}' '''
-        p[0] = p[2] + [SwitchCase(p[3])]
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[4])
+        p[0] = ptg.four_child_node("switch_block", tmp1, p[2], p[3], tmp2)
 
     def p_switch_block_statements(self, p):
         '''switch_block_statements : switch_block_statement
                                    | switch_block_statements switch_block_statement'''
         if len(p) == 2:
-            p[0] = [p[1]]
-        else:
-            p[0] = p[1] + [p[2]]
+            p[0] = ptg.one_child_node("switch_block_statements", p[1])
+        elif len(p) == 3:
+            p[0] = ptg.two_child_node("switch_block_statements", p[1], p[2])
 
     def p_switch_block_statement(self, p):
         '''switch_block_statement : switch_labels block_statements'''
-        p[0] = SwitchCase(p[1], body=p[2])
+        p[0] = ptg.two_child_node("switch_block_statement", p[1], p[2])
 
     def p_switch_labels(self, p):
         '''switch_labels : switch_label
                          | switch_labels switch_label'''
         if len(p) == 2:
-            p[0] = [p[1]]
-        else:
-            p[0] = p[1] + [p[2]]
+            p[0] = ptg.one_child_node("switch_labels", p[1])
+        elif len(p) == 3:
+            p[0] = ptg.two_child_node("switch_labels", p[1], p[2])
 
     def p_switch_label(self, p):
         '''switch_label : CASE constant_expression ':'
                         | DEFAULT ':' '''
         if len(p) == 3:
-            p[0] = 'default'
-        else:
-            p[0] = p[2]
+            tmp1 = ptg.node_create(p[1])
+            tmp2 = ptg.node_create(p[3])
+            p[0] = ptg.three_child_node("switch_label", tmp1, p[2], tmp2)
+        elif len(p) == 4:
+            tmp1 = ptg.node_create(p[1])
+            tmp2 = ptg.node_create(p[2])
+            p[0] = ptg.two_child_node("switch_label", tmp1, tmp2)
 
     def p_constant_expression(self, p):
         '''constant_expression : expression'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("constant_expression", p[1])
 
     def p_do_statement(self, p):
         '''do_statement : DO statement WHILE '(' expression ')' ';' '''
-        p[0] = DoWhile(p[5], body=p[2])
-
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[3])
+        tmp3 = ptg.node_create(p[4])
+        tmp4 = ptg.node_create(p[6])
+        tmp5 = ptg.node_create(p[7])
+        p[0] = ptg.seven_child_node("do_statement", tmp1, p[2], tmp2, tmp3, p[5], tmp4, tmp5)
+        
     def p_break_statement(self, p):
         '''break_statement : BREAK ';'
                            | BREAK NAME ';' '''
         if len(p) == 3:
-            p[0] = Break()
-        else:
-            p[0] = Break(p[2])
-
+            tmp1 = ptg.node_create(p[1])
+            tmp2 = ptg.node_create(p[2])
+            p[0] = ptg.two_child_node("break_statement", tmp1, tmp2)
+        elif len(p) == 4:
+            tmp1 = ptg.node_create(p[1])
+            tmp2 = ptg.node_create(p[2])
+            tmp3 = ptg.node_create(p[3])
+            p[0] = ptg.three_child_node("break_statement", tmp1, tmp2, tmp3)
+    
     def p_continue_statement(self, p):
         '''continue_statement : CONTINUE ';'
                               | CONTINUE NAME ';' '''
         if len(p) == 3:
-            p[0] = Continue()
-        else:
-            p[0] = Continue(p[2])
+            tmp1 = ptg.node_create(p[1])
+            tmp2 = ptg.node_create(p[2])
+            p[0] = ptg.two_child_node("continue_statement", tmp1, tmp2)
+        elif len(p) == 4:
+            tmp1 = ptg.node_create(p[1])
+            tmp2 = ptg.node_create(p[2])
+            tmp3 = ptg.node_create(p[3])
+            p[0] = ptg.three_child_node("continue_statement", tmp1, tmp2, tmp3)
 
     def p_return_statement(self, p):
         '''return_statement : RETURN expression_opt ';' '''
-        p[0] = Return(p[2])
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[3])
+        p[0] = ptg.three_child_node("return_statement", tmp1, p[2], tmp2)
 
     def p_synchronized_statement(self, p):
         '''synchronized_statement : SYNCHRONIZED '(' expression ')' block'''
-        p[0] = Synchronized(p[3], p[5])
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[2])
+        tmp3 = ptg.node_create(p[4])
+        p[0] = ptg.five_child_node("synchronized_statement", tmp1, tmp2, p[3], tmp3, p[5])
 
     def p_throw_statement(self, p):
         '''throw_statement : THROW expression ';' '''
-        p[0] = Throw(p[2])
-
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[3])
+        p[0] = ptg.three_child_node("throw_statement", tmp1, p[2], tmp2)
+    
     def p_try_statement(self, p):
         '''try_statement : TRY try_block catches
                          | TRY try_block catches_opt finally'''
         if len(p) == 4:
-            p[0] = Try(p[2], catches=p[3])
-        else:
-            p[0] = Try(p[2], catches=p[3], _finally=p[4])
+            tmp = ptg.node_create(p[1])
+            p[0] = ptg.three_child_node("try_statement", tmp, p[2], p[3])
+        elif len(p) == 5:
+            tmp = ptg.node_create(p[1])
+            p[0] = ptg.four_child_node("try_statement", tmp, p[2], p[3], p[4])
 
     def p_try_block(self, p):
         '''try_block : block'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("try_block", p[1])
 
     def p_catches(self, p):
         '''catches : catch_clause
                    | catches catch_clause'''
         if len(p) == 2:
-            p[0] = [p[1]]
-        else:
-            p[0] = p[1] + [p[2]]
+            p[0] = ptg.one_child_node("catches", p[1])
+        elif len(p) == 3:
+            p[0] = ptg.two_child_node("catches", p[1], p[2])
 
     def p_catches_opt(self, p):
         '''catches_opt : catches'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("catches_opt", p[1])
 
     def p_catches_opt2(self, p):
         '''catches_opt : empty'''
-        p[0] = []
+        p[0] = ptg.one_child_node("catches_opt", p[1])
 
     def p_catch_clause(self, p):
         '''catch_clause : CATCH '(' catch_formal_parameter ')' block'''
-        p[0] = Catch(p[3]['variable'], types=p[3]['types'], modifiers=p[3]['modifiers'], block=p[5])
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[2])
+        tmp3 = ptg.node_create(p[4])
+        p[0] = ptg.five_child_node("catch_clause", tmp1, tmp2, p[3], tmp3, p[5])
 
     def p_catch_formal_parameter(self, p):
         '''catch_formal_parameter : modifiers_opt catch_type variable_declarator_id'''
-        p[0] = {'modifiers': p[1], 'types': p[2], 'variable': p[3]}
+        p[0] = ptg.three_child_node("catch_formal_parameter", p[1], p[2], p[3])
 
     def p_catch_type(self, p):
         '''catch_type : union_type'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("catch_type", p[1])
 
     def p_union_type(self, p):
         '''union_type : type
                       | union_type '|' type'''
         if len(p) == 2:
-            p[0] = [p[1]]
-        else:
-            p[0] = p[1] + [p[3]]
+            p[0] = ptg.one_child_node("union_type", p[1])
+        elif len(p) == 4:
+            tmp = ptg.node_create(p[2])
+            p[0] = ptg.three_child_node("union_type", p[1], tmp, p[3])
 
     def p_try_statement_with_resources(self, p):
         '''try_statement_with_resources : TRY resource_specification try_block catches_opt
                                         | TRY resource_specification try_block catches_opt finally'''
         if len(p) == 5:
-            p[0] = Try(p[3], resources=p[2], catches=p[4])
-        else:
-            p[0] = Try(p[3], resources=p[2], catches=p[4], _finally=p[5])
+            tmp = ptg.node_create(p[1])
+            p[0] = ptg.four_child_node("try_statement_with_resources", tmp, p[2], p[3], p[4])
+        elif len(p) == 6:
+            tmp = ptg.node_create(p[1])
+            p[0] = ptg.five_create("try_statement_with_resources", tmp, p[2], p[3], p[4], p[5])
 
     def p_resource_specification(self, p):
         '''resource_specification : '(' resources semi_opt ')' '''
-        p[0] = p[2]
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[4])
+        p[0] = ptg.four_child_node("resource_specification", tmp1, p[2], p[3], tmp2)
 
     def p_semi_opt(self, p):
         '''semi_opt : ';'
                     | empty'''
-        # ignore
+        tmp = ptg.node_create(p[1])
+        p[0] = ptg.one_child_node("semi_opt", tmp)
 
     def p_resources(self, p):
         '''resources : resource
                      | resources trailing_semicolon resource'''
         if len(p) == 2:
-            p[0] = [p[1]]
-        else:
-            p[0] = p[1] + [p[3]]
+            p[0] = ptg.one_child_node("resources", p[1])
+        elif len(p) == 4:
+            p[0] = ptg.three_child_node("resources", p[1], p[2], p[3])
 
     def p_trailing_semicolon(self, p):
         '''trailing_semicolon : ';' '''
-        # ignore
+        tmp = ptg.node_create(p[1])
+        p[0] = ptg.one_child_node("trailing_semicolon", tmp)
 
     def p_resource(self, p):
         '''resource : type variable_declarator_id '=' variable_initializer'''
-        p[0] = Resource(p[2], type=p[1], initializer=p[4])
+        tmp = ptg.node_create(p[3])
+        p[0] = ptg.four_child_node("resource", p[1], p[2], tmp, p[4])
 
     def p_resource2(self, p):
         '''resource : modifiers type variable_declarator_id '=' variable_initializer'''
-        p[0] = Resource(p[3], type=p[2], modifiers=p[1], initializer=p[5])
+        tmp = ptg.node_create(p[4])
+        p[0] = ptg.five_child_node("resource", p[1], p[2], p[3], tmp, p[5])
 
     def p_finally(self, p):
         '''finally : FINALLY block'''
-        p[0] = p[2]
+        tmp = ptg.node_create(p[1])
+        p[0] = ptg.two_child_node("finally", tmp, p[2])
 
     def p_explicit_constructor_invocation(self, p):
         '''explicit_constructor_invocation : THIS '(' argument_list_opt ')' ';'
                                            | SUPER '(' argument_list_opt ')' ';' '''
-        p[0] = ConstructorInvocation(p[1], arguments=p[3])
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[2])
+        tmp3 = ptg.node_create(p[4])
+        tmp4 = ptg.node_create(p[5])
+        p[0] = ptg.five_child_node("explicit_constructor_invocation", tmp1, tmp2, p[3], tmp3, tmp4)
 
     def p_explicit_constructor_invocation2(self, p):
         '''explicit_constructor_invocation : type_arguments SUPER '(' argument_list_opt ')' ';'
                                            | type_arguments THIS '(' argument_list_opt ')' ';' '''
-        p[0] = ConstructorInvocation(p[2], type_arguments=p[1], arguments=p[4])
-
+        tmp1 = ptg.node_create(p[2])
+        tmp2 = ptg.node_create(p[3])
+        tmp3 = ptg.node_create(p[5])
+        tmp4 = ptg.node_create(p[6])
+        p[0] = ptg.six_child_node("explicit_constructor_invocation", p[1], tmp1, tmp2, p[4], tmp3, tmp4)
+    
     def p_explicit_constructor_invocation3(self, p):
         '''explicit_constructor_invocation : primary '.' SUPER '(' argument_list_opt ')' ';'
                                            | name '.' SUPER '(' argument_list_opt ')' ';'
                                            | primary '.' THIS '(' argument_list_opt ')' ';'
                                            | name '.' THIS '(' argument_list_opt ')' ';' '''
-        p[0] = ConstructorInvocation(p[3], target=p[1], arguments=p[5])
+        tmp1 = ptg.node_create(p[2])
+        tmp2 = ptg.node_create(p[3])
+        tmp3 = ptg.node_create(p[4])
+        tmp4 = ptg.node_create(p[6])
+        tmp5 = ptg.node_create(p[7])
+        p[0] = ptg.seven_child_node("explicit_constructor_invocation", p[1], tmp1, tmp2, tmp3, p[5], tmp4, tmp5)
 
     def p_explicit_constructor_invocation4(self, p):
         '''explicit_constructor_invocation : primary '.' type_arguments SUPER '(' argument_list_opt ')' ';'
                                            | name '.' type_arguments SUPER '(' argument_list_opt ')' ';'
                                            | primary '.' type_arguments THIS '(' argument_list_opt ')' ';'
                                            | name '.' type_arguments THIS '(' argument_list_opt ')' ';' '''
-        p[0] = ConstructorInvocation(p[4], target=p[1], type_arguments=p[3], arguments=p[6])
+        tmp1 = ptg.node_create(p[2])
+        tmp2 = ptg.node_create(p[4])
+        tmp3 = ptg.node_create(p[5])
+        tmp4 = ptg.node_create(p[7])
+        tmp5 = ptg.node_create(p[8])
+        p[0] = ptg.eight_child_node("explicit_constructor_invocation", p[1], tmp1, p[3], tmp2, tmp3, p[6], tmp4, tmp5)
 
     def p_class_instance_creation_expression(self, p):
         '''class_instance_creation_expression : NEW type_arguments class_type '(' argument_list_opt ')' class_body_opt'''
-        p[0] = InstanceCreation(p[3], type_arguments=p[3], arguments=p[5], body=p[7])
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[4])
+        tmp3 = ptg.node_create(p[6])
+        p[0] = ptg.seven_child_node("class_instance_creation_expression", tmp1, p[2], p[3], tmp2, p[5], tmp3, p[7])
 
     def p_class_instance_creation_expression2(self, p):
         '''class_instance_creation_expression : NEW class_type '(' argument_list_opt ')' class_body_opt'''
-        p[0] = InstanceCreation(p[2], arguments=p[4], body=p[6])
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[3])
+        tmp3 = ptg.node_create(p[5])
+        p[0] = ptg.six_child_node("class_instance_creation_expression", tmp1, p[2], tmp2, p[4], tmp3, p[6])
 
     def p_class_instance_creation_expression3(self, p):
         '''class_instance_creation_expression : primary '.' NEW type_arguments class_type '(' argument_list_opt ')' class_body_opt'''
-        p[0] = InstanceCreation(p[5], enclosed_in=p[1], type_arguments=p[4], arguments=p[7], body=p[9])
+        tmp1 = ptg.node_create(p[2])
+        tmp2 = ptg.node_create(p[3])
+        tmp3 = ptg.node_create(p[6])
+        tmp4 = ptg.node_create(p[8])
+        p[0] = ptg.eight_child_node("class_instance_creation_expression", p[1], tmp1, tmp2, p[4], p[5], tmp3, p[7], tmp4)
 
     def p_class_instance_creation_expression4(self, p):
         '''class_instance_creation_expression : primary '.' NEW class_type '(' argument_list_opt ')' class_body_opt'''
-        p[0] = InstanceCreation(p[4], enclosed_in=p[1], arguments=p[6], body=p[8])
+        tmp1 = ptg.node_create(p[2])
+        tmp2 = ptg.node_create(p[3])
+        tmp3 = ptg.node_create(p[6])
+        tmp4 = ptg.node_create(p[8])
+        p[0] = ptg.eight_child_node("class_instance_creation_instance", p[1], tmp1, tmp2, p[4], p[5], tmp3, p[7], tmp4)
 
     def p_class_instance_creation_expression5(self, p):
         '''class_instance_creation_expression : class_instance_creation_expression_name NEW class_type '(' argument_list_opt ')' class_body_opt'''
-        p[0] = InstanceCreation(p[3], enclosed_in=p[1], arguments=p[5], body=p[7])
+        tmp1 = ptg.node_create(p[2])
+        tmp2 = ptg.node_create(p[4])
+        tmp3 = ptg.node_create(p[6])
+        p[0] = ptg.eight_child_node("class_instance_creation_instance", p[1], tmp1, p[3], tmp2, p[5], tmp3, p[7])
 
     def p_class_instance_creation_expression6(self, p):
         '''class_instance_creation_expression : class_instance_creation_expression_name NEW type_arguments class_type '(' argument_list_opt ')' class_body_opt'''
-        p[0] = InstanceCreation(p[4], enclosed_in=p[1], type_arguments=p[3], arguments=p[6], body=p[8])
+        tmp1 = ptg.node_create(p[2])
+        tmp2 = ptg.node_create(p[5])
+        tmp3 = ptg.node_create(p[7])
+        p[0] = ptg.eight_child_node("class_instance_creation_instance", p[1], tmp1, p[3], p[4], tmp2, p[6] tmp3, p[8])
 
     def p_class_instance_creation_expression_name(self, p):
         '''class_instance_creation_expression_name : name '.' '''
-        p[0] = p[1]
+        tmp = ptg.node_create(p[2])
+        p[0] = ptg.two_child_node("class_instance_creation_expression_name", p[1], tmp)
 
     def p_class_body_opt(self, p):
         '''class_body_opt : class_body
                           | empty'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("class_body_opt", p[1])
 
     def p_field_access(self, p):
-        '''field_access : primary '.' NAME
-                        | SUPER '.' NAME'''
-        p[0] = FieldAccess(p[3], p[1])
+        '''field_access : primary '.' NAME'''
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[2])
+        p[0] = ptg.three_child_node("field_access", p[1], tmp2, tmp3)
+
+    def p_field_access2(self, p)
+        '''field access : SUPER '.' NAME'''
+        tmp1 = ptg.node_create(p[1])
+        tmp2 = ptg.node_create(p[2])
+        tmp3 = ptg.node_create(p[3])
+        p[0] = ptg.three_child_node("field_access", tmp1, tmp2, tmp3)
 
     def p_array_access(self, p):
         '''array_access : name '[' expression ']'
                         | primary_no_new_array '[' expression ']'
                         | array_creation_with_array_initializer '[' expression ']' '''
-        p[0] = ArrayAccess(p[3], p[1])
+        tmp1 = ptg.node_create(p[2])
+        tmp2 = ptg.node_create(p[4])
+        p[0] = ptg.four_child_node("array_access", p[1], tmp1, p[3], tmp2)
 
     def p_array_creation_with_array_initializer(self, p):
         '''array_creation_with_array_initializer : NEW primitive_type dim_with_or_without_exprs array_initializer
                                                  | NEW class_or_interface_type dim_with_or_without_exprs array_initializer'''
-        p[0] = ArrayCreation(p[2], dimensions=p[3], initializer=p[4])
+        tmp1 = ptg.node_create(p[1])
+        p[0] = ptg.four_child_node("array_creation_with_array_initializer", p[1], tmp, p[3], p[4])
 
     def p_dim_with_or_without_exprs(self, p):
         '''dim_with_or_without_exprs : dim_with_or_without_expr
                                      | dim_with_or_without_exprs dim_with_or_without_expr'''
         if len(p) == 2:
-            p[0] = [p[1]]
-        else:
-            p[0] = p[1] + [p[2]]
+            p[0] = ptg.one_child_node("dim_with_or_without_exprs", p[1])
+        elif len(p) == 3:
+            p[0] = ptg.two_child_node("dim_with_or_without_exprs", p[1], p[2])
 
     def p_dim_with_or_without_expr(self, p):
         '''dim_with_or_without_expr : '[' expression ']'
                                     | '[' ']' '''
         if len(p) == 3:
-            p[0] = None
-        else:
-            p[0] = p[2]
+            tmp1 = ptg.node_create(p[1])
+            tmp2 = ptg.node_create(p[2])
+            p[0] = ptg.two_child_node("dim_with_or_without_expr", tmp1, tmp2)
+        elif len(p) == 4:
+            tmp1 = ptg.node_create(p[1])
+            tmp2 = ptg.node_create(p[3])
+            p[0] = ptg.three_child_node("dim_with_or_without_expr", tmp1, p[2], tmp2)
 
     def p_array_creation_without_array_initializer(self, p):
         '''array_creation_without_array_initializer : NEW primitive_type dim_with_or_without_exprs
                                                     | NEW class_or_interface_type dim_with_or_without_exprs'''
-        p[0] = ArrayCreation(p[2], dimensions=p[3])
+        tmp = ptg.node_create(p[1])
+        p[0] = ptg.three_child_node("array_creation_without_array_initializer", tmp, p[2], p[3])
 
 class NameParser(object):
 
     def p_name(self, p):
         '''name : simple_name
                 | qualified_name'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("name", p[1])
 
     def p_simple_name(self, p):
         '''simple_name : NAME'''
-        p[0] = Name(p[1])
+        tmp = ptg.node_create(p[1])
+        p[0] = ptg.one_child_node("simple_name", tmp)
 
     def p_qualified_name(self, p):
         '''qualified_name : name '.' simple_name'''
-        p[1].append_name(p[3])
-        p[0] = p[1]
+        tmp = ptg.node_create(p[2])
+        p[0] = ptg.one_child_node("qualified_name", p[1], tmp, p[3])
 
 class LiteralParser(object):
 
@@ -924,25 +1232,26 @@ class LiteralParser(object):
                    | TRUE
                    | FALSE
                    | NULL'''
-        p[0] = Literal(p[1])
+        tmp = ptg.node_create(p[1])
+        p[0] = ptg.one_child_node("literal", tmp)
 
 class TypeParser(object):
 
     def p_modifiers_opt(self, p):
         '''modifiers_opt : modifiers'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("modifiers_opt", p[1])
 
     def p_modifiers_opt2(self, p):
         '''modifiers_opt : empty'''
-        p[0] = []
+        p[0] = ptg.one_child_node("modifiers_opt", p[1])
 
     def p_modifiers(self, p):
         '''modifiers : modifier
                      | modifiers modifier'''
         if len(p) == 2:
-            p[0] = [p[1]]
-        else:
-            p[0] = p[1] + [p[2]]
+            p[0] = ptg.one_child_node("modifiers", p[1])
+        elif len(p) == 3:
+            p[0] = ptg.two_child_node("modifiers", p[1], p[2])
 
     def p_modifier(self, p):
         '''modifier : PUBLIC
@@ -955,14 +1264,18 @@ class TypeParser(object):
                     | SYNCHRONIZED
                     | TRANSIENT
                     | VOLATILE
-                    | STRICTFP
-                    | annotation'''
-        p[0] = p[1]
+                    | STRICTFP'''
+        tmp = ptg.node_create(p[1])
+        p[0] = ptg.one_child_node("modifier", tmp)
+
+    def p_modifier2(self, p): 
+        '''modifier: annotation'''
+        p[0] = ptg.one_child_node("modifier", p[1])
 
     def p_type(self, p):
         '''type : primitive_type
                 | reference_type'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("type", p[1])
 
     def p_primitive_type(self, p):
         '''primitive_type : BOOLEAN
@@ -974,29 +1287,31 @@ class TypeParser(object):
                           | CHAR
                           | FLOAT
                           | DOUBLE'''
-        p[0] = p[1]
+        tmp = ptg.node_create(p[1])
+        p[0] = ptg.one_child_node("primitive_type", tmp)
 
     def p_reference_type(self, p):
         '''reference_type : class_or_interface_type
                           | array_type'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("reference_type", p[1])
 
     def p_class_or_interface_type(self, p):
         '''class_or_interface_type : class_or_interface
                                    | generic_type'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("class_or_interface_type", p[1])
 
     def p_class_type(self, p):
         '''class_type : class_or_interface_type'''
-        p[0] = p[1]
+        p[0] = ptg.one_child_node("class_type", p[1])
 
     def p_class_or_interface(self, p):
         '''class_or_interface : name
                               | generic_type '.' name'''
         if len(p) == 2:
-            p[0] = Type(p[1])
-        else:
-            p[0] = Type(p[3], enclosed_in=p[1])
+            p[0] = ptg.one_child_node("class_or_interface", p[1])
+        elif len(p) == 4:
+            tmp = ptg.node_create(p[2])
+            p[0] = ptg.three_child_node("class_or_interface", p[1], tmp, p[3])
 
     def p_generic_type(self, p):
         '''generic_type : class_or_interface type_arguments'''
