@@ -8,6 +8,15 @@ the implementation language, java as the source language and x86 as the target l
 ```
 sudo pip3 install -r requirements.txt
 ```
+
+### Running
+
+```
+python3 jcp/parser.py [-g] file_name
+```
+
+-g: debug flag
+
 ### Dependencies
 
 * pydot
@@ -22,5 +31,4 @@ sudo pip3 install -r requirements.txt
 
 ### References
 
-* The grammar that we have used is inspired by [ANTLR Java Grammar](https://github.com/antlr/antlr4/blob/master/tool-testsuite/test/org/antlr/v4/test/tool/Java.g4)
-* The class structure and lexer is inspired by [plyj](https://github.com/musiKk/plyj)
+* The grammar that we have used is taken from [plyj](https://github.com/musiKk/plyj)
