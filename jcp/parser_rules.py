@@ -4,7 +4,7 @@ import lexer
 ast = ""
 
 class Node:
-    def __init__(self, name, value, type, children=None):
+    def __init__(self, name, value="", type="", children=None):
         self.name = name
         self.value = value
         self.type = type
@@ -424,21 +424,25 @@ class ExpressionParser(object):
         '''one_dim_loop : '[' ']' '''
         p[0] = p[1] + p[2]
 
-    # TODO: Cast Expressions not done
     def p_cast_expression(self, p):
         '''cast_expression : '(' primitive_type dims_opt ')' unary_expression'''
+        p[0] = Node("CastExpr", type=p[2]+p[3], children=[p[5]])
 
     def p_cast_expression2(self, p):
         '''cast_expression : '(' name type_arguments dims_opt ')' unary_expression_not_plus_minus'''
+        p[0] = Node("CastExpr", type=p[2].value+p[3]+p[4], children=[p[6]])
 
     def p_cast_expression3(self, p):
         '''cast_expression : '(' name type_arguments '.' class_or_interface_type dims_opt ')' unary_expression_not_plus_minus'''
+        p[0] = Node("CastExpr", type=p[2].value+p[3]+p[5]+p[6], children=[p[8]])
 
     def p_cast_expression4(self, p):
         '''cast_expression : '(' name ')' unary_expression_not_plus_minus'''
+        p[0] = Node("CastExpr", type=p[2].value, children=[p[4]])
 
     def p_cast_expression5(self, p):
         '''cast_expression : '(' name dims ')' unary_expression_not_plus_minus'''
+        p[0] = Node("CastExpr", type=p[2].value+p[3], children=[p[5]])
 
 class StatementParser(object):
 
@@ -629,7 +633,7 @@ class StatementParser(object):
         tmp3 = ptg.node_create(p[4])
         tmp4 = ptg.node_create(p[6])
         p[0] = ptg.six_child_node("method_invocation", p[1], tmp1,tmp2, tmp3, p[5], tmp4)
-     
+
     def p_method_invocation5(self, p):
         '''method_invocation : SUPER '.' NAME '(' argument_list_opt ')' '''
         tmp1 = ptg.node_create(p[1])
@@ -872,7 +876,7 @@ class StatementParser(object):
         tmp4 = ptg.node_create(p[6])
         tmp5 = ptg.node_create(p[7])
         p[0] = ptg.seven_child_node("do_statement", tmp1, p[2], tmp2, tmp3, p[5], tmp4, tmp5)
-        
+
     def p_break_statement(self, p):
         '''break_statement : BREAK ';'
                            | BREAK NAME ';' '''
@@ -885,7 +889,7 @@ class StatementParser(object):
             tmp2 = ptg.node_create(p[2])
             tmp3 = ptg.node_create(p[3])
             p[0] = ptg.three_child_node("break_statement", tmp1, tmp2, tmp3)
-    
+
     def p_continue_statement(self, p):
         '''continue_statement : CONTINUE ';'
                               | CONTINUE NAME ';' '''
@@ -917,7 +921,7 @@ class StatementParser(object):
         tmp1 = ptg.node_create(p[1])
         tmp2 = ptg.node_create(p[3])
         p[0] = ptg.three_child_node("throw_statement", tmp1, p[2], tmp2)
-    
+
     def p_try_statement(self, p):
         '''try_statement : TRY try_block catches
                          | TRY try_block catches_opt finally'''
@@ -1039,7 +1043,7 @@ class StatementParser(object):
         tmp3 = ptg.node_create(p[5])
         tmp4 = ptg.node_create(p[6])
         p[0] = ptg.six_child_node("explicit_constructor_invocation", p[1], tmp1, tmp2, p[4], tmp3, tmp4)
-    
+
     def p_explicit_constructor_invocation3(self, p):
         '''explicit_constructor_invocation : primary '.' SUPER '(' argument_list_opt ')' ';'
                                            | name '.' SUPER '(' argument_list_opt ')' ';'
@@ -1263,8 +1267,7 @@ class TypeParser(object):
                           | CHAR
                           | FLOAT
                           | DOUBLE'''
-        tmp = ptg.node_create(p[1])
-        p[0] = ptg.one_child_node("primitive_type", tmp)
+        p[0] = p[1]
 
     def p_reference_type(self, p):
         '''reference_type : class_or_interface_type
@@ -1336,7 +1339,7 @@ class TypeParser(object):
         else:
             tmp = ptg.node_create("\,")
             p[0] = ptg.three_child_node("type_argument_list",  p[1], tmp, p[3])
-       
+
     def p_type_argument(self, p):
         '''type_argument : reference_type
                          | wildcard'''
@@ -2284,4 +2287,4 @@ class JavaParser(ExpressionParser, NameParser, LiteralParser, TypeParser, ClassP
 
     def p_empty(self, p):
         '''empty :'''
-        p[0] = ptg.node_create("EMPTY")
+        p[0] = ""
