@@ -24,25 +24,27 @@ class ExpressionParser(object):
 
     def p_expression(self, p):
         '''expression : assignment_expression'''
-        p[0] = ptg.one_child_node("expression", p[1])
+        p[0] = p[1]
+        p[0].print_tree()
+        print(ast)
 
     def p_expression_not_name(self, p):
         '''expression_not_name : assignment_expression_not_name'''
-        p[0] = ptg.one_child_node("expression_not_name", p[1])
+        p[0] = p[1]
 
     def p_assignment_expression(self, p):
         '''assignment_expression : assignment
                                  | conditional_expression'''
-        p[0] = ptg.one_child_node("assignment_expression", p[1])
+        p[0] = p[1]
 
     def p_assignment_expression_not_name(self, p):
         '''assignment_expression_not_name : assignment
                                           | conditional_expression_not_name'''
-        p[0] = ptg.one_child_node("assignment_expression_not_name", p[1])
+        p[0] = p[1]
 
     def p_assignment(self, p):
         '''assignment : postfix_expression assignment_operator assignment_expression'''
-        p[0] = ptg.three_child_node("assignment", p[1], p[2], p[3])
+        p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
 
     def p_assignment_operator(self, p):
         '''assignment_operator : '='
@@ -57,134 +59,118 @@ class ExpressionParser(object):
                                | AND_ASSIGN
                                | OR_ASSIGN
                                | XOR_ASSIGN'''
-        tmp = ptg.node_create(p[1])
-        p[0] = ptg.one_child_node("assignment_operator", tmp)
+        p[0] = p[1]
 
     def p_conditional_expression(self, p):
         '''conditional_expression : conditional_or_expression
                                   | conditional_or_expression '?' expression ':' conditional_expression'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("conditional_expression", p[1])
+            p[0] = p[1]
         elif len(p) == 6:
-            tmp1 = ptg.node_create(p[2])
-            tmp2 = ptg.node_create(p[4])
-            p[0] = ptg.five_child_node("conditional_expression", p[1], tmp1, p[3], tmp2, p[5])
+            p[0] = Node("BinaryOperator", "", "", [p[3], p[5]])
 
     def p_conditional_expression_not_name(self, p):
         '''conditional_expression_not_name : conditional_or_expression_not_name
                                            | conditional_or_expression_not_name '?' expression ':' conditional_expression
                                            | name '?' expression ':' conditional_expression'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("conditional_expression_not_name", p[1])
+            p[0] = p[1]
         elif len(p) == 6:
-            tmp1 = ptg.node_create(p[2])
-            tmp2 = ptg.node_create(p[4])
-            p[0] = ptg.five_child_node("conditional_expression_not_name", p[1], tmp1, p[3], tmp2, p[5])
+            p[0] = Node("BinaryOperator", "", "", [p[3], p[5]])
 
     def p_conditional_or_expression(self, p):
         '''conditional_or_expression : conditional_and_expression
                                      | conditional_or_expression OR conditional_and_expression'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("conditional_or_expression", p[1])
+            p[0] = p[1]
         elif len(p) == 4:
-            tmp = ptg.node_create(p[2])
-            p[0] = ptg.three_child_node("conditional_or_expression", p[1], tmp, p[3])
+            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
 
     def p_conditional_or_expression_not_name(self, p):
         '''conditional_or_expression_not_name : conditional_and_expression_not_name
                                               | conditional_or_expression_not_name OR conditional_and_expression
                                               | name OR conditional_and_expression'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("conditional_or_expression_not_name", p[1])
+            p[0] = p[1]
         elif len(p) == 4:
-            tmp = ptg.node_create(p[2])
-            p[0] = ptg.three_child_node("conditional_or_expression_not_name", p[1], tmp, p[3])
+            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
 
     def p_conditional_and_expression(self, p):
         '''conditional_and_expression : inclusive_or_expression
                                       | conditional_and_expression AND inclusive_or_expression'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("conditional_and_expression", p[1])
+            p[0] = p[1]
         elif len(p) == 4:
-            tmp = ptg.node_create(p[2])
-            p[0] = ptg.three_child_node("conditional_and_expression", p[1], tmp, p[3])
+            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
 
     def p_conditional_and_expression_not_name(self, p):
         '''conditional_and_expression_not_name : inclusive_or_expression_not_name
                                                | conditional_and_expression_not_name AND inclusive_or_expression
                                                | name AND inclusive_or_expression'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("conditional_and_expression_not_name", p[1])
+            p[0] = p[1]
         elif len(p) == 4:
-            tmp = ptg.node_create(p[2])
-            p[0] = ptg.three_child_node("conditional_and_expression_not_name", p[1], tmp, p[3])
+            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
 
     def p_inclusive_or_expression(self, p):
         '''inclusive_or_expression : exclusive_or_expression
                                    | inclusive_or_expression '|' exclusive_or_expression'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("inclusive_or_expression", p[1])
+            p[0] = p[1]
         elif len(p) == 4:
-            tmp = ptg.node_create(p[2])
-            p[0] = ptg.three_child_node("inclusive_or_expression", p[1], tmp, p[3])
+            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
 
     def p_inclusive_or_expression_not_name(self, p):
         '''inclusive_or_expression_not_name : exclusive_or_expression_not_name
                                             | inclusive_or_expression_not_name '|' exclusive_or_expression
                                             | name '|' exclusive_or_expression'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("inclusive_or_expression_not_name", p[1])
+            p[0] = p[1]
         elif len(p) == 4:
-            tmp = ptg.node_create(p[2])
-            p[0] = ptg.three_child_node("inclusive_or_expression_not_name", p[1], tmp, p[3])
+            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
 
     def p_exclusive_or_expression(self, p):
         '''exclusive_or_expression : and_expression
                                    | exclusive_or_expression '^' and_expression'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("exclusive_or_expression", p[1])
+            p[0] = p[1]
         elif len(p) == 4:
-            tmp = ptg.node_create(p[2])
-            p[0] = ptg.three_child_node("exclusive_or_expression", p[1], tmp, p[3])
+            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
 
     def p_exclusive_or_expression_not_name(self, p):
         '''exclusive_or_expression_not_name : and_expression_not_name
                                             | exclusive_or_expression_not_name '^' and_expression
                                             | name '^' and_expression'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("exclusive_or_expression_not_name", p[1])
+            p[0] = p[1]
         elif len(p) == 4:
-            tmp = ptg.node_create(p[2])
-            p[0] = ptg.three_child_node("exclusive_or_expression_not_name", p[1], tmp, p[3])
+            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
 
     def p_and_expression(self, p):
         '''and_expression : equality_expression
                           | and_expression '&' equality_expression'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("and_expression", p[1])
+            p[0] = p[1]
         elif len(p) == 4:
-            tmp = ptg.node_create(p[2])
-            p[0] = ptg.three_child_node("and_expression", p[1], tmp, p[3])
+            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
 
     def p_and_expression_not_name(self, p):
         '''and_expression_not_name : equality_expression_not_name
                                    | and_expression_not_name '&' equality_expression
                                    | name '&' equality_expression'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("and_expression_not_name", p[1])
+            p[0] = p[1]
         elif len(p) == 4:
-            tmp = ptg.node_create(p[2])
-            p[0] = ptg.three_child_node("and_expression_not_name", p[1], tmp, p[3])
+            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
 
     def p_equality_expression(self, p):
         '''equality_expression : instanceof_expression
                                | equality_expression EQ instanceof_expression
                                | equality_expression NEQ instanceof_expression'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("equality_expression", p[1])
+            p[0] = p[1]
         elif len(p) == 4:
-            tmp = ptg.node_create(p[2])
-            p[0] = ptg.three_child_node("equality_expression", p[1], tmp, p[3])
+            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
 
     def p_equality_expression_not_name(self, p):
         '''equality_expression_not_name : instanceof_expression_not_name
@@ -193,10 +179,9 @@ class ExpressionParser(object):
                                         | equality_expression_not_name NEQ instanceof_expression
                                         | name NEQ instanceof_expression'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("equality_expression_not_name", p[1])
+            p[0] = p[1]
         elif len(p) == 4:
-            tmp = ptg.node_create(p[2])
-            p[0] = ptg.three_child_node("equality_expression_not_name", p[1], tmp, p[3])
+            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
 
     def p_instanceof_expression(self, p):
         '''instanceof_expression : relational_expression
@@ -211,10 +196,9 @@ class ExpressionParser(object):
                                           | name INSTANCEOF reference_type
                                           | instanceof_expression_not_name INSTANCEOF reference_type'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("instanceof_expression_not_name", p[1])
+            p[0] = p[1]
         elif len(p) == 4:
-            tmp = ptg.node_create(p[2])
-            p[0] = ptg.three_child_node("instanceof_expression_not_name", p[1], tmp, p[3])
+            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
 
     def p_relational_expression(self, p):
         '''relational_expression : shift_expression
@@ -238,10 +222,9 @@ class ExpressionParser(object):
                                           | shift_expression_not_name LTEQ shift_expression
                                           | name LTEQ shift_expression'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("relational_expression_not_name", p[1])
+            p[0] = p[1]
         elif len(p) == 4:
-            tmp = ptg.node_create(p[2])
-            p[0] = ptg.three_child_node("relational_expression_not_name", p[1], tmp, p[3])
+            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
 
     def p_shift_expression(self, p):
         '''shift_expression : additive_expression
@@ -251,7 +234,7 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
-            p[0] = Node("ShiftOperator", p[2], "", [p[1], p[3]])
+            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
 
     def p_shift_expression_not_name(self, p):
         '''shift_expression_not_name : additive_expression_not_name
@@ -262,10 +245,9 @@ class ExpressionParser(object):
                                      | shift_expression_not_name RRSHIFT additive_expression
                                      | name RRSHIFT additive_expression'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("shift_expression_not_name", p[1])
+            p[0] = p[1]
         elif len(p) == 4:
-            tmp = ptg.node_create(p[2])
-            p[0] = ptg.three_child_node("shift_expression_not_name", p[1], tmp, p[3])
+            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
 
     def p_additive_expression(self, p):
         '''additive_expression : multiplicative_expression
@@ -275,8 +257,6 @@ class ExpressionParser(object):
             p[0] = p[1]
         elif len(p) == 4:
             p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
-            p[0].print_tree()
-            print(ast)
 
     def p_additive_expression_not_name(self, p):
         '''additive_expression_not_name : multiplicative_expression_not_name
@@ -285,10 +265,9 @@ class ExpressionParser(object):
                                         | additive_expression_not_name '-' multiplicative_expression
                                         | name '-' multiplicative_expression'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("additive_expression_not_name", p[1])
+            p[0] = p[1]
         elif len(p) == 4:
-            tmp = ptg.node_create(p[2])
-            p[0] = ptg.three_child_node("additive_expression_not_name", p[1], tmp, p[3])
+            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
 
     def p_multiplicative_expression(self, p):
         '''multiplicative_expression : unary_expression
@@ -296,7 +275,6 @@ class ExpressionParser(object):
                                      | multiplicative_expression '/' unary_expression
                                      | multiplicative_expression '%' unary_expression'''
         if len(p) == 2:
-            # TODO: other 2 grammar rules
             p[0] = p[1]
         elif len(p) == 4:
             p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
@@ -310,10 +288,9 @@ class ExpressionParser(object):
                                               | multiplicative_expression_not_name '%' unary_expression
                                               | name '%' unary_expression'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("multiplicative_expression_not_name", p[1])
+            p[0] = p[1]
         elif len(p) == 4:
-            tmp = ptg.node_create(p[2])
-            p[0] = ptg.three_child_node("multiplicative_expression_not_name", p[1], tmp, p[3])
+            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
 
     def p_unary_expression(self, p):
         '''unary_expression : pre_increment_expression
@@ -322,11 +299,9 @@ class ExpressionParser(object):
                             | '-' unary_expression
                             | unary_expression_not_plus_minus'''
         if len(p) == 2:
-            # TODO: other 2 grammar rules
             p[0] = p[1]
         elif len(p) == 3:
-            tmp = ptg.node_create(p[1])
-            p[0] = ptg.two_child_node("unary_expression", tmp, p[2])
+            p[0] = Node("UnaryOperator", p[1], "", [p[2]])
 
     def p_unary_expression_not_name(self, p):
         '''unary_expression_not_name : pre_increment_expression
@@ -335,20 +310,17 @@ class ExpressionParser(object):
                                      | '-' unary_expression
                                      | unary_expression_not_plus_minus_not_name'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("unary_expression_not_name", p[1])
+            p[0] = p[1]
         elif len(p) == 3:
-            tmp = ptg.node_create(p[1])
-            p[0] = ptg.two_child_node("unary_expression_not_name", tmp, p[2])
+            p[0] = Node("UnaryOperator", p[1], "", [p[2]])
 
     def p_pre_increment_expression(self, p):
         '''pre_increment_expression : PLUSPLUS unary_expression'''
-        tmp = ptg.node_create(p[1])
-        p[0] = ptg.two_child_node("pre_increment_expression", tmp, p[2])
+        p[0] = Node("UnaryOperator", p[1], "", [p[2]])
 
     def p_pre_decrement_expression(self, p):
         '''pre_decrement_expression : MINUSMINUS unary_expression'''
-        tmp = ptg.node_create(p[1])
-        p[0] = ptg.two_child_node("pre_decrement_expression", tmp, p[2])
+        p[0] = Node("UnaryOperator", p[1], "", [p[2]])
 
     def p_unary_expression_not_plus_minus(self, p):
         '''unary_expression_not_plus_minus : postfix_expression
@@ -356,11 +328,9 @@ class ExpressionParser(object):
                                            | '!' unary_expression
                                            | cast_expression'''
         if len(p) == 2:
-            # TODO: other 2 grammar rules
             p[0] = p[1]
         elif len(p) == 3:
-            tmp = ptg.node_create(p[1])
-            p[0] = ptg.two_child_node("unary_expression_not_plus_minus", tmp, p[2])
+            p[0] = Node("UnaryOperator", p[1], "", [p[2]])
 
     def p_unary_expression_not_plus_minus_not_name(self, p):
         '''unary_expression_not_plus_minus_not_name : postfix_expression_not_name
@@ -368,41 +338,35 @@ class ExpressionParser(object):
                                                     | '!' unary_expression
                                                     | cast_expression'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("unary_expression_not_plus_minus_not_name", p[1])
+            p[0] = p[1]
         elif len(p) == 3:
-            tmp = ptg.node_create(p[1])
-            p[0] = ptg.two_child_node("unary_expression_not_plus_minus_not_name", tmp, p[2])
+            p[0] = Node("UnaryOperator", p[1], "", [p[2]])
 
     def p_postfix_expression(self, p):
         '''postfix_expression : primary
                               | name
                               | post_increment_expression
                               | post_decrement_expression'''
-        # TODO: other 2 grammar rules
         p[0] = p[1]
 
     def p_postfix_expression_not_name(self, p):
         '''postfix_expression_not_name : primary
                                        | post_increment_expression
                                        | post_decrement_expression'''
-        # TODO: other 2 grammar rules
         p[0] = p[1]
 
     def p_post_increment_expression(self, p):
         '''post_increment_expression : postfix_expression PLUSPLUS'''
-        tmp = ptg.node_create(p[2])
-        p[0] = ptg.two_child_node("post_increment_expression", p[1], tmp)
+        p[0] = Node("UnaryOperator", p[2], "", [p[1]])
 
     def p_post_decrement_expression(self, p):
         '''post_decrement_expression : postfix_expression MINUSMINUS'''
-        tmp = ptg.node_create(p[2])
-        p[0] = ptg.two_child_node("post_decrement_expression", p[1], tmp)
+        p[0] = Node("UnaryOperator", p[2], "", [p[1]])
 
     def p_primary(self, p):
         '''primary : primary_no_new_array
                    | array_creation_with_array_initializer
                    | array_creation_without_array_initializer'''
-        # TODO: other 2 grammar rules
         p[0] = p[1]
 
     def p_primary_no_new_array(self, p):
@@ -411,7 +375,6 @@ class ExpressionParser(object):
                                 | field_access
                                 | method_invocation
                                 | array_access'''
-        # TODO: other 4 grammar rules
         p[0] = p[1]
 
     def p_primary_no_new_array2(self, p):
@@ -419,83 +382,63 @@ class ExpressionParser(object):
                                 | THIS
                                 | '(' expression_not_name ')' '''
         if len(p) == 2:
-            tmp = ptg.node_create(p[1])
-            p[0] = ptg.one_child_node("primary_no_new_array", tmp)
+            p[0] = p[1]
         elif len(p) == 4:
-            tmp1 = ptg.node_create(p[1])
-            tmp2 = ptg.node_create(p[3])
-            p[0] = ptg.three_child_node("primary_no_new_array", tmp1, p[2], tmp2)
+            p[0] = p[2]
 
     def p_primary_no_new_array3(self, p):
         '''primary_no_new_array : name '.' THIS
                                 | name '.' SUPER'''
-        tmp = ptg.node_create(p[2])
-        p[0] = ptg.three_child_node("primary_no_new_array", p[1], tmp, p[3])
+        # TODO: Not yet implemented
+        p[0] = Node("Modifier", p[3], "", [])
 
     def p_primary_no_new_array4(self, p):
         '''primary_no_new_array : name '.' CLASS
                                 | name dims '.' CLASS
                                 | primitive_type dims '.' CLASS
                                 | primitive_type '.' CLASS'''
-        tmp = ptg.node_create(p[2])
-        p[0] = ptg.three_child_node("primary_no_new_array", p[1], tmp, p[3])
+        # TODO: Not yet implemented
+        p[0] = Node("Modifier", p[3], "", [])
 
     def p_dims_opt(self, p):
         '''dims_opt : dims'''
-        p[0] = ptg.one_child_node("dims_opt", p[1])
+        p[0] = p[1]
 
     def p_dims_opt2(self, p):
         '''dims_opt : empty'''
-        p[0] = ptg.one_child_node("dims_opt", p[1])
+        p[0] = p[1]
 
     def p_dims(self, p):
         '''dims : dims_loop'''
-        p[0] = ptg.one_child_node("dims", p[1])
+        p[0] = p[1]
 
     def p_dims_loop(self, p):
         '''dims_loop : one_dim_loop
                      | dims_loop one_dim_loop'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("dims_loop", p[1]) 
+            p[0] = p[1]
         elif len(p) == 3:
-            p[0] = ptg.two_child_node("dims_loop", p[1], p[2])
+            p[0] = p[1] + p[2]
 
     def p_one_dim_loop(self, p):
         '''one_dim_loop : '[' ']' '''
-        tmp1 = ptg.node_create(p[1])
-        tmp2 = ptg.node_create(p[2])
-        p[0] = ptg.two_child_node("one_dim_loop", tmp1, tmp2)
+        p[0] = p[1] + p[2]
 
+    # TODO: Cast Expressions not done
     def p_cast_expression(self, p):
         '''cast_expression : '(' primitive_type dims_opt ')' unary_expression'''
-        tmp1 = ptg.node_create(p[1])
-        tmp2 = ptg.node_create(p[4])
-        p[0] = ptg.five_child_node("cast_expression", tmp1, p[2], p[3], tmp2, p[5])
 
     def p_cast_expression2(self, p):
         '''cast_expression : '(' name type_arguments dims_opt ')' unary_expression_not_plus_minus'''
-        tmp1 = ptg.node_create(p[1])
-        tmp2 = ptg.node_create(p[5])
-        p[0] = ptg.six_child_node("cast_expression", tmp1, p[2], p[3], p[4], tmp2, p[6])
 
     def p_cast_expression3(self, p):
         '''cast_expression : '(' name type_arguments '.' class_or_interface_type dims_opt ')' unary_expression_not_plus_minus'''
-        tmp1 = ptg.node_create(p[1])
-        tmp2 = ptg.node_create(p[4])
-        tmp3 = ptg.node_create(p[7])
-        p[0] = ptg.eight_child_node("cast_expression", tmp1, p[2], p[3], tmp2, p[5], p[6], tmp3, p[8])
 
     def p_cast_expression4(self, p):
         '''cast_expression : '(' name ')' unary_expression_not_plus_minus'''
-        tmp1 = ptg.node_create(p[1])
-        tmp2 = ptg.node_create(p[3])
-        p[0] = ptg.four_child_node("cast_expression", tmp1, p[2], tmp2, p[4])
 
     def p_cast_expression5(self, p):
         '''cast_expression : '(' name dims ')' unary_expression_not_plus_minus'''
-        tmp1 = ptg.node_create(p[1])
-        tmp2 = ptg.node_create(p[4])
-        p[0] = ptg.five_child_node("cast_expression", tmp1, p[2], p[3], tmp2, p[5])
 
 class StatementParser(object):
 
@@ -1234,12 +1177,11 @@ class NameParser(object):
     def p_name(self, p):
         '''name : simple_name
                 | qualified_name'''
-        p[0] = ptg.one_child_node("name", p[1])
+        p[0] = p[1]
 
     def p_simple_name(self, p):
         '''simple_name : NAME'''
-        tmp = ptg.node_create(p[1])
-        p[0] = ptg.one_child_node("simple_name", tmp)
+        p[0] = Node("Variable", p[1], "")
 
     def p_qualified_name(self, p):
         '''qualified_name : name '.' simple_name'''
