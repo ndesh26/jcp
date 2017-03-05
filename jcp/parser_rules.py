@@ -202,10 +202,9 @@ class ExpressionParser(object):
         '''instanceof_expression : relational_expression
                                  | instanceof_expression INSTANCEOF reference_type'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("instanceof_expression", p[1])
+            p[0] = p[1]
         elif len(p) == 4:
-            tmp = ptg.node_create(p[2])
-            p[0] = ptg.three_child_node("instanceof_expression", p[1], tmp, p[3])
+            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
 
     def p_instanceof_expression_not_name(self, p):
         '''instanceof_expression_not_name : relational_expression_not_name
@@ -224,10 +223,9 @@ class ExpressionParser(object):
                                  | relational_expression GTEQ shift_expression
                                  | relational_expression LTEQ shift_expression'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("relational_expression", p[1])
+            p[0] = p[1]
         elif len(p) == 4:
-            tmp = ptg.node_create(p[2])
-            p[0] = ptg.three_child_node("relational_expression", p[1], tmp, p[3])
+            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
 
     def p_relational_expression_not_name(self, p):
         '''relational_expression_not_name : shift_expression_not_name
@@ -251,10 +249,9 @@ class ExpressionParser(object):
                             | shift_expression RSHIFT additive_expression
                             | shift_expression RRSHIFT additive_expression'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("shift_expression", p[1])
+            p[0] = p[1]
         elif len(p) == 4:
-            tmp = ptg.node_create(p[2])
-            p[0] = ptg.three_child_node("shift_expression", p[1], tmp, p[3])
+            p[0] = Node("ShiftOperator", p[2], "", [p[1], p[3]])
 
     def p_shift_expression_not_name(self, p):
         '''shift_expression_not_name : additive_expression_not_name
@@ -275,7 +272,6 @@ class ExpressionParser(object):
                                | additive_expression '+' multiplicative_expression
                                | additive_expression '-' multiplicative_expression'''
         if len(p) == 2:
-            # TODO: other 2 grammar rules
             p[0] = p[1]
         elif len(p) == 4:
             p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
