@@ -1,6 +1,8 @@
 import ptg
 import lexer
 
+ast = ""
+
 class Node:
     def __init__(self, name, value, type, children=None):
         self.name = name
@@ -10,6 +12,13 @@ class Node:
              self.children = children
         else:
              self.children = [ ]
+
+    def print_tree(self, k=1):
+        global ast
+        ast = ast + self.name + " " + self.type + " " + self.value + "\n"
+        for node in self.children:
+            ast = ast + '  ' * k
+            node.print_tree(k+1)
 
 class ExpressionParser(object):
 
@@ -266,10 +275,12 @@ class ExpressionParser(object):
                                | additive_expression '+' multiplicative_expression
                                | additive_expression '-' multiplicative_expression'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("additive_expression", p[1])
+            # TODO: other 2 grammar rules
+            p[0] = p[1]
         elif len(p) == 4:
-            tmp = ptg.node_create(p[2])
-            p[0] = ptg.three_child_node("additive_expression", p[1], tmp, p[3])
+            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
+            p[0].print_tree()
+            print(ast)
 
     def p_additive_expression_not_name(self, p):
         '''additive_expression_not_name : multiplicative_expression_not_name
@@ -289,10 +300,10 @@ class ExpressionParser(object):
                                      | multiplicative_expression '/' unary_expression
                                      | multiplicative_expression '%' unary_expression'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("multiplicative_expression", p[1])
+            # TODO: other 2 grammar rules
+            p[0] = p[1]
         elif len(p) == 4:
-            tmp = ptg.node_create(p[2])
-            p[0] = ptg.three_child_node("multiplicative_expression", p[1], tmp, p[3])
+            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
 
     def p_multiplicative_expression_not_name(self, p):
         '''multiplicative_expression_not_name : unary_expression_not_name
@@ -315,7 +326,8 @@ class ExpressionParser(object):
                             | '-' unary_expression
                             | unary_expression_not_plus_minus'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("unary_expression", p[1])
+            # TODO: other 2 grammar rules
+            p[0] = p[1]
         elif len(p) == 3:
             tmp = ptg.node_create(p[1])
             p[0] = ptg.two_child_node("unary_expression", tmp, p[2])
@@ -348,7 +360,8 @@ class ExpressionParser(object):
                                            | '!' unary_expression
                                            | cast_expression'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("unary_expression_not_plus_minus", p[1])
+            # TODO: other 2 grammar rules
+            p[0] = p[1]
         elif len(p) == 3:
             tmp = ptg.node_create(p[1])
             p[0] = ptg.two_child_node("unary_expression_not_plus_minus", tmp, p[2])
@@ -369,7 +382,8 @@ class ExpressionParser(object):
                               | name
                               | post_increment_expression
                               | post_decrement_expression'''
-        p[0] = ptg.one_child_node("postfix_expression", p[1])
+        # TODO: other 2 grammar rules
+        p[0] = p[1]
 
     def p_postfix_expression_not_name(self, p):
         '''postfix_expression_not_name : primary
