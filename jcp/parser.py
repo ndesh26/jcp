@@ -22,5 +22,5 @@ else:
         _file = open(sys.argv[1])
     content = _file.read()
 
-result = parser.parse("++"+content, debug=debug)
-ptg.end()
+result = parser.parse("--"+content, debug=debug)
+# ptg.end()

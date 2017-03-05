@@ -1,6 +1,16 @@
 import ptg
 import lexer
 
+class Node:
+    def __init__(self, name, value, type, children=None):
+        self.name = name
+        self.value = value
+        self.type = type
+        if children:
+             self.children = children
+        else:
+             self.children = [ ]
+
 class ExpressionParser(object):
 
     def p_expression(self, p):
@@ -365,7 +375,8 @@ class ExpressionParser(object):
         '''postfix_expression_not_name : primary
                                        | post_increment_expression
                                        | post_decrement_expression'''
-        p[0] = ptg.one_child_node("postfix_expression_not_name", p[1])
+        # TODO: other 2 grammar rules
+        p[0] = p[1]
 
     def p_post_increment_expression(self, p):
         '''post_increment_expression : postfix_expression PLUSPLUS'''
@@ -381,7 +392,8 @@ class ExpressionParser(object):
         '''primary : primary_no_new_array
                    | array_creation_with_array_initializer
                    | array_creation_without_array_initializer'''
-        p[0] = ptg.one_child_node("primary", p[1])
+        # TODO: other 2 grammar rules
+        p[0] = p[1]
 
     def p_primary_no_new_array(self, p):
         '''primary_no_new_array : literal
@@ -389,7 +401,8 @@ class ExpressionParser(object):
                                 | field_access
                                 | method_invocation
                                 | array_access'''
-        p[0] = ptg.one_child_node("primary_no_new_array", p[1])
+        # TODO: other 4 grammar rules
+        p[0] = p[1]
 
     def p_primary_no_new_array2(self, p):
         '''primary_no_new_array : '(' name ')'
@@ -1225,15 +1238,26 @@ class NameParser(object):
 
 class LiteralParser(object):
 
-    def p_literal(self, p):
-        '''literal : NUM
-                   | CHAR_LITERAL
-                   | STRING_LITERAL
-                   | TRUE
-                   | FALSE
-                   | NULL'''
-        tmp = ptg.node_create(p[1])
-        p[0] = ptg.one_child_node("literal", tmp)
+    def p_literal1(self, p):
+        '''literal : NUM'''
+        p[0] = Node("IntegerLiteral", p[1], "int")
+
+    def p_literal2(self, p):
+        '''literal : CHAR_LITERAL'''
+        p[0] = Node("CharLiteral", p[1], "char")
+
+    def p_literal3(self, p):
+        '''literal : STRING_LITERAL'''
+        p[0] = Node("StringLiteral", p[1], "string")
+
+    def p_literal4(self, p):
+        '''literal : TRUE
+                   | FALSE'''
+        p[0] = Node("Boolean", p[1], "bool")
+
+    def p_literal5(self, p):
+        '''literal : NULL'''
+        p[0] = Node("Null", p[1], "null")
 
 class TypeParser(object):
 
