@@ -17,8 +17,9 @@ class Node:
         global ast
         ast = ast + self.name + " " + self.type + " " + self.value + "\n"
         for node in self.children:
-            ast = ast + '  ' * k
-            node.print_tree(k+1)
+            if node:
+                ast = ast + '  ' * k
+                node.print_tree(k+1)
 
 class ExpressionParser(object):
 
@@ -448,25 +449,24 @@ class StatementParser(object):
 
     def p_block(self, p):
         '''block : '{' block_statements_opt '}' '''
-        tmp1 = ptg.node_create(p[1])
-        tmp2 = ptg.node_create(p[3])
-        p[0] = ptg.three_child_node("block", tmp1, p[2], tmp2)
+        p[0] = p[1]
 
     def p_block_statements_opt(self, p):
         '''block_statements_opt : block_statements'''
-        p[0] = ptg.one_child_node("block_statements_opt", p[1])
+        p[0] = p[1]
 
     def p_block_statements_opt2(self, p):
         '''block_statements_opt : empty'''
-        p[0] = ptg.one_child_node("block_statements_opt", p[1])
+        p[0] = p[1]
 
     def p_block_statements(self, p):
         '''block_statements : block_statement
                             | block_statements block_statement'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("block_statements", p[1])
+            p[0] = Node("BlockStmts", "", "", [p[1]])
         elif len(p) == 3:
-            p[0] = ptg.two_child_node("block_statements", p[1], p[2])
+            p[1].children.append(p[2])
+            p[0] = p[1]
 
     def p_block_statement(self, p):
         '''block_statement : local_variable_declaration_statement
@@ -475,7 +475,7 @@ class StatementParser(object):
                            | interface_declaration
                            | annotation_type_declaration
                            | enum_declaration'''
-        p[0] = ptg.one_child_node("block_statement", p[1])
+        p[0] = p[1]
 
     def p_local_variable_declaration_statement(self, p):
         '''local_variable_declaration_statement : local_variable_declaration ';' '''
@@ -561,7 +561,7 @@ class StatementParser(object):
                                 | post_decrement_expression
                                 | method_invocation
                                 | class_instance_creation_expression'''
-        p[0] = ptg.one_child_node("statement_expression", p[1])
+        p[0] = p[1]
 
     def p_comma_opt(self, p):
         '''comma_opt : ','
@@ -660,68 +660,41 @@ class StatementParser(object):
 
     def p_if_then_statement(self, p):
         '''if_then_statement : IF '(' expression ')' statement'''
-        tmp1 = ptg.node_create(p[1])
-        tmp2 = ptg.node_create(p[2])
-        tmp3 = ptg.node_create(p[4])
-        p[0] = ptg.five_child_node("if_then_statement", tmp1, tmp2, p[3], tmp3, p[5])
+        p[0] = Node("IfStmt", children=[p[3],p[5]])
 
     def p_if_then_else_statement(self, p):
         '''if_then_else_statement : IF '(' expression ')' statement_no_short_if ELSE statement'''
-        tmp1 = ptg.node_create(p[1])
-        tmp2 = ptg.node_create(p[2])
-        tmp3 = ptg.node_create(p[4])
-        tmp4 = ptg.node_create(p[6])
-        p[0] = ptg.seven_child_node("if_then_else_statement", tmp1, tmp2, p[3], tmp3, p[5], tmp4, p[7])
+        p[0] = Node("IfStmt", children=[p[3], p[5], p[7]])
 
     def p_if_then_else_statement_no_short_if(self, p):
         '''if_then_else_statement_no_short_if : IF '(' expression ')' statement_no_short_if ELSE statement_no_short_if'''
-        tmp1 = ptg.node_create(p[1])
-        tmp2 = ptg.node_create(p[2])
-        tmp3 = ptg.node_create(p[4])
-        tmp4 = ptg.node_create(p[6])
-        p[0] = ptg.seven_child_node("if_then_else_statement_no_short_if", tmp1, tmp2, p[3], tmp3, p[5], tmp4, p[7])
+        p[0] = Node("IfStmt", children=[p[3], p[5], p[7]])
 
     def p_while_statement(self, p):
         '''while_statement : WHILE '(' expression ')' statement'''
-        tmp1 = ptg.node_create(p[1])
-        tmp2 = ptg.node_create(p[2])
-        tmp3 = ptg.node_create(p[4])
-        p[0] = ptg.five_child_node("while_statement", tmp1, tmp2, p[3], tmp3, p[5])
+        p[0] = Node("WhileStmt", children=[p[3], p[5]])
 
     def p_while_statement_no_short_if(self, p):
         '''while_statement_no_short_if : WHILE '(' expression ')' statement_no_short_if'''
-        tmp1 = ptg.node_create(p[1])
-        tmp2 = ptg.node_create(p[2])
-        tmp3 = ptg.node_create(p[4])
-        p[0] = ptg.five_child_node("while_statement_no_short_if", tmp1, tmp2, p[3], tmp3, p[5])
+        p[0] = Node("WhileStmt", children=[p[3], p[5]])
 
     def p_for_statement(self, p):
         '''for_statement : FOR '(' for_init_opt ';' expression_opt ';' for_update_opt ')' statement'''
-        tmp1 = ptg.node_create(p[1])
-        tmp2 = ptg.node_create(p[2])
-        tmp3 = ptg.node_create(p[4])
-        tmp4 = ptg.node_create(p[6])
-        tmp5 = ptg.node_create(p[8])
-        p[0] = ptg.nine_child_node("for_statement", tmp1, tmp2, p[3], tmp3, p[5], tmp4, p[7], tmp5, p[9])
+        p[0] = Node("ForStmt", children=[p[3], p[5], p[7], p[9]])
 
     def p_for_statement_no_short_if(self, p):
         '''for_statement_no_short_if : FOR '(' for_init_opt ';' expression_opt ';' for_update_opt ')' statement_no_short_if'''
-        tmp1 = ptg.node_create(p[1])
-        tmp2 = ptg.node_create(p[2])
-        tmp3 = ptg.node_create(p[4])
-        tmp4 = ptg.node_create(p[6])
-        tmp5 = ptg.node_create(p[8])
-        p[0] = ptg.nine_child_node("for_statement_no_short_if", tmp1, tmp2, p[3], tmp3, p[5], tmp4, p[7], tmp5, p[9])
+        p[0] = Node("ForStmt", children=[p[3], p[5], p[7], p[9]])
 
     def p_for_init_opt(self, p):
         '''for_init_opt : for_init
                         | empty'''
-        p[0] = ptg.one_child_node("for_init_opt", p[1])
+        p[0] = p[1]
 
     def p_for_init(self, p):
         '''for_init : statement_expression_list
                     | local_variable_declaration'''
-        p[0] = ptg.one_child_node("for_init", p[1])
+        p[0] = p[1]
 
     def p_statement_expression_list(self, p):
         '''statement_expression_list : statement_expression
@@ -1008,8 +981,7 @@ class StatementParser(object):
 
     def p_trailing_semicolon(self, p):
         '''trailing_semicolon : ';' '''
-        tmp = ptg.node_create(p[1])
-        p[0] = ptg.one_child_node("trailing_semicolon", tmp)
+        p[0] = Node("NullStmt")
 
     def p_resource(self, p):
         '''resource : type variable_declarator_id '=' variable_initializer'''
@@ -1023,8 +995,6 @@ class StatementParser(object):
 
     def p_finally(self, p):
         '''finally : FINALLY block'''
-        tmp = ptg.node_create(p[1])
-        p[0] = ptg.two_child_node("finally", tmp, p[2])
 
     def p_explicit_constructor_invocation(self, p):
         '''explicit_constructor_invocation : THIS '(' argument_list_opt ')' ';'
