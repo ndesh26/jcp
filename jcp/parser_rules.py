@@ -4,10 +4,14 @@ import lexer
 ast = ""
 
 class Node:
-    def __init__(self, name, value="", type="", children=None):
+    def __init__(self, name="", value="", type="", children=None, modifiers=None):
         self.name = name
         self.value = value
         self.type = type
+        if modifiers:
+            self.modifiers = modifiers
+        else:
+            self.modifiers = [  ]
         if children:
              self.children = children
         else:
@@ -15,7 +19,11 @@ class Node:
 
     def print_tree(self, k=1):
         global ast
-        ast = ast + self.name + " " + self.type + " " + self.value + "\n"
+        ast = ast + self.name + " " + self.type + " " + self.value
+        for modifier in self.modifiers:
+            if modifier:
+                ast = ast + modifier
+        ast = ast + "\n"
         for node in self.children:
             if node:
                 ast = ast + '  ' * k
@@ -419,11 +427,12 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 3:
-            p[0] = p[1] + p[2]
+            p[1].type = p[1].type + p[2].type
+            p[0] = p[1]
 
     def p_one_dim_loop(self, p):
         '''one_dim_loop : '[' ']' '''
-        p[0] = p[1] + p[2]
+        p[0] = Node(type='[]')
 
     def p_cast_expression(self, p):
         '''cast_expression : '(' primitive_type dims_opt ')' unary_expression'''
@@ -479,12 +488,12 @@ class StatementParser(object):
 
     def p_local_variable_declaration_statement(self, p):
         '''local_variable_declaration_statement : local_variable_declaration ';' '''
-        tmp = ptg.node_create(p[2])
-        p[0] = ptg.two_child_node("local_variable_declaration_statement", p[1], tmp)
+        p[1].name = "DeclStmt"
+        p[0] = p[1]
 
     def p_local_variable_declaration(self, p):
         '''local_variable_declaration : type variable_declarators'''
-        p[0] = ptg.two_child_node("local_variable_declaration", p[1], p[2])
+        p[0] = Node("Decls", "", type=p[1], [p[2]])
 
     def p_local_variable_declaration2(self, p):
         '''local_variable_declaration : modifiers type variable_declarators'''
@@ -1155,12 +1164,11 @@ class NameParser(object):
 
     def p_simple_name(self, p):
         '''simple_name : NAME'''
-        p[0] = Node("Variable", p[1], "")
+        p[0] = Node("DeclsRefExpr", p[1], "")
 
     def p_qualified_name(self, p):
         '''qualified_name : name '.' simple_name'''
-        tmp = ptg.node_create(p[2])
-        p[0] = ptg.three_child_node("qualified_name", p[1], tmp, p[3])
+        p[0] = Node("MemberExpr", p[2] + p[3].value, "", [p[1]])
 
 class LiteralParser(object):
 
@@ -1189,19 +1197,20 @@ class TypeParser(object):
 
     def p_modifiers_opt(self, p):
         '''modifiers_opt : modifiers'''
-        p[0] = ptg.one_child_node("modifiers_opt", p[1])
+        p[0] = p[1]
 
     def p_modifiers_opt2(self, p):
         '''modifiers_opt : empty'''
-        p[0] = ptg.one_child_node("modifiers_opt", p[1])
+        p[0] = p[1]
 
     def p_modifiers(self, p):
         '''modifiers : modifier
                      | modifiers modifier'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("modifiers", p[1])
+            p[0] = p[1]
         elif len(p) == 3:
-            p[0] = ptg.two_child_node("modifiers", p[1], p[2])
+            p[1].modifiers.extend(p[2].modifiers)
+            p[0] = p[1]
 
     def p_modifier(self, p):
         '''modifier : PUBLIC
@@ -1215,17 +1224,16 @@ class TypeParser(object):
                     | TRANSIENT
                     | VOLATILE
                     | STRICTFP'''
-        tmp = ptg.node_create(p[1])
-        p[0] = ptg.one_child_node("modifier", tmp)
+        p[0] = Node("Modifier", modifiers=[p[1]])
 
     def p_modifier2(self, p):
         '''modifier : annotation'''
-        p[0] = ptg.one_child_node("modifier", p[1])
+        p[0] = p[1]
 
     def p_type(self, p):
         '''type : primitive_type
                 | reference_type'''
-        p[0] = ptg.one_child_node("type", p[1])
+        p[0] = p[1]
 
     def p_primitive_type(self, p):
         '''primitive_type : BOOLEAN
@@ -1237,60 +1245,61 @@ class TypeParser(object):
                           | CHAR
                           | FLOAT
                           | DOUBLE'''
-        p[0] = p[1]
+        p[0] = Node("Type", type=p[1])
 
     def p_reference_type(self, p):
         '''reference_type : class_or_interface_type
                           | array_type'''
-        p[0] = ptg.one_child_node("reference_type", p[1])
+        p[0] = p[1]
 
     def p_class_or_interface_type(self, p):
         '''class_or_interface_type : class_or_interface
                                    | generic_type'''
-        p[0] = ptg.one_child_node("class_or_interface_type", p[1])
+        p[0] = p[1]
 
     def p_class_type(self, p):
         '''class_type : class_or_interface_type'''
-        p[0] = ptg.one_child_node("class_type", p[1])
+        p[0] = p[1]
 
     def p_class_or_interface(self, p):
         '''class_or_interface : name
                               | generic_type '.' name'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("class_or_interface", p[1])
+            p[1].type = p[1].value
+            p[0] = p[1]
         elif len(p) == 4:
-            tmp = ptg.node_create(p[2])
-            p[0] = ptg.three_child_node("class_or_interface", p[1], tmp, p[3])
+            p[1].type = p[1].type + '.' + p[3].value
+            p[0] = p[1]
 
     def p_generic_type(self, p):
         '''generic_type : class_or_interface type_arguments'''
-        p[0] = ptg.one_child_node("generic_type", p[1])
+        p[1].type = p[1].type + p[2].type
+        p[0] = p[1]
 
     def p_generic_type2(self, p):
         '''generic_type : class_or_interface '<' '>' '''
-        lt = ptg.node_create("<")
-        gt = ptg.node_create(">")
-        p[0] = ptg.three_child_node("generic_type", p[1], lt, gt)
+        p[1].type = p[1].type + '< >'
+        p[0] = p[1]
 
     def p_array_type(self, p):
         '''array_type : primitive_type dims
-                      | name dims'''
-        p[0] = ptg.two_child_node("array_type", p[1], p[2])
+                      | generic_type dims'''
+        p[1].type = p[1].type + p[2].type
+        p[0] = p[1]
 
     def p_array_type2(self, p):
-        '''array_type : generic_type dims'''
-        p[0] = ptg.two_child_node("array_type", p[1], p[2])
+        '''array_type : name dims'''
+        p[1].type = p[1].value + p[2].type
+        p[0] = p[1]
 
     def p_array_type3(self, p):
         '''array_type : generic_type '.' name dims'''
-        tmp = ptg.node_create(".")
-        p[0] = ptg.three_child_node("array_type", p[1], tmp, p[3])
+        p[1].type = p[1].type + '.' + p[3].value + p[4].type
+        p[0] = p[1]
 
     def p_type_arguments(self, p):
         '''type_arguments : '<' type_argument_list1'''
-        tmp = ptg.node_create("<")
-        p[0] = ptg.two_child_node("type_arguments",  tmp, p[2])
-
+        p[0] = p[1]
 
     def p_type_argument_list1(self, p):
         '''type_argument_list1 : type_argument1
@@ -2257,4 +2266,4 @@ class JavaParser(ExpressionParser, NameParser, LiteralParser, TypeParser, ClassP
 
     def p_empty(self, p):
         '''empty :'''
-        p[0] = ""
+        p[0] = Node()
