@@ -24,17 +24,19 @@ class Node:
 
     def print_tree(self, k=1):
         global ast
-        ast = ast + self.name + " " + self.type + " " + self.value
-        for modifier in self.modifiers:
-            if modifier:
-                ast = ast + modifier
-        ast = ast + "\n"
-        for node in self.children:
-            if isinstance(node, Node):
-                ast = ast + '  ' * k
-                node.print_tree(k+1)
-            else:
-                print(node)
+        if self.name:
+            ast = ast + self.name + " " + self.type + " " + self.value
+            for modifier in self.modifiers:
+                if modifier:
+                    ast = ast + modifier
+            ast = ast + "\n"
+            for node in self.children:
+                if isinstance(node, Node):
+                    if node.name:
+                        ast = ast + '  ' * (k-1) +'|'
+                        node.print_tree(k+1)
+                else:
+                    print(node)
 
 class ExpressionParser(object):
 
@@ -607,7 +609,8 @@ class StatementParser(object):
     def p_method_invocation(self, p):
         '''method_invocation : NAME '(' argument_list_opt ')' '''
         p[1] = Node("DeclsRefExpr", value=p[1])
-        p[0] = Node("MethodInvocation", children=[p[1]]+p[3].children)
+        tmp = Node("ImplicitCastExpr", children=[p[1]])
+        p[0] = Node("MethodInvocation", children=[tmp]+p[3].children)
 
     def p_method_invocation2(self, p):
         '''method_invocation : name '.' type_arguments NAME '(' argument_list_opt ')'
@@ -1048,9 +1051,8 @@ class StatementParser(object):
         '''array_access : name '[' expression ']'
                         | primary_no_new_array '[' expression ']'
                         | array_creation_with_array_initializer '[' expression ']' '''
-        tmp1 = ptg.node_create(p[2])
-        tmp2 = ptg.node_create(p[4])
-        p[0] = ptg.four_child_node("array_access", p[1], tmp1, p[3], tmp2)
+        p[1] = Node("ImplicitCastExpr", children=[p[1]])
+        p[0] = Node("ArrayAccess", children=[p[1],p[3]])
 
     def p_array_creation_with_array_initializer(self, p):
         '''array_creation_with_array_initializer : NEW primitive_type dim_with_or_without_exprs array_initializer
@@ -1474,7 +1476,7 @@ class ClassParser(object):
 
     def p_class_declaration(self, p):
         '''class_declaration : class_header class_body'''
-        p[0] = Node("ClassDecl", children=[p[2],p[3]])
+        p[0] = Node("ClassDecl", children=[p[1],p[2]])
 
     def p_class_header(self, p):
         '''class_header : class_header_name class_header_extends_opt class_header_implements_opt'''
@@ -1589,7 +1591,7 @@ class ClassParser(object):
     def p_constructor_header(self, p):
         '''constructor_header : constructor_header_name formal_parameter_list_opt ')' method_header_throws_clause_opt'''
         # TODO: Not done because of nayan
-        p[0] = p[1]
+        p[0] = Node("ConstructorHeader", children=[p[1], p[2], p[4]])
 
     def p_constructor_header_name(self, p):
         '''constructor_header_name : modifiers_opt type_parameters NAME '('
@@ -1639,17 +1641,16 @@ class ClassParser(object):
 
     def p_method_header_throws_clause(self, p):
         '''method_header_throws_clause : THROWS class_type_list'''
-        tmp = ptg.node_create(p[1])
-        p[0] = ptg.two_child_node("method_header_throws_clause", tmp, p[2])
+        p[2].name = "Throws"
+        p[0] = p[2]
 
     def p_class_type_list(self, p):
         '''class_type_list : class_type_elt
                            | class_type_list ',' class_type_elt'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("class_type_list", p[1])
+            p[0] = Node("ThrowsList", children=[p[1]])
         else:
-            tmp = ptg.node_create("\,")
-            p[0] = ptg.three_child_node("class_type_list",  p[1], tmp, p[3])
+            p[3].children.append(p[1])
 
     def p_class_type_elt(self, p):
         '''class_type_elt : class_type'''
@@ -1657,7 +1658,9 @@ class ClassParser(object):
 
     def p_method_body(self, p):
         '''method_body : '{' block_statements_opt '}' '''
-        p[0] = p[1]
+        p[2].name = "MethodBody"
+        p[0] = p[2]
+
 
     def p_method_declaration(self, p):
         '''method_declaration : abstract_method_declaration
@@ -1850,20 +1853,20 @@ class ClassParser(object):
 
     def p_argument_list_opt(self, p):
         '''argument_list_opt : argument_list'''
-        p[0] = ptg.one_child_node("arguments_list_opt", p[1])
+        p[0] = p[1]
 
     def p_argument_list_opt2(self, p):
         '''argument_list_opt : empty'''
-        p[0] = ptg.one_child_node("arguments_list_opt", p[1])
+        p[0] = p[1]
 
     def p_argument_list(self, p):
         '''argument_list : expression
                          | argument_list ',' expression'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("arguments_list", p[1])
+            p[0] = Node("ArgumentList", children=[p[1]])
         else:
-            tmp = ptg.node_create("\,")
-            p[0] = ptg.three_child_node("argument_list",  p[1], tmp, p[3])
+            p[1].children.append(p[3])
+            p[0] = p[1]
 
     def p_enum_body_declarations_opt(self, p):
         '''enum_body_declarations_opt : enum_declarations'''
@@ -2089,7 +2092,7 @@ class CompilationUnitParser(object):
 
     def p_compilation_unit6(self, p):
         '''compilation_unit : type_declarations'''
-        p[0] = ptg.one_child_node("compilation_unit", p[1])
+        p[0] = p[1]
 
     def p_compilation_unit7(self, p):
         '''compilation_unit : import_declarations type_declarations'''
@@ -2163,7 +2166,7 @@ class CompilationUnitParser(object):
         '''type_declarations : type_declaration
                              | type_declarations type_declaration'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("type_declarations", p[1])
+            p[0] = p[1]
         else:
             p[0] = ptg.two_child_node("type_declarations", p[1], p[2])
 
@@ -2173,6 +2176,8 @@ class JavaParser(ExpressionParser, NameParser, LiteralParser, TypeParser, ClassP
     def p_goal_compilation_unit(self, p):
         '''goal : PLUSPLUS compilation_unit'''
         p[0] = p[2]
+        p[0].print_tree()
+        print(ast)
 
     def p_goal_expression(self, p):
         '''goal : MINUSMINUS expression'''
@@ -2181,8 +2186,6 @@ class JavaParser(ExpressionParser, NameParser, LiteralParser, TypeParser, ClassP
     def p_goal_statement(self, p):
         '''goal : '*' block_statement'''
         p[0] = p[2]
-        p[0].print_tree()
-        print(ast)
 
     # Error rule for syntax errors
     def p_error(self, p):
