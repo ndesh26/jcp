@@ -6,11 +6,12 @@ ast = ""
 symbol_table = symbol_table.SymbolTable()
 
 class Node:
-    def __init__(self, name="", value="", type="", children=None, modifiers=None, dims=0, arraylen=None):
+    def __init__(self, name="", value="", type="", children=None, modifiers=None, dims=0, arraylen=None, sym_entry=None):
         self.name = name
         self.value = value
         self.type = type
         self.dims = dims
+        self.sym_entry = sym_entry
         if modifiers:
             self.modifiers = modifiers
         else:
@@ -319,7 +320,7 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 3:
-            p[0] = Node("UnaryOperator", p[1], "", [p[2]])
+            p[0] = Node("UnaryOperator", value=p[1], type=p[2].type, children=[p[2]])
 
     def p_unary_expression_not_name(self, p):
         '''unary_expression_not_name : pre_increment_expression
@@ -330,15 +331,15 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 3:
-            p[0] = Node("UnaryOperator", p[1], "", [p[2]])
+            p[0] = Node("UnaryOperator", value=p[1], type=p[2].type, children=[p[2]])
 
     def p_pre_increment_expression(self, p):
         '''pre_increment_expression : PLUSPLUS unary_expression'''
-        p[0] = Node("UnaryOperator", p[1], "", [p[2]])
+        p[0] = Node("UnaryOperator", value=p[1], type=p[2].type, children=[p[2]])
 
     def p_pre_decrement_expression(self, p):
         '''pre_decrement_expression : MINUSMINUS unary_expression'''
-        p[0] = Node("UnaryOperator", p[1], "", [p[2]])
+        p[0] = Node("UnaryOperator", value=p[1], type=p[2].type, children=[p[2]])
 
     def p_unary_expression_not_plus_minus(self, p):
         '''unary_expression_not_plus_minus : postfix_expression
@@ -348,7 +349,7 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 3:
-            p[0] = Node("UnaryOperator", p[1], "", [p[2]])
+            p[0] = Node("UnaryOperator", value=p[1], type=p[2].type, children=[p[2]])
 
     def p_unary_expression_not_plus_minus_not_name(self, p):
         '''unary_expression_not_plus_minus_not_name : postfix_expression_not_name
@@ -358,7 +359,7 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 3:
-            p[0] = Node("UnaryOperator", p[1], "", [p[2]])
+            p[0] = Node("UnaryOperator", value=p[1], type=p[2].type, children=[p[2]])
 
     def p_postfix_expression(self, p):
         '''postfix_expression : primary
@@ -375,11 +376,11 @@ class ExpressionParser(object):
 
     def p_post_increment_expression(self, p):
         '''post_increment_expression : postfix_expression PLUSPLUS'''
-        p[0] = Node("UnaryOperator", p[2], "", [p[1]])
+        p[0] = Node("UnaryOperator", value=p[2], type=p[1].type, children=[p[1]])
 
     def p_post_decrement_expression(self, p):
         '''post_decrement_expression : postfix_expression MINUSMINUS'''
-        p[0] = Node("UnaryOperator", p[2], "", [p[1]])
+        p[0] = Node("UnaryOperator", value=p[2], type=p[1].type, children=[p[1]])
 
     def p_primary(self, p):
         '''primary : primary_no_new_array
@@ -1105,7 +1106,8 @@ class NameParser(object):
 
     def p_simple_name(self, p):
         '''simple_name : NAME'''
-        p[0] = Node("DeclsRefExpr", p[1], "")
+        entry = symbol_table.get_entry(p[1])
+        p[0] = Node("DeclsRefExpr", value=p[1], type=entry['type'])
 
     def p_qualified_name(self, p):
         '''qualified_name : name '.' simple_name'''

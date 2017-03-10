@@ -42,8 +42,9 @@ class Table:
             self.entries[name] = attributes
 
     def print_table(self):
-        for entry in self.entries:
-            print(entry)
+        for key, value in self.entries.items():
+            print(key)
+            print(value)
 
 class SymbolTable:
 
@@ -59,7 +60,7 @@ class SymbolTable:
         self.table = self.table.parent_table
 
     def get_entry(self, name):
-        return self.table.get_entry(name)
+        return self.table.get_method_entry(name)
 
     def insert(self, name, attributes={}):
         self.table.insert(name, attributes)
