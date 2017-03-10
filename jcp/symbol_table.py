@@ -35,7 +35,34 @@ class Table:
             current_table = current_table.parent_table
         return None
 
-    def print(self, file):
+    def insert(self, name, attributes={}):
+        if name in self.entries:
+            print("Error")
+        else:
+            self.entries[name] = attributes
+
+    def print_table(self):
         for entry in self.entries:
-            file.write("Nayan ludo")
-            file.write(entry[name])
+            print(entry)
+
+class SymbolTable:
+
+    def __init__(self):
+        self.table = Table()
+
+    def begin_scope(self):
+        new_table = Table(self.table)
+        self.table = new_table
+        return self.table
+
+    def end_scope(self):
+        self.table = self.table.parent_table
+
+    def get_entry(self, name):
+        return self.table.get_entry(name)
+
+    def insert(self, name, attributes={}):
+        self.table.insert(name, attributes)
+
+    def print_table(self):
+        self.table.print_table()

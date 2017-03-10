@@ -1,7 +1,9 @@
 import ptg
 import lexer
+import symbol_table
 
 ast = ""
+symbol_table = symbol_table.SymbolTable()
 
 class Node:
     def __init__(self, name="", value="", type="", children=None, modifiers=None, dims=0, arraylen=None):
@@ -502,6 +504,10 @@ class StatementParser(object):
         '''local_variable_declaration : type variable_declarators'''
         for node in p[2].children:
             node.type = p[1].type
+            if symbol_table.get_entry(node.value):
+                print("Error")
+            else:
+                symbol_table.insert(node.value, {'type':node.type})
         p[0] = p[2]
 
     def p_local_variable_declaration2(self, p):
@@ -509,6 +515,10 @@ class StatementParser(object):
         for node in p[3].children:
             node.type = p[2].type
             node.modifiers = p[1].modifiers
+            if symbol_table.get_entry(node.value):
+                print("Error")
+            else:
+                symbol_table.insert(node.value, {'type':node.type, 'modifiers':node.modifiers})
         p[0] = p[3]
 
     def p_variable_declarators(self, p):
@@ -1105,24 +1115,24 @@ class LiteralParser(object):
 
     def p_literal1(self, p):
         '''literal : NUM'''
-        p[0] = Node("IntegerLiteral", p[1], "int")
+        p[0] = Node("IntegerLiteral", value=p[1], type="int")
 
     def p_literal2(self, p):
         '''literal : CHAR_LITERAL'''
-        p[0] = Node("CharLiteral", p[1], "char")
+        p[0] = Node("CharLiteral", value=p[1], type="char")
 
     def p_literal3(self, p):
         '''literal : STRING_LITERAL'''
-        p[0] = Node("StringLiteral", p[1], "string")
+        p[0] = Node("StringLiteral", value=p[1], type="string")
 
     def p_literal4(self, p):
         '''literal : TRUE
                    | FALSE'''
-        p[0] = Node("Boolean", p[1], "bool")
+        p[0] = Node("Boolean", value=p[1], type="bool")
 
     def p_literal5(self, p):
         '''literal : NULL'''
-        p[0] = Node("Null", p[1], "null")
+        p[0] = Node("Null", value=p[1], type="null")
 
 class TypeParser(object):
 
@@ -2176,8 +2186,6 @@ class JavaParser(ExpressionParser, NameParser, LiteralParser, TypeParser, ClassP
     def p_goal_compilation_unit(self, p):
         '''goal : PLUSPLUS compilation_unit'''
         p[0] = p[2]
-        p[0].print_tree()
-        print(ast)
 
     def p_goal_expression(self, p):
         '''goal : MINUSMINUS expression'''
@@ -2186,6 +2194,9 @@ class JavaParser(ExpressionParser, NameParser, LiteralParser, TypeParser, ClassP
     def p_goal_statement(self, p):
         '''goal : '*' block_statement'''
         p[0] = p[2]
+        p[0].print_tree()
+        print(ast)
+        symbol_table.print_table()
 
     # Error rule for syntax errors
     def p_error(self, p):
