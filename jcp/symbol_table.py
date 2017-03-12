@@ -36,10 +36,7 @@ class Table:
         return None
 
     def insert(self, name, attributes={}):
-        if name in self.entries:
-            print("Error")
-        else:
-            self.entries[name] = attributes
+        self.entries[name] = attributes
 
     def print_table(self):
         for key, value in self.entries.items():
