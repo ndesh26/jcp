@@ -593,10 +593,13 @@ class StatementParser(object):
         '''block_statements : block_statement
                             | block_statements block_statement'''
         if len(p) == 2:
-            p[0] = Node("BlockStmts", "", "", [p[1]])
+            p[0] = Node("BlockStmts", type="void", children=[p[1]])
         elif len(p) == 3:
+            # if (p[1].type == p[2].type):
             p[1].children.append(p[2])
             p[0] = p[1]
+            # else:
+                # print("line {}: type mismatch in block statements".format(p.lineno(2)))
 
     def p_block_statement(self, p):
         '''block_statement : local_variable_declaration_statement
@@ -614,31 +617,39 @@ class StatementParser(object):
 
     def p_local_variable_declaration(self, p):
         '''local_variable_declaration : type variable_declarators'''
+        p[2].type = p[1].type
         for node in p[2].children:
-            node.type = p[1].type
-            entry = symbol_table.get_entry(node.value)
-            if entry:
-                print("line {}: the variable {} is already declared".format(p.lineno(2), node.value))
+            if (node.type == "") or (node.type != "" and node.type == p[1].type):
+                node.type = p[1].type
+                entry = symbol_table.get_entry(node.value)
+                if entry:
+                    print("line {}: variable {} is already declared".format(p.lineno(2), node.value))
+                else:
+                    symbol_table.insert(node.value, {'type':node.type})
             else:
-                symbol_table.insert(node.value, {'type':node.type})
+                print("ERROR: variable {} (type {}) initialized to type {}".format(node.value, p[1].type, node.type))
         p[0] = p[2]
 
     def p_local_variable_declaration2(self, p):
         '''local_variable_declaration : modifiers type variable_declarators'''
+        p[2].type = p[1].type
         for node in p[3].children:
-            node.type = p[2].type
-            node.modifiers = p[1].modifiers
-            if symbol_table.get_entry(node.value):
-                print("Error")
+            if (node.type == "") or (node.type != "" and node.type == p[2].type):
+                node.type = p[2].type
+                node.modifiers = p[1].modifiers
+                if symbol_table.get_entry(node.value):
+                    print("line {}: variable {} is already declared".format(p.lineno(2), node.value))
+                else:
+                    symbol_table.insert(node.value, {'type':node.type, 'modifiers':node.modifiers})
             else:
-                symbol_table.insert(node.value, {'type':node.type, 'modifiers':node.modifiers})
+                print("ERROR: variable {} (type {}) initialized to type {}".format(node.value, p[2].type, node.type))
         p[0] = p[3]
 
     def p_variable_declarators(self, p):
         '''variable_declarators : variable_declarator
                                 | variable_declarators ',' variable_declarator'''
         if len(p) == 2:
-            p[0] = Node("Decls", children=[p[1]])
+            p[0] = Node("Decls", type=p[1].type, children=[p[1]])
         elif len(p) == 4:
             p[1].children.append(p[3])
             p[0] = p[1]
@@ -649,6 +660,7 @@ class StatementParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
+            p[1].type = p[3].type
             p[1].children.append(p[3])
             p[0] = p[1]
 
@@ -770,31 +782,54 @@ class StatementParser(object):
 
     def p_if_then_statement(self, p):
         '''if_then_statement : IF '(' expression ')' statement'''
-        p[0] = Node("IfStmt", children=[p[3],p[5]])
+        if p[3].type == "boolean":
+            p[0] = Node("IfStmt", type=p[5].type, children=[p[3],p[5]])
+        else:
+            print("line {}: IF expression not of type BOOLEAN".format(p.lineno(2)))
 
     def p_if_then_else_statement(self, p):
         '''if_then_else_statement : IF '(' expression ')' statement_no_short_if ELSE statement'''
-        p[0] = Node("IfStmt", children=[p[3], p[5], p[7]])
+        if p[3].type == "boolean":
+            p[0] = Node("IfStmt", type=p[5].type, children=[p[3], p[5], p[7]])
+        else:
+            print("line {}: IF expression not of type BOOLEAN".format(p.lineno(2)))
 
     def p_if_then_else_statement_no_short_if(self, p):
         '''if_then_else_statement_no_short_if : IF '(' expression ')' statement_no_short_if ELSE statement_no_short_if'''
-        p[0] = Node("IfStmt", children=[p[3], p[5], p[7]])
+        if p[3].type == "boolean" and p[5].type == p[7].type:
+            p[0] = Node("IfStmt", type=p[5].type, children=[p[3], p[5], p[7]])
+        else:
+            print("line {}: IF expression not of type BOOLEAN".format(p.lineno(2)))
 
     def p_while_statement(self, p):
         '''while_statement : WHILE '(' expression ')' statement'''
-        p[0] = Node("WhileStmt", children=[p[3], p[5]])
+        if p[3].type == "boolean":
+            p[0] = Node("WhileStmt", type=p[5].type, children=[p[3], p[5]])
+        else:
+            print("line {}: WHILE expression not of type BOOLEAN".format(p.lineno(2)))
 
     def p_while_statement_no_short_if(self, p):
         '''while_statement_no_short_if : WHILE '(' expression ')' statement_no_short_if'''
-        p[0] = Node("WhileStmt", children=[p[3], p[5]])
+        if p[3].type == "boolean":
+            p[0] = Node("WhileStmt", type=p[5].type, children=[p[3], p[5]])
+        else:
+            print("line {}: WHILE expression not of type BOOLEAN".format(p.lineno(2)))
 
     def p_for_statement(self, p):
         '''for_statement : FOR '(' for_init_opt ';' expression_opt ';' for_update_opt ')' statement'''
-        p[0] = Node("ForStmt", children=[p[3], p[5], p[7], p[9]])
+    # TODO: For inner statements still not clear
+        if p[3].type == "void" and p[5].type == "int":
+            p[0] = Node("ForStmt", type=p[9].type, children=[p[3], p[5], p[7], p[9]])
+        else:
+            print("line {}: Error in FOR statement types".format(p.lineno(2)))
 
     def p_for_statement_no_short_if(self, p):
         '''for_statement_no_short_if : FOR '(' for_init_opt ';' expression_opt ';' for_update_opt ')' statement_no_short_if'''
-        p[0] = Node("ForStmt", children=[p[3], p[5], p[7], p[9]])
+    # TODO: For inner statements still not clear
+        if p[3].type == "void" and p[5].type == "int":
+            p[0] = Node("ForStmt", type=p[9].type, children=[p[3], p[5], p[7], p[9]])
+        else:
+            print("line {}: Error in FOR statement types".format(p.lineno(2)))
 
     def p_for_init_opt(self, p):
         '''for_init_opt : for_init
@@ -810,10 +845,13 @@ class StatementParser(object):
         '''statement_expression_list : statement_expression
                                      | statement_expression_list ',' statement_expression'''
         if len(p) == 2:
-            p[0] = Node("StmtList", children=[p[1]])
+            p[0] = Node("StmtList", type=p[1].type, children=[p[1]])
         elif len(p) == 4:
-            p[1].children.append(p[3])
-            p[0] = p[1]
+            if p[1].type == p[3].type:
+                p[1].children.append(p[3])
+                p[0] = p[1]
+            else:
+                print("ERROR: statements not of same type")
 
     def p_expression_opt(self, p):
         '''expression_opt : expression
@@ -831,11 +869,11 @@ class StatementParser(object):
 
     def p_enhanced_for_statement(self, p):
         '''enhanced_for_statement : enhanced_for_statement_header statement'''
-        p[0] = Node("EnhancedFor", children=p[1].children+[p[2]])
+        p[0] = Node("EnhancedFor", type=p[2].type, children=p[1].children+[p[2]])
 
     def p_enhanced_for_statement_no_short_if(self, p):
         '''enhanced_for_statement_no_short_if : enhanced_for_statement_header statement_no_short_if'''
-        p[0] = Node("EnhancedFor", children=p[1].children+[p[2]])
+        p[0] = Node("EnhancedFor", type=p[2].type, children=p[1].children+[p[2]])
 
     def p_enhanced_for_statement_header(self, p):
         '''enhanced_for_statement_header : enhanced_for_statement_header_init ':' expression ')' '''
@@ -865,9 +903,12 @@ class StatementParser(object):
         '''assert_statement : ASSERT expression ';'
                             | ASSERT expression ':' expression ';' '''
         if len(p) == 4:
-            p[0] = Node("AssertStmt", children=[p[2]])
+            p[0] = Node("AssertStmt", type=p[2].type, children=[p[2]])
         elif len(p) == 6:
-            p[0] = Node("AssertStmt", children=[p[2],p[4]])
+            if p[2].type == p[4].type:
+                p[0] = Node("AssertStmt", type=p[2].type, children=[p[2],p[4]])
+            else:
+                print("ERROR: ASSERT Statement has type mismatch")
 
     def p_empty_statement(self, p):
         '''empty_statement : ';' '''
@@ -875,7 +916,7 @@ class StatementParser(object):
 
     def p_switch_statement(self, p):
         '''switch_statement : SWITCH '(' expression ')' switch_block'''
-        p[0] = Node("SwitchStmt", children=[p[3]]+p[5].children)
+        p[0] = Node("SwitchStmt", type=p[5].type, children=[p[3]]+p[5].children)
 
     def p_switch_block(self, p):
         '''switch_block : '{' '}' '''
@@ -898,15 +939,19 @@ class StatementParser(object):
         '''switch_block_statements : switch_block_statement
                                    | switch_block_statements switch_block_statement'''
         if len(p) == 2:
-            p[0] = Node("CompoundStmt", children=[p[1]])
+            p[0] = Node("CompoundStmt", type=p[1].type, children=[p[1]])
         elif len(p) == 3:
-            p[1].children.append(p[2])
-            p[0] = p[1]
+            if p[1].type == p[2].type:
+                p[1].children.append(p[2])
+                p[0] = p[1]
+            else:
+                print("ERROR: SWITCH block has type mismatch")
 
     def p_switch_block_statement(self, p):
         '''switch_block_statement : switch_labels block_statements'''
         p[1].children.append(p[2])
         p[0] = p[1]
+        p[0] = p[2].type
 
     def p_switch_labels(self, p):
         '''switch_labels : switch_label
@@ -931,35 +976,35 @@ class StatementParser(object):
 
     def p_do_statement(self, p):
         '''do_statement : DO statement WHILE '(' expression ')' ';' '''
-        p[0] = Node("DoWhileStmt", children=[p[2], p[5]])
+        p[0] = Node("DoWhileStmt", type=p[2].type, children=[p[2], p[5]])
 
     def p_break_statement(self, p):
         '''break_statement : BREAK ';'
                            | BREAK NAME ';' '''
         if len(p) == 3:
-            p[0] = Node("BreakStmt")
+            p[0] = Node("BreakStmt", type="void")
         elif len(p) == 4:
-            p[0] = Node("BreakStmt", value=p[2])
+            p[0] = Node("BreakStmt", type="void", value=p[2])
 
     def p_continue_statement(self, p):
         '''continue_statement : CONTINUE ';'
                               | CONTINUE NAME ';' '''
         if len(p) == 3:
-            p[0] = Node("ContinueStmt")
+            p[0] = Node("ContinueStmt", type="void")
         elif len(p) == 4:
-            p[0] = Node("ContinueStmt", value=p[2])
+            p[0] = Node("ContinueStmt", type="void", value=p[2])
 
     def p_return_statement(self, p):
         '''return_statement : RETURN expression_opt ';' '''
-        p[0] = Node("ReturnStmt", children=[p[2]])
+        p[0] = Node("ReturnStmt", type=p[2].type, children=[p[2]])
 
     def p_synchronized_statement(self, p):
         '''synchronized_statement : SYNCHRONIZED '(' expression ')' block'''
-        p[0] = Node("SynStmt", children=[p[3],p[5]])
+        p[0] = Node("SynStmt", type=p[5].type, children=[p[3],p[5]])
 
     def p_throw_statement(self, p):
         '''throw_statement : THROW expression ';' '''
-        p[0] = Node("ThrowStmt", children=[p[2]])
+        p[0] = Node("ThrowStmt", type=p[2].type, children=[p[2]])
 
     def p_try_statement(self, p):
         '''try_statement : TRY try_block catches
