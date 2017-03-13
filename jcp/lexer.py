@@ -21,7 +21,7 @@ keywords = ('this', 'class', 'void', 'super', 'extends', 'implements', 'enum', '
 
 tokens = [
         'NAME',
-        'NUM',
+        'INT_LITERAL', 'FLOAT_LITERAL',
         'CHAR_LITERAL',
         'STRING_LITERAL',
         'LINE_COMMENT', 'BLOCK_COMMENT',
@@ -40,7 +40,8 @@ tokens = [
 ] + [k.upper() for k in keywords]
 literals = '()+-*/=?:,.^|&~!=[]{};<>@%'
 
-t_NUM = r'\.?[0-9][0-9eE_lLdDa-fA-F.xXpP]*'
+t_INT_LITERAL = r'[1-9][0-9]*'
+t_FLOAT_LITERAL = r'\.?[0-9][0-9eE_lLdDa-fA-F.xXpP]*'
 t_CHAR_LITERAL = r'\'([^\\\n]|(\\.))*?\''
 t_STRING_LITERAL = r'\"([^\\\n]|(\\.))*?\"'
 

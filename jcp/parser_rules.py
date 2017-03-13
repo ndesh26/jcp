@@ -64,10 +64,10 @@ class ExpressionParser(object):
     def p_assignment(self, p):
         '''assignment : postfix_expression assignment_operator assignment_expression'''
         if p[1].type == p[3].type:
-            p[0] = Node("BinaryOperator", value=p[2], type="", children=[p[1], p[3]])
+            p[0] = Node("BinaryOperator", value=p[2], type="void", children=[p[1], p[3]])
         else:
             print("line {}: Type mismatch".format(p.lineno(1)))
-            p[0] = Node("BinaryOperator", value=p[2], type="", children=[p[1], p[3]])
+            p[0] = Node("BinaryOperator", value=p[2], type="error", children=[p[1], p[3]])
 
     def p_assignment_operator(self, p):
         '''assignment_operator : '='
@@ -91,18 +91,18 @@ class ExpressionParser(object):
             p[0] = p[1]
         elif len(p) == 6:
             if p[3].type == p[5].type:
-                p[0] = Node("ConditionalOperator", value="", type=p[3].type, children=[p[3], p[5]])
-            elif p[3].type == "string" or p[3].type == "float":
+                p[0] = Node("ConditionalOperator", value="", type=p[3].type, children=[p[1], p[3], p[5]])
+            elif p[3].type == "string" or p[3].type == "float" or p[3].type == "char":
                 print("line {}: type mismatch in conditional expression".format(p.lineno(2)))
                 p[5] = Node("ImplicitCastExpr", type=p[3].type, children=p[5])
-                p[0] = Node("ConditionalOperator", value="", type=p[3].type, children=[p[3], p[5]])
-            elif p[5].type == "string" or p[5].type == "float":
+                p[0] = Node("ConditionalOperator", value="", type=p[3].type, children=[p[1], p[3], p[5]])
+            elif p[5].type == "string" or p[5].type == "float" or p[5].type == "char":
                 print("line {}: type mismatch in conditional expression".format(p.lineno(2)))
                 p[3] = Node("ImplicitCastExpr", type=p[5].type, children=[p[3]])
-                p[0] = Node("ConditionalOperator", value="", type=p[5].type, children=[p[3], p[5]])
+                p[0] = Node("ConditionalOperator", value="", type=p[5].type, children=[p[1], p[3], p[5]])
             else:
                 print("line {}: type mismatch in conditional expression".format(p.lineno(2)))
-                p[0] = Node("ConditionalOperator", value="", type="float", children=[p[3], p[5]])
+                p[0] = Node("ConditionalOperator", value="", type="error", children=[p[1], p[3], p[5]])
 
 
     def p_conditional_expression_not_name(self, p):
@@ -113,18 +113,18 @@ class ExpressionParser(object):
             p[0] = p[1]
         elif len(p) == 6:
             if p[3].type == p[5].type:
-                p[0] = Node("ConditionalOperator", value="", type=p[3].type, children=[p[3], p[5]])
-            elif p[3].type == "string" or p[3].type == "float":
+                p[0] = Node("ConditionalOperator", value="", type=p[3].type, children=[p[1], p[3], p[5]])
+            elif p[3].type == "string" or p[3].type == "float" or p[3].type == "char":
                 print("line {}: type mismatch in conditional expression".format(p.lineno(2)))
                 p[5] = Node("ImplicitCastExpr", type=p[3].type, children=p[5])
-                p[0] = Node("ConditionalOperator", value="", type=p[3].type, children=[p[3], p[5]])
-            elif p[5].type == "string" or p[5].type == "float":
+                p[0] = Node("ConditionalOperator", value="", type=p[3].type, children=[p[1], p[3], p[5]])
+            elif p[5].type == "string" or p[5].type == "float" or p[5].type == "char":
                 print("line {}: type mismatch in conditional expression".format(p.lineno(2)))
                 p[3] = Node("ImplicitCastExpr", type=p[5].type, children=[p[3]])
-                p[0] = Node("ConditionalOperator", value="", type=p[5].type, children=[p[3], p[5]])
+                p[0] = Node("ConditionalOperator", value="", type=p[5].type, children=[p[1], p[3], p[5]])
             else:
                 print("line {}: type mismatch in conditional expression".format(p.lineno(2)))
-                p[0] = Node("ConditionalOperator", value="", type="float", children=[p[3], p[5]])
+                p[0] = Node("ConditionalOperator", value="", type="error", children=[p[1], p[3], p[5]])
 
     def p_conditional_or_expression(self, p):
         '''conditional_or_expression : conditional_and_expression
@@ -132,7 +132,7 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
-            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
+            p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
 
     def p_conditional_or_expression_not_name(self, p):
         '''conditional_or_expression_not_name : conditional_and_expression_not_name
@@ -141,7 +141,7 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
-            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
+            p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
 
     def p_conditional_and_expression(self, p):
         '''conditional_and_expression : inclusive_or_expression
@@ -149,7 +149,7 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
-            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
+            p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
 
     def p_conditional_and_expression_not_name(self, p):
         '''conditional_and_expression_not_name : inclusive_or_expression_not_name
@@ -158,7 +158,8 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
-            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
+            p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
+
 
     def p_inclusive_or_expression(self, p):
         '''inclusive_or_expression : exclusive_or_expression
@@ -166,7 +167,11 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
-            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
+            if p[1].type in ["int", "char"] and p[3].type in ["int", "char"]:
+                p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
+            else:
+                print("line {}: incompatible operator {} with operand of type {} and {}".format(p.lineno(2), p[2], p[1].type, p[3].type))
+                p[0] = Node("BinaryOperator", value=p[2], type="error", children=[p[1], p[3]])
 
     def p_inclusive_or_expression_not_name(self, p):
         '''inclusive_or_expression_not_name : exclusive_or_expression_not_name
@@ -175,7 +180,11 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
-            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
+            if p[1].type in ["int", "char"] and p[3].type in ["int", "char"]:
+                p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
+            else:
+                print("line {}: incompatible operator {} with operand of type {} and {}".format(p.lineno(2), p[2], p[1].type, p[3].type))
+                p[0] = Node("BinaryOperator", value=p[2], type="error", children=[p[1], p[3]])
 
     def p_exclusive_or_expression(self, p):
         '''exclusive_or_expression : and_expression
@@ -183,7 +192,11 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
-            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
+            if p[1].type in ["int", "char"] and p[3].type in ["int", "char"]:
+                p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
+            else:
+                print("line {}: incompatible operator {} with operand of type {} and {}".format(p.lineno(2), p[2], p[1].type, p[3].type))
+                p[0] = Node("BinaryOperator", value=p[2], type="error", children=[p[1], p[3]])
 
     def p_exclusive_or_expression_not_name(self, p):
         '''exclusive_or_expression_not_name : and_expression_not_name
@@ -192,7 +205,11 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
-            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
+            if p[1].type in ["int", "char"] and p[3].type in ["int", "char"]:
+                p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
+            else:
+                print("line {}: incompatible operator {} with operand of type {} and {}".format(p.lineno(2), p[2], p[1].type, p[3].type))
+                p[0] = Node("BinaryOperator", value=p[2], type="error", children=[p[1], p[3]])
 
     def p_and_expression(self, p):
         '''and_expression : equality_expression
@@ -200,7 +217,11 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
-            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
+            if p[1].type in ["int", "char"] and p[3].type in ["int", "char"]:
+                p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
+            else:
+                print("line {}: incompatible operator {} with operand of type {} and {}".format(p.lineno(2), p[2], p[1].type, p[3].type))
+                p[0] = Node("BinaryOperator", value=p[2], type="error", children=[p[1], p[3]])
 
     def p_and_expression_not_name(self, p):
         '''and_expression_not_name : equality_expression_not_name
@@ -209,7 +230,11 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
-            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
+            if p[1].type in ["int", "char"] and p[3].type in ["int", "char"]:
+                p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
+            else:
+                print("line {}: incompatible operator {} with operand of type {} and {}".format(p.lineno(2), p[2], p[1].type, p[3].type))
+                p[0] = Node("BinaryOperator", value=p[2], type="error", children=[p[1], p[3]])
 
     def p_equality_expression(self, p):
         '''equality_expression : instanceof_expression
@@ -218,7 +243,7 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
-            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
+            p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
 
     def p_equality_expression_not_name(self, p):
         '''equality_expression_not_name : instanceof_expression_not_name
@@ -229,7 +254,7 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
-            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
+            p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
 
     def p_instanceof_expression(self, p):
         '''instanceof_expression : relational_expression
@@ -237,7 +262,7 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
-            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
+            p[0] = Node("BinaryOperator", value=p[2], type="", children=[p[1], p[3]])
 
     def p_instanceof_expression_not_name(self, p):
         '''instanceof_expression_not_name : relational_expression_not_name
@@ -246,7 +271,7 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
-            p[0] = Node("BinaryOperator", p[2], "", [p[1], p[3]])
+            p[0] = Node("BinaryOperator", value=p[2], type="", children=[p[1], p[3]])
 
     def p_relational_expression(self, p):
         '''relational_expression : shift_expression
@@ -257,12 +282,8 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
-            if p[1].type == "int" and p[3].type == "int":
+            if p[1].type in ["int", "float", "char"] and p[3].type in ["int", "float", "char"]:
                 p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
-            elif p[1].type == "float" and p[3].type == "int":
-                p[0] = Node("BinaryOperator", value=p[2], type="float", children=[p[1], p[3]])
-            elif p[1].type == "char" and p[3].type == "int":
-                p[0] = Node("BinaryOperator", value=p[2], type="char", children=[p[1], p[3]])
             else:
                 print("line {}: incompatible operator {} with operand of type {} and {}".format(p.lineno(2), p[2], p[1].type, p[3].type))
                 p[0] = Node("BinaryOperator", value=p[2], type="error", children=[p[1], p[3]])
@@ -280,12 +301,8 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
-            if p[1].type == "int" and p[3].type == "int":
+            if p[1].type in ["int", "float", "char"] and p[3].type in ["int", "float", "char"]:
                 p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
-            elif p[1].type == "float" and p[3].type == "int":
-                p[0] = Node("BinaryOperator", value=p[2], type="float", children=[p[1], p[3]])
-            elif p[1].type == "char" and p[3].type == "int":
-                p[0] = Node("BinaryOperator", value=p[2], type="char", children=[p[1], p[3]])
             else:
                 print("line {}: incompatible operator {} with operand of type {} and {}".format(p.lineno(2), p[2], p[1].type, p[3].type))
                 p[0] = Node("BinaryOperator", value=p[2], type="error", children=[p[1], p[3]])
@@ -1215,7 +1232,7 @@ class NameParser(object):
 class LiteralParser(object):
 
     def p_literal1(self, p):
-        '''literal : NUM'''
+        '''literal : INT_LITERAL'''
         p[0] = Node("IntegerLiteral", value=p[1], type="int")
 
     def p_literal2(self, p):
@@ -1234,6 +1251,10 @@ class LiteralParser(object):
     def p_literal5(self, p):
         '''literal : NULL'''
         p[0] = Node("Null", value=p[1], type="null")
+
+    def p_literal6(self, p):
+        '''literal : FLOAT_LITERAL'''
+        p[0] = Node("FloatingLiteral", value=p[1], type="float")
 
 class TypeParser(object):
 
