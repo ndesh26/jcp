@@ -69,7 +69,6 @@ class ExpressionParser(object):
             print("line {}: Type mismatch".format(p.lineno(1)))
             p[0] = Node("BinaryOperator", value=p[2], type="", children=[p[1], p[3]])
 
-
     def p_assignment_operator(self, p):
         '''assignment_operator : '='
                                | TIMES_ASSIGN
@@ -91,7 +90,20 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 6:
-            p[0] = Node("BinaryOperator", "", "", [p[3], p[5]])
+            if p[3].type == p[5].type:
+                p[0] = Node("ConditionalOperator", value="", type=p[3].type, children=[p[3], p[5]])
+            elif p[3].type == "string" or p[3].type == "float":
+                print("line {}: type mismatch in conditional expression".format(p.lineno(2)))
+                p[5] = Node("ImplicitCastExpr", type=p[3].type, children=p[5])
+                p[0] = Node("ConditionalOperator", value="", type=p[3].type, children=[p[3], p[5]])
+            elif p[5].type == "string" or p[5].type == "float":
+                print("line {}: type mismatch in conditional expression".format(p.lineno(2)))
+                p[3] = Node("ImplicitCastExpr", type=p[5].type, children=[p[3]])
+                p[0] = Node("ConditionalOperator", value="", type=p[5].type, children=[p[3], p[5]])
+            else:
+                print("line {}: type mismatch in conditional expression".format(p.lineno(2)))
+                p[0] = Node("ConditionalOperator", value="", type="float", children=[p[3], p[5]])
+
 
     def p_conditional_expression_not_name(self, p):
         '''conditional_expression_not_name : conditional_or_expression_not_name
@@ -100,7 +112,19 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 6:
-            p[0] = Node("BinaryOperator", "", "", [p[3], p[5]])
+            if p[3].type == p[5].type:
+                p[0] = Node("ConditionalOperator", value="", type=p[3].type, children=[p[3], p[5]])
+            elif p[3].type == "string" or p[3].type == "float":
+                print("line {}: type mismatch in conditional expression".format(p.lineno(2)))
+                p[5] = Node("ImplicitCastExpr", type=p[3].type, children=p[5])
+                p[0] = Node("ConditionalOperator", value="", type=p[3].type, children=[p[3], p[5]])
+            elif p[5].type == "string" or p[5].type == "float":
+                print("line {}: type mismatch in conditional expression".format(p.lineno(2)))
+                p[3] = Node("ImplicitCastExpr", type=p[5].type, children=[p[3]])
+                p[0] = Node("ConditionalOperator", value="", type=p[5].type, children=[p[3], p[5]])
+            else:
+                print("line {}: type mismatch in conditional expression".format(p.lineno(2)))
+                p[0] = Node("ConditionalOperator", value="", type="float", children=[p[3], p[5]])
 
     def p_conditional_or_expression(self, p):
         '''conditional_or_expression : conditional_and_expression
@@ -2267,13 +2291,13 @@ class JavaParser(ExpressionParser, NameParser, LiteralParser, TypeParser, ClassP
     def p_goal_expression(self, p):
         '''goal : MINUSMINUS expression'''
         p[0] = p[2]
-        p[0].print_tree()
-        print(ast)
-        symbol_table.print_table()
 
     def p_goal_statement(self, p):
         '''goal : '*' block_statement'''
         p[0] = p[2]
+        p[0].print_tree()
+        print(ast)
+        symbol_table.print_table()
 
     # Error rule for syntax errors
     def p_error(self, p):
