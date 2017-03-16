@@ -661,7 +661,10 @@ class StatementParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
+            if p[1].dims != p[3].dims:
+                print("line {}: variable '{}'  is a {}-D array, but initialized using a {}-D initializer".format(p.lineno(2), p[1].value, p[1].dims, p[3].dims))
             p[1].type = p[3].type
+            p[1].arraylen = p[3].arraylen
             p[1].children.append(p[3])
             p[0] = p[1]
 
@@ -725,7 +728,7 @@ class StatementParser(object):
 
     def p_array_initializer(self, p):
         '''array_initializer : '{' comma_opt '}' '''
-        p[0] = Node("InitListExpr", arraylen=[0])
+        p[0] = Node("InitListExpr", arraylen=[0], dims=1)
 
     def p_array_initializer2(self, p):
         '''array_initializer : '{' variable_initializers '}'
@@ -736,10 +739,10 @@ class StatementParser(object):
         '''variable_initializers : variable_initializer
                                  | variable_initializers ',' variable_initializer'''
         if len(p) == 2:
-            p[0] = Node("InitListExpr", arraylen=[1], children=[p[1]])
+            p[0] = Node("InitListExpr", arraylen=[1]+p[1].arraylen, children=[p[1]], dims=p[1].dims+1)
         elif len(p) == 4:
             p[1].children.append(p[3])
-            p[1].arraylen[0] = p[1].arraylen[0] + 1
+            p[1].arraylen[0] += 1
             p[0] = p[1]
 
     def p_method_invocation(self, p):
