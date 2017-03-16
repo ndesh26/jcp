@@ -6,11 +6,12 @@ ast = ""
 symbol_table = symbol_table.SymbolTable()
 
 class Node:
-    def __init__(self, name="", value="", type="", children=None, modifiers=None, dims=0, arraylen=None, sym_entry=None):
+    def __init__(self, name="", value="", type="", children=None, modifiers=None, dims=0, arraylen=None, sym_entry=None, lineno=0):
         self.name = name
         self.value = value
         self.type = type
         self.dims = dims
+        self.lineno = lineno
         self.sym_entry = sym_entry
         if modifiers:
             self.modifiers = modifiers
@@ -804,54 +805,73 @@ class StatementParser(object):
 
     def p_if_then_statement(self, p):
         '''if_then_statement : IF '(' expression ')' statement'''
-        if p[3].type == "boolean":
+        if p[3].type == "int" or p[3].type == "bool":
             p[0] = Node("IfStmt", type=p[5].type, children=[p[3],p[5]])
         else:
-            print("line {}: IF expression not of type BOOLEAN".format(p.lineno(2)))
+            tmp = Node("ImplicitCastExpr", type="int", children=[p[3]])
+            p[0] = Node("IfStmt", type=p[5].type, children=[tmp,p[5]])
+            print("line {}: condition in if statment is not of type int".format(p.lineno(2)))
+            print("line {}: there will be an implicit conversion form '{}' to 'int'".format(p.lineno(2), p[3].type))
 
     def p_if_then_else_statement(self, p):
         '''if_then_else_statement : IF '(' expression ')' statement_no_short_if ELSE statement'''
-        if p[3].type == "boolean":
+        if p[3].type == "int" or p[3].type == "bool":
             p[0] = Node("IfStmt", type=p[5].type, children=[p[3], p[5], p[7]])
         else:
-            print("line {}: IF expression not of type BOOLEAN".format(p.lineno(2)))
+            tmp = Node("ImplicitCastExpr", type="int", children=[p[3]])
+            p[0] = Node("IfStmt", type=p[5].type, children=[p[3], p[5], p[7]])
+            print("line {}: condition in if statement is not of type int".format(p.lineno(2)))
+            print("line {}: there will be an implicit conversion form '{}' to 'int'".format(p.lineno(2), p[3].type))
 
     def p_if_then_else_statement_no_short_if(self, p):
         '''if_then_else_statement_no_short_if : IF '(' expression ')' statement_no_short_if ELSE statement_no_short_if'''
-        if p[3].type == "boolean" and p[5].type == p[7].type:
+        if p[3].type == "int" or p[3].type == "bool":
             p[0] = Node("IfStmt", type=p[5].type, children=[p[3], p[5], p[7]])
         else:
-            print("line {}: IF expression not of type BOOLEAN".format(p.lineno(2)))
+            tmp = Node("ImplicitCastExpr", type="int", children=[p[3]])
+            p[0] = Node("IfStmt", type=p[5].type, children=[p[3], p[5], p[7]])
+            print("line {}: condition in if statement is not of type int".format(p.lineno(2)))
+            print("line {}: there will be an implicit conversion form '{}' to 'int'".format(p.lineno(2), p[3].type))
 
     def p_while_statement(self, p):
         '''while_statement : WHILE '(' expression ')' statement'''
-        if p[3].type == "boolean":
-            p[0] = Node("WhileStmt", type=p[5].type, children=[p[3], p[5]])
+        if p[3].type == "int" or p[3].type == "bool":
+            p[0] = Node("WhileStmt", type=p[5].type, children=[p[3],p[5]])
         else:
-            print("line {}: WHILE expression not of type BOOLEAN".format(p.lineno(2)))
+            tmp = Node("ImplicitCastExpr", type="int", children=[p[3]])
+            p[0] = Node("WhileStmt", type=p[5].type, children=[tmp,p[5]])
+            print("line {}: condition in while statement is not of type int".format(p.lineno(2)))
+            print("line {}: there will be an implicit conversion form '{}' to 'int'".format(p.lineno(2), p[3].type))
 
     def p_while_statement_no_short_if(self, p):
         '''while_statement_no_short_if : WHILE '(' expression ')' statement_no_short_if'''
-        if p[3].type == "boolean":
-            p[0] = Node("WhileStmt", type=p[5].type, children=[p[3], p[5]])
+        if p[3].type == "int" or p[3].type == "bool":
+            p[0] = Node("WhileStmt", type=p[5].type, children=[p[3],p[5]])
         else:
-            print("line {}: WHILE expression not of type BOOLEAN".format(p.lineno(2)))
+            tmp = Node("ImplicitCastExpr", type="int", children=[p[3]])
+            p[0] = Node("WhileStmt", type=p[5].type, children=[tmp,p[5]])
+            print("line {}: condition in while statement is not of type int".format(p.lineno(2)))
+            print("line {}: there will be an implicit conversion form '{}' to 'int'".format(p.lineno(2), p[3].type))
 
     def p_for_statement(self, p):
         '''for_statement : FOR '(' for_init_opt ';' expression_opt ';' for_update_opt ')' statement'''
-    # TODO: For inner statements still not clear
-        if p[3].type == "void" and p[5].type == "int":
-            p[0] = Node("ForStmt", type=p[9].type, children=[p[3], p[5], p[7], p[9]])
-        else:
-            print("line {}: Error in FOR statement types".format(p.lineno(2)))
+        if p[3].name == "":
+            p[3].name = "NullStmt"
+        if p[5].name == "":
+            p[5].name = "NullStmt"
+        if p[7].name == "":
+            p[7].name = "NullStmt"
+        p[0] = Node("ForStmt", children=[p[3], p[5], p[7], p[9]])
 
     def p_for_statement_no_short_if(self, p):
         '''for_statement_no_short_if : FOR '(' for_init_opt ';' expression_opt ';' for_update_opt ')' statement_no_short_if'''
-    # TODO: For inner statements still not clear
-        if p[3].type == "void" and p[5].type == "int":
-            p[0] = Node("ForStmt", type=p[9].type, children=[p[3], p[5], p[7], p[9]])
-        else:
-            print("line {}: Error in FOR statement types".format(p.lineno(2)))
+        if p[3].name == "":
+            p[3].name = "NullStmt"
+        if p[5].name == "":
+            p[5].name = "NullStmt"
+        if p[7].name == "":
+            p[7].name = "NullStmt"
+        p[0] = Node("ForStmt", children=[p[3], p[5], p[7], p[9]])
 
     def p_for_init_opt(self, p):
         '''for_init_opt : for_init
@@ -867,13 +887,10 @@ class StatementParser(object):
         '''statement_expression_list : statement_expression
                                      | statement_expression_list ',' statement_expression'''
         if len(p) == 2:
-            p[0] = Node("StmtList", type=p[1].type, children=[p[1]])
+            p[0] = Node("StmtList", children=[p[1]])
         elif len(p) == 4:
-            if p[1].type == p[3].type:
-                p[1].children.append(p[3])
-                p[0] = p[1]
-            else:
-                print("ERROR: statements not of same type")
+            p[1].children.append(p[3])
+            p[0] = p[1]
 
     def p_expression_opt(self, p):
         '''expression_opt : expression
@@ -887,18 +904,22 @@ class StatementParser(object):
 
     def p_for_update(self, p):
         '''for_update : statement_expression_list'''
+        p[1].name = "ForUpdate"
         p[0] = p[1]
 
     def p_enhanced_for_statement(self, p):
         '''enhanced_for_statement : enhanced_for_statement_header statement'''
-        p[0] = Node("EnhancedFor", type=p[2].type, children=p[1].children+[p[2]])
+        p[0] = Node("EnhancedFor", children=p[1].children+[p[2]])
 
     def p_enhanced_for_statement_no_short_if(self, p):
         '''enhanced_for_statement_no_short_if : enhanced_for_statement_header statement_no_short_if'''
-        p[0] = Node("EnhancedFor", type=p[2].type, children=p[1].children+[p[2]])
+        p[0] = Node("EnhancedFor", children=p[1].children+[p[2]], type=p[1].type)
 
     def p_enhanced_for_statement_header(self, p):
         '''enhanced_for_statement_header : enhanced_for_statement_header_init ':' expression ')' '''
+        if p[1].type != p[3].type or p[1].dims != p[3].dims:
+            p[1].type = "error"
+            print("line {}: the type of iterator and array do not match".format(p.lineno(2)))
         p[1].children.append(p[3])
         p[0] = p[1]
 
@@ -930,7 +951,7 @@ class StatementParser(object):
             if p[2].type == p[4].type:
                 p[0] = Node("AssertStmt", type=p[2].type, children=[p[2],p[4]])
             else:
-                print("line {}: ASSERT Statement has type mismatch".format(p.lineno(2)))
+                print("line {}: assert Statement has type mismatch".format(p.lineno(1)))
 
     def p_empty_statement(self, p):
         '''empty_statement : ';' '''
@@ -973,7 +994,6 @@ class StatementParser(object):
         '''switch_block_statement : switch_labels block_statements'''
         p[1].children.append(p[2])
         p[0] = p[1]
-        p[0] = p[2].type
 
     def p_switch_labels(self, p):
         '''switch_labels : switch_label
@@ -988,7 +1008,7 @@ class StatementParser(object):
         '''switch_label : CASE constant_expression ':'
                         | DEFAULT ':' '''
         if len(p) == 4:
-            p[0] = Node("CaseStmt", children=[p[2]])
+            p[0] = Node("CaseStmt", children=[p[2]] ,type=p[2].type, lineno=p.lineno(1))
         elif len(p) == 3:
             p[0] = Node("DefaultStmt")
 
@@ -2339,6 +2359,9 @@ class JavaParser(ExpressionParser, NameParser, LiteralParser, TypeParser, ClassP
     def p_goal_compilation_unit(self, p):
         '''goal : PLUSPLUS compilation_unit'''
         p[0] = p[2]
+        p[0].print_tree()
+        print(ast)
+        symbol_table.print_table()
 
     def p_goal_expression(self, p):
         '''goal : MINUSMINUS expression'''
@@ -2347,9 +2370,6 @@ class JavaParser(ExpressionParser, NameParser, LiteralParser, TypeParser, ClassP
     def p_goal_statement(self, p):
         '''goal : '*' block_statement'''
         p[0] = p[2]
-        p[0].print_tree()
-        print(ast)
-        symbol_table.print_table()
 
     # Error rule for syntax errors
     def p_error(self, p):
