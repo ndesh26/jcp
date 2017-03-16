@@ -712,10 +712,7 @@ class StatementParser(object):
     def p_expression_statement(self, p):
         '''expression_statement : statement_expression ';'
                                 | explicit_constructor_invocation'''
-        if len(p) == 2:
-            p[0] = p[1]
-        elif len(p) == 3:
-            p[0] = p[1]
+        p[0] = p[1]
 
     def p_statement_expression(self, p):
         '''statement_expression : assignment
@@ -753,8 +750,13 @@ class StatementParser(object):
 
     def p_method_invocation(self, p):
         '''method_invocation : NAME '(' argument_list_opt ')' '''
-        p[1] = Node("DeclsRefExpr", value=p[1])
-        tmp = Node("ImplicitCastExpr", children=[p[1]])
+        entry = symbol_table.get_entry(p[1])
+        if entry:
+            p[1] = Node("DeclsRefExpr", value=p[1], type=entry['type'])
+        else:
+            print("line {}: the method '{}' has not been declared in this scope".format(p.lineno(2), p[1]))
+            p[1] = Node("DeclsRefExpr", value=p[1])
+        tmp = Node("ImplicitCastExpr", children=[p[1]], type="method pointer")
         p[0] = Node("MethodInvocation", children=[tmp]+p[3].children)
 
     def p_method_invocation2(self, p):
@@ -769,13 +771,23 @@ class StatementParser(object):
     def p_method_invocation4(self, p):
         '''method_invocation : name '.' NAME '(' argument_list_opt ')'
                              | primary '.' NAME '(' argument_list_opt ')' '''
-        p[3] = Node("MemberExpr", value=p[2]+p[3], children=[p[1]])
+        entry = symbol_table.get_entry(p[1].value+p[2]+p[3])
+        if entry:
+            p[3] = Node("MemberExpr", value=p[2]+p[3], children=[p[1]], type=entry['type'])
+        else:
+            print("line {}: the method '{}' has not been declared in this scope".format(p.lineno(2), p[1]))
+            p[3] = Node("MemberExpr", value=p[2]+p[3], children=[p[1]])
         p[0] = Node("MethodInvocation", children=[p[3]]+p[5].children)
 
     def p_method_invocation5(self, p):
         '''method_invocation : SUPER '.' NAME '(' argument_list_opt ')' '''
         p[1] = Node("RefExpr", value=p[1])
-        p[3] = Node("MemberExpr", value=p[2]+p[3], children=[p[1]])
+        entry = symbol_table.get_entry(p[1].value+p[2]+p[3])
+        if entry:
+            p[3] = Node("MemberExpr", value=p[2]+p[3], children=[p[1]], type=entry['type'])
+        else:
+            print("line {}: the method '{}' has not been declared in this scope".format(p.lineno(2), p[1]))
+            p[3] = Node("MemberExpr", value=p[2]+p[3], children=[p[1]])
         p[0] = Node("MethodInvocation", children=[p[3]]+p[5].children)
 
     def p_labeled_statement(self, p):
