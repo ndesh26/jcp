@@ -33,13 +33,19 @@ class Node:
                 if modifier:
                     ast = ast + modifier
             ast = ast + "\n"
-            for node in self.children:
-                if isinstance(node, Node):
-                    if node.name:
-                        ast = ast + '  ' * (k-1) +'|'
-                        node.print_tree(k+1)
-                else:
-                    print("Error {}".format(node))
+            if self.children == [  ]:
+                return
+            else:
+                for node in  self.children:
+                    if isinstance(node, Node):
+                        if node.name:
+                            if node == self.children[len(self.children) - 1]:
+                                ast = ast + ' |' * (k-1) + ' `-'
+                            else:
+                                ast = ast + ' |' * (k-1) + ' |-'
+                            node.print_tree(k+1)
+                    else:
+                        print("Error {}".format(node))
 
 class ExpressionParser(object):
 
