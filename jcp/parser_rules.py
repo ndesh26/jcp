@@ -176,7 +176,7 @@ class ExpressionParser(object):
             if p[1].type in ["int", "char"] and p[3].type in ["int", "char"]:
                 p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
             else:
-                print("line {}: incompatible operator {} with operand of type {} and {}".format(p.lineno(2), p[2], p[1].type, p[3].type))
+                print("line {}: incompatible operator '{}' with operand of type '{}' and '{}'".format(p.lineno(2), p[2], p[1].type, p[3].type))
                 p[0] = Node("BinaryOperator", value=p[2], type="error", children=[p[1], p[3]])
 
     def p_inclusive_or_expression_not_name(self, p):
@@ -189,7 +189,7 @@ class ExpressionParser(object):
             if p[1].type in ["int", "char"] and p[3].type in ["int", "char"]:
                 p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
             else:
-                print("line {}: incompatible operator {} with operand of type {} and {}".format(p.lineno(2), p[2], p[1].type, p[3].type))
+                print("line {}: incompatible operator '{}' with operand of type '{}' and '{}'".format(p.lineno(2), p[2], p[1].type, p[3].type))
                 p[0] = Node("BinaryOperator", value=p[2], type="error", children=[p[1], p[3]])
 
     def p_exclusive_or_expression(self, p):
@@ -201,7 +201,7 @@ class ExpressionParser(object):
             if p[1].type in ["int", "char"] and p[3].type in ["int", "char"]:
                 p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
             else:
-                print("line {}: incompatible operator {} with operand of type {} and {}".format(p.lineno(2), p[2], p[1].type, p[3].type))
+                print("line {}: incompatible operator '{}' with operand of type '{}' and '{}'".format(p.lineno(2), p[2], p[1].type, p[3].type))
                 p[0] = Node("BinaryOperator", value=p[2], type="error", children=[p[1], p[3]])
 
     def p_exclusive_or_expression_not_name(self, p):
@@ -214,7 +214,7 @@ class ExpressionParser(object):
             if p[1].type in ["int", "char"] and p[3].type in ["int", "char"]:
                 p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
             else:
-                print("line {}: incompatible operator {} with operand of type {} and {}".format(p.lineno(2), p[2], p[1].type, p[3].type))
+                print("line {}: incompatible operator '{}' with operand of type '{}' and '{}'".format(p.lineno(2), p[2], p[1].type, p[3].type))
                 p[0] = Node("BinaryOperator", value=p[2], type="error", children=[p[1], p[3]])
 
     def p_and_expression(self, p):
@@ -226,7 +226,7 @@ class ExpressionParser(object):
             if p[1].type in ["int", "char"] and p[3].type in ["int", "char"]:
                 p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
             else:
-                print("line {}: incompatible operator {} with operand of type {} and {}".format(p.lineno(2), p[2], p[1].type, p[3].type))
+                print("line {}: incompatible operator '{}' with operand of type '{}' and '{}'".format(p.lineno(2), p[2], p[1].type, p[3].type))
                 p[0] = Node("BinaryOperator", value=p[2], type="error", children=[p[1], p[3]])
 
     def p_and_expression_not_name(self, p):
@@ -239,7 +239,7 @@ class ExpressionParser(object):
             if p[1].type in ["int", "char"] and p[3].type in ["int", "char"]:
                 p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
             else:
-                print("line {}: incompatible operator {} with operand of type {} and {}".format(p.lineno(2), p[2], p[1].type, p[3].type))
+                print("line {}: incompatible operator '{}' with operand of type '{}' and '{}'".format(p.lineno(2), p[2], p[1].type, p[3].type))
                 p[0] = Node("BinaryOperator", value=p[2], type="error", children=[p[1], p[3]])
 
     def p_equality_expression(self, p):
@@ -291,7 +291,7 @@ class ExpressionParser(object):
             if p[1].type in ["int", "float", "char"] and p[3].type in ["int", "float", "char"]:
                 p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
             else:
-                print("line {}: incompatible operator {} with operand of type {} and {}".format(p.lineno(2), p[2], p[1].type, p[3].type))
+                print("line {}: incompatible operator '{}' with operand of type '{}' and '{}'".format(p.lineno(2), p[2], p[1].type, p[3].type))
                 p[0] = Node("BinaryOperator", value=p[2], type="error", children=[p[1], p[3]])
 
     def p_relational_expression_not_name(self, p):
@@ -310,7 +310,7 @@ class ExpressionParser(object):
             if p[1].type in ["int", "float", "char"] and p[3].type in ["int", "float", "char"]:
                 p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
             else:
-                print("line {}: incompatible operator {} with operand of type {} and {}".format(p.lineno(2), p[2], p[1].type, p[3].type))
+                print("line {}: incompatible operator '{}' with operand of type '{}' and '{}'".format(p.lineno(2), p[2], p[1].type, p[3].type))
                 p[0] = Node("BinaryOperator", value=p[2], type="error", children=[p[1], p[3]])
 
     def p_shift_expression(self, p):
@@ -328,7 +328,7 @@ class ExpressionParser(object):
             elif p[1].type == "char" and p[3].type == "int":
                 p[0] = Node("BinaryOperator", value=p[2], type="char", children=[p[1], p[3]])
             else:
-                print("line {}: incompatible operator {} with operand of type {} and {}".format(p.lineno(2), p[2], p[1].type, p[3].type))
+                print("line {}: incompatible operator '{}' with operand of type '{}' and '{}'".format(p.lineno(2), p[2], p[1].type, p[3].type))
                 p[0] = Node("BinaryOperator", value=p[2], type="error", children=[p[1], p[3]])
 
     def p_shift_expression_not_name(self, p):
@@ -349,7 +349,7 @@ class ExpressionParser(object):
             elif p[1].type == "char" and p[3].type == "int":
                 p[0] = Node("BinaryOperator", value=p[2], type="char", children=[p[1], p[3]])
             else:
-                print("line {}: incompatible operator {} with operand of type {} and {}".format(p.lineno(2), p[2], p[1].type, p[3].type))
+                print("line {}: incompatible operator '{}' with operand of type '{}' and '{}'".format(p.lineno(2), p[2], p[1].type, p[3].type))
                 p[0] = Node("BinaryOperator", value=p[2], type="error", children=[p[1], p[3]])
 
     def p_additive_expression(self, p):
@@ -366,7 +366,7 @@ class ExpressionParser(object):
             elif p[1].type == "float" and p[3].type == "float":
                 p[0] = Node("BinaryOperator", value=p[2], type="float", children=[p[1], p[3]])
             else:
-                print("line {}: incompatible operator {} with operand of type {} and {}".format(p.lineno(2), p[2], p[1].type, p[3].type))
+                print("line {}: incompatible operator '{}' with operand of type '{}' and '{}'".format(p.lineno(2), p[2], p[1].type, p[3].type))
                 p[0] = Node("BinaryOperator", value=p[2], type="error", children=[p[1], p[3]])
 
     def p_additive_expression_not_name(self, p):
@@ -385,7 +385,7 @@ class ExpressionParser(object):
             elif p[1].type == "float" and p[3].type == "float":
                 p[0] = Node("BinaryOperator", value=p[2], type="float", children=[p[1], p[3]])
             else:
-                print("line {}: incompatible operator {} with operand of type {} and {}".format(p.lineno(2), p[2], p[1].type, p[3].type))
+                print("line {}: incompatible operator '{}' with operand of type '{}' and '{}'".format(p.lineno(2), p[2], p[1].type, p[3].type))
                 p[0] = Node("BinaryOperator", value=p[2], type="error", children=[p[1], p[3]])
 
     def p_multiplicative_expression(self, p):
@@ -403,7 +403,7 @@ class ExpressionParser(object):
             elif p[1].type == "float" and p[3].type == "float":
                 p[0] = Node("BinaryOperator", value=p[2], type="float", children=[p[1], p[3]])
             else:
-                print("line {}: incompatible operator {} with operand of type {} and {}".format(p.lineno(2), p[2], p[1].type, p[3].type))
+                print("line {}: incompatible operator '{}' with operand of type '{}' and '{}'".format(p.lineno(2), p[2], p[1].type, p[3].type))
                 p[0] = Node("BinaryOperator", value=p[2], type="error", children=[p[1], p[3]])
 
 
@@ -425,7 +425,7 @@ class ExpressionParser(object):
             elif p[1].type == "float" and p[3].type == "float":
                 p[0] = Node("BinaryOperator", value=p[2], type="float", children=[p[1], p[3]])
             else:
-                print("line {}: incompatible operator {} with operand of type {} and {}".format(p.lineno(2), p[2], p[1].type, p[3].type))
+                print("line {}: incompatible operator '{}' with operand of type '{}' and '{}'".format(p.lineno(2), p[2], p[1].type, p[3].type))
                 p[0] = Node("BinaryOperator", value=p[2], type="error", children=[p[1], p[3]])
 
     def p_unary_expression(self, p):
@@ -1253,7 +1253,7 @@ class NameParser(object):
         if entry:
             p[0] = Node("DeclsRefExpr", value=p[1], type=entry['type'])
         else:
-            print("line {}: the variable {} is undeclared".format(p.lineno(1), p[1]))
+            print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1]))
             p[0] = Node("DeclsRefExpr", value=p[1])
 
     def p_qualified_name(self, p):
