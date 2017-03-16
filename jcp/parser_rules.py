@@ -594,12 +594,13 @@ class StatementParser(object):
                             | block_statements block_statement'''
         if len(p) == 2:
             p[0] = Node("BlockStmts", type="void", children=[p[1]])
+            if (p[1].type == "error"):
+                p[0].type = "error"
         elif len(p) == 3:
-            # if (p[1].type == p[2].type):
+            if (p[2].type == "error"):
+                p[1].type = "error"
             p[1].children.append(p[2])
             p[0] = p[1]
-            # else:
-                # print("line {}: type mismatch in block statements".format(p.lineno(2)))
 
     def p_block_statement(self, p):
         '''block_statement : local_variable_declaration_statement
@@ -617,32 +618,32 @@ class StatementParser(object):
 
     def p_local_variable_declaration(self, p):
         '''local_variable_declaration : type variable_declarators'''
-        p[2].type = p[1].type
         for node in p[2].children:
             if (node.type == "") or (node.type != "" and node.type == p[1].type):
                 node.type = p[1].type
                 entry = symbol_table.get_entry(node.value)
                 if entry:
-                    print("line {}: variable {} is already declared".format(p.lineno(2), node.value))
+                    print("line {}: variable '{}' is already declared".format(p.lineno(2), node.value))
                 else:
                     symbol_table.insert(node.value, {'type':node.type})
             else:
-                print("line {}: variable {} (type {}) initialized to type {}".format(p.lineno(2), node.value, p[1].type, node.type))
+                print("line {}: variable '{}' (type '{}') initialized to type '{}'".format(p.lineno(2), node.value, p[1].type, node.type))
+                p[2].type = "error"
         p[0] = p[2]
 
     def p_local_variable_declaration2(self, p):
         '''local_variable_declaration : modifiers type variable_declarators'''
-        p[2].type = p[1].type
         for node in p[3].children:
             if (node.type == "") or (node.type != "" and node.type == p[2].type):
                 node.type = p[2].type
                 node.modifiers = p[1].modifiers
                 if symbol_table.get_entry(node.value):
-                    print("line {}: variable {} is already declared".format(p.lineno(2), node.value))
+                    print("line {}: variable '{}' is already declared".format(p.lineno(2), node.value))
                 else:
                     symbol_table.insert(node.value, {'type':node.type, 'modifiers':node.modifiers})
             else:
-                print("line {}: variable {} (type {}) initialized to type {}".format(p.lineno(2), node.value, p[2].type, node.type))
+                print("line {}: variable '{}' (type '{}') initialized to type '{}'".format(p.lineno(2), node.value, p[2].type, node.type))
+                p[3].type = "error"
         p[0] = p[3]
 
     def p_variable_declarators(self, p):
