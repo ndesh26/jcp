@@ -48,6 +48,15 @@ class Node:
                     else:
                         print("Error {}".format(node))
 
+def check_type(name, type, node):
+    if node.name == "InitListExpr":
+        for node1 in node.children:
+            check_type(name, type, node1)
+    else:
+        if node.type != type:
+            print("line {}: array '{}' (type '{}') initialized to value '{}' of type '{}'".format(node.lineno, name, type, node.value, node.type))
+
+
 class ExpressionParser(object):
 
     def p_expression(self, p):
@@ -71,10 +80,10 @@ class ExpressionParser(object):
     def p_assignment(self, p):
         '''assignment : postfix_expression assignment_operator assignment_expression'''
         if p[1].type == p[3].type:
-            p[0] = Node("BinaryOperator", value=p[2], type="void", children=[p[1], p[3]])
+            p[0] = Node("BinaryOperator", value=p[2].value, type="void", children=[p[1], p[3]])
         else:
-            print("line {}: Type mismatch".format(p.lineno(1)))
-            p[0] = Node("BinaryOperator", value=p[2], type="error", children=[p[1], p[3]])
+            print("line {}: Type mismatch".format(p[2].lineno))
+            p[0] = Node("BinaryOperator", value=p[2].value, type="error", children=[p[1], p[3]])
 
     def p_assignment_operator(self, p):
         '''assignment_operator : '='
@@ -89,7 +98,7 @@ class ExpressionParser(object):
                                | AND_ASSIGN
                                | OR_ASSIGN
                                | XOR_ASSIGN'''
-        p[0] = p[1]
+        p[0] = Node(value=p[1], lineno=p.lineno(1))
 
     def p_conditional_expression(self, p):
         '''conditional_expression : conditional_or_expression
@@ -628,13 +637,15 @@ class StatementParser(object):
         for node in p[2].children:
             if (node.type == "") or (node.type != "" and node.type == p[1].type):
                 node.type = p[1].type
+                if node.children != [  ] and node.children[0].name == "InitListExpr":
+                    check_type(node.value, node.type, node.children[0])
                 entry = symbol_table.get_entry(node.value)
                 if entry:
-                    print("line {}: variable '{}' is already declared".format(p.lineno(2), node.value))
+                    print("line {}: variable '{}' is already declared".format(node.lineno, node.value))
                 else:
-                    symbol_table.insert(node.value, {'type':node.type})
+                    node.sym_entry = symbol_table.insert(node.value, {'type':node.type, 'dims':node.dims, 'arraylen':node.arraylen})
             else:
-                print("line {}: variable '{}' (type '{}') initialized to type '{}'".format(p.lineno(2), node.value, p[1].type, node.type))
+                print("line {}: variable '{}' (type '{}') initialized to type '{}'".format(node.lineno, node.value, p[1].type, node.type))
                 p[2].type = "error"
         p[0] = p[2]
 
@@ -645,11 +656,11 @@ class StatementParser(object):
                 node.type = p[2].type
                 node.modifiers = p[1].modifiers
                 if symbol_table.get_entry(node.value):
-                    print("line {}: variable '{}' is already declared".format(p.lineno(2), node.value))
+                    print("line {}: variable '{}' is already declared".format(node.lineno, node.value))
                 else:
-                    symbol_table.insert(node.value, {'type':node.type, 'modifiers':node.modifiers})
+                    node.sym_entry = symbol_table.insert(node.value, {'type':node.type, 'modifiers':node.modifiers, 'dims':node.dims, 'arraylen':node.arraylen})
             else:
-                print("line {}: variable '{}' (type '{}') initialized to type '{}'".format(p.lineno(2), node.value, p[2].type, node.type))
+                print("line {}: variable '{}' (type '{}') initialized to type '{}'".format(node.lineno, node.value, p[2].type, node.type))
                 p[3].type = "error"
         p[0] = p[3]
 
@@ -673,6 +684,7 @@ class StatementParser(object):
             p[1].type = p[3].type
             p[1].arraylen = p[3].arraylen
             p[1].children.append(p[3])
+            p[1].lineno = p.lineno(2)
             p[0] = p[1]
 
     def p_variable_declarator_id(self, p):
@@ -910,6 +922,8 @@ class StatementParser(object):
     def p_enhanced_for_statement(self, p):
         '''enhanced_for_statement : enhanced_for_statement_header statement'''
         p[0] = Node("EnhancedFor", children=p[1].children+[p[2]])
+        symbol_table.end_scope()
+
 
     def p_enhanced_for_statement_no_short_if(self, p):
         '''enhanced_for_statement_no_short_if : enhanced_for_statement_header statement_no_short_if'''
@@ -925,12 +939,16 @@ class StatementParser(object):
 
     def p_enhanced_for_statement_header_init(self, p):
         '''enhanced_for_statement_header_init : FOR '(' type NAME dims_opt'''
-        p[4] = Node("VarDecl", type=p[3].type, dims=p[5].dims)
+        symbol_table.begin_scope()
+        p[4] = Node("VarDecl", value=p[4], type=p[3].type, dims=p[5].dims)
+        p[4].sym_entry = symbol_table.insert(p[4].value, {'type':p[4].type, 'dims':p[4].dims})
         p[0] = Node("EnhancedForHead", children=[p[4]])
 
     def p_enhanced_for_statement_header_init2(self, p):
         '''enhanced_for_statement_header_init : FOR '(' modifiers type NAME dims_opt'''
+        symbol_table.begin_scope()
         p[5] = Node("VarDecl", type=p[4].type, dims=p[6].dims, modifiers=p[3].modifiers)
+        p[4].sym_entry = symbol_table.insert(p[4].value, {'type':p[4].type, 'dims':p[4].dims, 'modifiers':p[4].modifiers})
         p[0] = Node("EnhancedForHead", children=[p[5]])
 
     def p_statement_no_short_if(self, p):
@@ -959,7 +977,15 @@ class StatementParser(object):
 
     def p_switch_statement(self, p):
         '''switch_statement : SWITCH '(' expression ')' switch_block'''
-        p[0] = Node("SwitchStmt", type=p[5].type, children=[p[3]]+p[5].children)
+        p[0] = Node("SwitchStmt", children=[p[3]]+p[5].children)
+        for node in p[5].children:
+            if p[3].type != node.type:
+                print("line {}: expression '{}' is not of type '{}'".format(node.lineno, node.children[0].value, p[3].type))
+                p[0].type = "error"
+            for node1 in node.children:
+                if node1.name == "CaseStmt" and p[3].type != node1.type:
+                    print("line {}: expression '{}' is not of type '{}'".format(node1.lineno, node1.children[0].value, p[3].type))
+                    p[0].type = "error"
 
     def p_switch_block(self, p):
         '''switch_block : '{' '}' '''

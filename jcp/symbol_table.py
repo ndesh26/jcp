@@ -37,6 +37,7 @@ class Table:
 
     def insert(self, name, attributes={}):
         self.entries[name] = attributes
+        return self.entries[name]
 
     def print_table(self):
         for key, value in self.entries.items():
@@ -60,7 +61,7 @@ class SymbolTable:
         return self.table.get_method_entry(name)
 
     def insert(self, name, attributes={}):
-        self.table.insert(name, attributes)
+        return self.table.insert(name, attributes)
 
     def print_table(self):
         self.table.print_table()
