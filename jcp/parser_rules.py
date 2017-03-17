@@ -80,7 +80,7 @@ class ExpressionParser(object):
     def p_assignment(self, p):
         '''assignment : postfix_expression assignment_operator assignment_expression'''
         if p[1].type == p[3].type:
-            p[0] = Node("BinaryOperator", value=p[2].value, type="void", children=[p[1], p[3]])
+            p[0] = Node("BinaryOperator", value=p[2].value, children=[p[1], p[3]])
         else:
             print("line {}: Type mismatch".format(p[2].lineno))
             p[0] = Node("BinaryOperator", value=p[2].value, type="error", children=[p[1], p[3]])
@@ -609,7 +609,7 @@ class StatementParser(object):
         '''block_statements : block_statement
                             | block_statements block_statement'''
         if len(p) == 2:
-            p[0] = Node("BlockStmts", type="void", children=[p[1]])
+            p[0] = Node("BlockStmts", children=[p[1]])
             if (p[1].type == "error"):
                 p[0].type = "error"
         elif len(p) == 3:
@@ -635,33 +635,31 @@ class StatementParser(object):
     def p_local_variable_declaration(self, p):
         '''local_variable_declaration : type variable_declarators'''
         for node in p[2].children:
-            if (node.type == "") or (node.type != "" and node.type == p[1].type):
-                node.type = p[1].type
-                if node.children != [  ] and node.children[0].name == "InitListExpr":
-                    check_type(node.value, node.type, node.children[0])
-                entry = symbol_table.get_entry(node.value)
-                if entry:
-                    print("line {}: variable '{}' is already declared".format(node.lineno, node.value))
-                else:
-                    node.sym_entry = symbol_table.insert(node.value, {'type':node.type, 'dims':node.dims, 'arraylen':node.arraylen})
-            else:
+            if (node.type != "") and (node.type == "" or node.type != p[1].type):
                 print("line {}: variable '{}' (type '{}') initialized to type '{}'".format(node.lineno, node.value, p[1].type, node.type))
                 p[2].type = "error"
+            node.type = p[1].type
+            if node.children != [  ] and node.children[0].name == "InitListExpr":
+                check_type(node.value, node.type, node.children[0])
+            entry = symbol_table.get_entry(node.value)
+            if entry:
+                print("line {}: variable '{}' is already declared".format(node.lineno, node.value))
+            else:
+                node.sym_entry = symbol_table.insert(node.value, {'type':node.type, 'dims':node.dims, 'arraylen':node.arraylen})
         p[0] = p[2]
 
     def p_local_variable_declaration2(self, p):
         '''local_variable_declaration : modifiers type variable_declarators'''
         for node in p[3].children:
-            if (node.type == "") or (node.type != "" and node.type == p[2].type):
-                node.type = p[2].type
-                node.modifiers = p[1].modifiers
-                if symbol_table.get_entry(node.value):
-                    print("line {}: variable '{}' is already declared".format(node.lineno, node.value))
-                else:
-                    node.sym_entry = symbol_table.insert(node.value, {'type':node.type, 'modifiers':node.modifiers, 'dims':node.dims, 'arraylen':node.arraylen})
-            else:
+            if (node.type != "") and (node.type == "" or node.type != p[2].type):
                 print("line {}: variable '{}' (type '{}') initialized to type '{}'".format(node.lineno, node.value, p[2].type, node.type))
                 p[3].type = "error"
+            node.type = p[2].type
+            node.modifiers = p[1].modifiers
+            if symbol_table.get_entry(node.value):
+                print("line {}: variable '{}' is already declared".format(node.lineno, node.value))
+            else:
+                node.sym_entry = symbol_table.insert(node.value, {'type':node.type, 'modifiers':node.modifiers, 'dims':node.dims, 'arraylen':node.arraylen})
         p[0] = p[3]
 
     def p_variable_declarators(self, p):
@@ -818,50 +816,48 @@ class StatementParser(object):
     def p_if_then_statement(self, p):
         '''if_then_statement : IF '(' expression ')' statement'''
         if p[3].type == "int" or p[3].type == "bool":
-            p[0] = Node("IfStmt", type=p[5].type, children=[p[3],p[5]])
+            p[0] = Node("IfStmt", children=[p[3],p[5]])
         else:
-            tmp = Node("ImplicitCastExpr", type="int", children=[p[3]])
-            p[0] = Node("IfStmt", type=p[5].type, children=[tmp,p[5]])
             print("line {}: condition in if statment is not of type int".format(p.lineno(2)))
             print("line {}: there will be an implicit conversion form '{}' to 'int'".format(p.lineno(2), p[3].type))
 
     def p_if_then_else_statement(self, p):
         '''if_then_else_statement : IF '(' expression ')' statement_no_short_if ELSE statement'''
         if p[3].type == "int" or p[3].type == "bool":
-            p[0] = Node("IfStmt", type=p[5].type, children=[p[3], p[5], p[7]])
+            p[0] = Node("IfStmt", children=[p[3], p[5], p[7]])
         else:
             tmp = Node("ImplicitCastExpr", type="int", children=[p[3]])
-            p[0] = Node("IfStmt", type=p[5].type, children=[p[3], p[5], p[7]])
+            p[0] = Node("IfStmt", children=[p[3], p[5], p[7]])
             print("line {}: condition in if statement is not of type int".format(p.lineno(2)))
             print("line {}: there will be an implicit conversion form '{}' to 'int'".format(p.lineno(2), p[3].type))
 
     def p_if_then_else_statement_no_short_if(self, p):
         '''if_then_else_statement_no_short_if : IF '(' expression ')' statement_no_short_if ELSE statement_no_short_if'''
         if p[3].type == "int" or p[3].type == "bool":
-            p[0] = Node("IfStmt", type=p[5].type, children=[p[3], p[5], p[7]])
+            p[0] = Node("IfStmt", children=[p[3], p[5], p[7]])
         else:
             tmp = Node("ImplicitCastExpr", type="int", children=[p[3]])
-            p[0] = Node("IfStmt", type=p[5].type, children=[p[3], p[5], p[7]])
+            p[0] = Node("IfStmt", children=[p[3], p[5], p[7]])
             print("line {}: condition in if statement is not of type int".format(p.lineno(2)))
             print("line {}: there will be an implicit conversion form '{}' to 'int'".format(p.lineno(2), p[3].type))
 
     def p_while_statement(self, p):
         '''while_statement : WHILE '(' expression ')' statement'''
         if p[3].type == "int" or p[3].type == "bool":
-            p[0] = Node("WhileStmt", type=p[5].type, children=[p[3],p[5]])
+            p[0] = Node("WhileStmt", children=[p[3],p[5]])
         else:
             tmp = Node("ImplicitCastExpr", type="int", children=[p[3]])
-            p[0] = Node("WhileStmt", type=p[5].type, children=[tmp,p[5]])
+            p[0] = Node("WhileStmt", children=[tmp,p[5]])
             print("line {}: condition in while statement is not of type int".format(p.lineno(2)))
             print("line {}: there will be an implicit conversion form '{}' to 'int'".format(p.lineno(2), p[3].type))
 
     def p_while_statement_no_short_if(self, p):
         '''while_statement_no_short_if : WHILE '(' expression ')' statement_no_short_if'''
         if p[3].type == "int" or p[3].type == "bool":
-            p[0] = Node("WhileStmt", type=p[5].type, children=[p[3],p[5]])
+            p[0] = Node("WhileStmt", children=[p[3],p[5]])
         else:
             tmp = Node("ImplicitCastExpr", type="int", children=[p[3]])
-            p[0] = Node("WhileStmt", type=p[5].type, children=[tmp,p[5]])
+            p[0] = Node("WhileStmt", children=[tmp,p[5]])
             print("line {}: condition in while statement is not of type int".format(p.lineno(2)))
             print("line {}: there will be an implicit conversion form '{}' to 'int'".format(p.lineno(2), p[3].type))
 
@@ -964,11 +960,16 @@ class StatementParser(object):
         '''assert_statement : ASSERT expression ';'
                             | ASSERT expression ':' expression ';' '''
         if len(p) == 4:
-            p[0] = Node("AssertStmt", type=p[2].type, children=[p[2]])
-        elif len(p) == 6:
-            if p[2].type == p[4].type:
-                p[0] = Node("AssertStmt", type=p[2].type, children=[p[2],p[4]])
+            if p[2].type == "int" or p[2].type == "bool":
+                p[0] = Node("AssertStmt", children=[p[2]])
             else:
+                print("line {}: assert Statement has type mismatch".format(p.lineno(1)))
+                p[0] = Node("AssertStmt", type="error", children=[p[2]])
+        elif len(p) == 6:
+            if (p[2].type == "int" or p[2].type == "bool") and p[4].type == "string":
+                p[0] = Node("AssertStmt", children=[p[2],p[4]])
+            else:
+                p[0] = Node("AssertStmt", type="error", children=[p[2],p[4]])
                 print("line {}: assert Statement has type mismatch".format(p.lineno(1)))
 
     def p_empty_statement(self, p):
@@ -978,6 +979,9 @@ class StatementParser(object):
     def p_switch_statement(self, p):
         '''switch_statement : SWITCH '(' expression ')' switch_block'''
         p[0] = Node("SwitchStmt", children=[p[3]]+p[5].children)
+        if p[3].type != "int" and p[3].type != "char" and p[3].type != "byte" and p[3].type != "string":
+            print("line {}: the switch statement requires expression of type int, char, byte or string".format(p.lineno(1)))
+            return
         for node in p[5].children:
             if p[3].type != node.type:
                 print("line {}: expression '{}' is not of type '{}'".format(node.lineno, node.children[0].value, p[3].type))
@@ -1008,13 +1012,10 @@ class StatementParser(object):
         '''switch_block_statements : switch_block_statement
                                    | switch_block_statements switch_block_statement'''
         if len(p) == 2:
-            p[0] = Node("CompoundStmt", type=p[1].type, children=[p[1]])
+            p[0] = Node("CompoundStmt", children=[p[1]])
         elif len(p) == 3:
-            if p[1].type == p[2].type:
-                p[1].children.append(p[2])
-                p[0] = p[1]
-            else:
-                print("line {}: SWITCH block has type mismatch".format(p.lineno(2)))
+            p[1].children.append(p[2])
+            p[0] = p[1]
 
     def p_switch_block_statement(self, p):
         '''switch_block_statement : switch_labels block_statements'''
@@ -1044,43 +1045,43 @@ class StatementParser(object):
 
     def p_do_statement(self, p):
         '''do_statement : DO statement WHILE '(' expression ')' ';' '''
-        p[0] = Node("DoWhileStmt", type=p[2].type, children=[p[2], p[5]])
+        p[0] = Node("DoWhileStmt", children=[p[2], p[5]])
 
     def p_break_statement(self, p):
         '''break_statement : BREAK ';'
                            | BREAK NAME ';' '''
         if len(p) == 3:
-            p[0] = Node("BreakStmt", type="void")
+            p[0] = Node("BreakStmt")
         elif len(p) == 4:
-            p[0] = Node("BreakStmt", type="void", value=p[2])
+            p[0] = Node("BreakStmt", value=p[2])
 
     def p_continue_statement(self, p):
         '''continue_statement : CONTINUE ';'
                               | CONTINUE NAME ';' '''
         if len(p) == 3:
-            p[0] = Node("ContinueStmt", type="void")
+            p[0] = Node("ContinueStmt")
         elif len(p) == 4:
-            p[0] = Node("ContinueStmt", type="void", value=p[2])
+            p[0] = Node("ContinueStmt", value=p[2])
 
     def p_return_statement(self, p):
         '''return_statement : RETURN expression_opt ';' '''
-        p[0] = Node("ReturnStmt", type=p[2].type, children=[p[2]])
+        p[0] = Node("ReturnStmt", children=[p[2]])
 
     def p_synchronized_statement(self, p):
         '''synchronized_statement : SYNCHRONIZED '(' expression ')' block'''
-        p[0] = Node("SynStmt", type=p[5].type, children=[p[3],p[5]])
+        p[0] = Node("SynStmt", children=[p[3],p[5]])
 
     def p_throw_statement(self, p):
         '''throw_statement : THROW expression ';' '''
-        p[0] = Node("ThrowStmt", type=p[2].type, children=[p[2]])
+        p[0] = Node("ThrowStmt", children=[p[2]])
 
     def p_try_statement(self, p):
         '''try_statement : TRY try_block catches
                          | TRY try_block catches_opt finally'''
         if len(p) == 4:
-            p[0] = Node("TryStmt", type=p[2].type, children=[p[2],p[3]])
+            p[0] = Node("TryStmt", children=[p[2],p[3]])
         elif len(p) == 5:
-            p[0] = Node("TryStmt", type=p[2].type, children=[p[2],p[3],p[4]])
+            p[0] = Node("TryStmt", children=[p[2],p[3],p[4]])
 
     def p_try_block(self, p):
         '''try_block : block'''
@@ -1105,7 +1106,7 @@ class StatementParser(object):
 
     def p_catch_clause(self, p):
         '''catch_clause : CATCH '(' catch_formal_parameter ')' block'''
-        p[0] = Node("Catch", type=p[5].type, children=[p[3], p[5]])
+        p[0] = Node("Catch", children=[p[3], p[5]])
 
     def p_catch_formal_parameter(self, p):
         '''catch_formal_parameter : modifiers_opt catch_type variable_declarator_id'''
@@ -1128,9 +1129,9 @@ class StatementParser(object):
         '''try_statement_with_resources : TRY resource_specification try_block catches_opt
                                         | TRY resource_specification try_block catches_opt finally'''
         if len(p) == 5:
-            p[0] = Node("Try", type=p[3].type, children=[p[2], p[3], p[4]])
+            p[0] = Node("Try", children=[p[2], p[3], p[4]])
         elif len(p) == 6:
-            p[0] = Node("Try", type=p[3].type, children=[p[2], p[3], p[4], p[5]])
+            p[0] = Node("Try", children=[p[2], p[3], p[4], p[5]])
 
     def p_resource_specification(self, p):
         '''resource_specification : '(' resources semi_opt ')' '''
