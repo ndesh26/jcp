@@ -79,7 +79,7 @@ class ExpressionParser(object):
 
     def p_assignment(self, p):
         '''assignment : postfix_expression assignment_operator assignment_expression'''
-        if p[1].type == p[3].type:
+        if p[1].type == p[3].type and p[1].dims == 0:
             p[0] = Node("BinaryOperator", value=p[2].value, children=[p[1], p[3]])
         else:
             print("line {}: Type mismatch".format(p[2].lineno))
@@ -645,7 +645,7 @@ class StatementParser(object):
             if entry:
                 print("line {}: variable '{}' is already declared".format(node.lineno, node.value))
             else:
-                node.sym_entry = symbol_table.insert(node.value, {'type':node.type, 'dims':node.dims, 'arraylen':node.arraylen})
+                node.sym_entry = symbol_table.insert(node.value, {'type':node.type, 'dims':node.dims, 'arraylen':node.arraylen, 'modifiers':None})
         p[0] = p[2]
 
     def p_local_variable_declaration2(self, p):
@@ -937,14 +937,14 @@ class StatementParser(object):
         '''enhanced_for_statement_header_init : FOR '(' type NAME dims_opt'''
         symbol_table.begin_scope()
         p[4] = Node("VarDecl", value=p[4], type=p[3].type, dims=p[5].dims)
-        p[4].sym_entry = symbol_table.insert(p[4].value, {'type':p[4].type, 'dims':p[4].dims})
+        p[4].sym_entry = symbol_table.insert(p[4].value, {'type':p[4].type, 'dims':p[4].dims, 'arraylen': 0, 'modifiers':None})
         p[0] = Node("EnhancedForHead", children=[p[4]])
 
     def p_enhanced_for_statement_header_init2(self, p):
         '''enhanced_for_statement_header_init : FOR '(' modifiers type NAME dims_opt'''
         symbol_table.begin_scope()
         p[5] = Node("VarDecl", type=p[4].type, dims=p[6].dims, modifiers=p[3].modifiers)
-        p[4].sym_entry = symbol_table.insert(p[4].value, {'type':p[4].type, 'dims':p[4].dims, 'modifiers':p[4].modifiers})
+        p[4].sym_entry = symbol_table.insert(p[4].value, {'type':p[4].type, 'dims':p[4].dims, 'modifiers':p[4].modifiers, 'arraylen':0})
         p[0] = Node("EnhancedForHead", children=[p[5]])
 
     def p_statement_no_short_if(self, p):
@@ -1160,14 +1160,14 @@ class StatementParser(object):
         if p[4].type == p[1].type:
             p[0] = Node("Resource", type=p[1].type, children=[p[2], p[4]])
         else:
-            print("line {}: Type mismatch in TRY statement".format(p.lineno(2)))
+            print("line {}: Type mismatch in TRY statement".format(p.lineno(3)))
 
     def p_resource2(self, p):
         '''resource : modifiers type variable_declarator_id '=' variable_initializer'''
         if p[4].type == p[1].type:
             p[0] = Node("Resource", type=p[2].type, modifiers=p[1].type, children=[p[3], p[5]])
         else:
-            print("line {}: Type mismatch in TRY statement".format(p.lineno(2)))
+            print("line {}: Type mismatch in TRY statement".format(p.lineno(4)))
 
     def p_finally(self, p):
         '''finally : FINALLY block'''
@@ -1250,42 +1250,55 @@ class StatementParser(object):
         p[2] = Node("FieldAccess", value=p[1]+p[2]+p[3])
 
     def p_array_access(self, p):
-        '''array_access : name '[' expression ']'
-                        | primary_no_new_array '[' expression ']' '''
-        p[1] = Node("ImplicitCastExpr", children=[p[1]])
-        p[0] = Node("ArrayAccess", children=[p[1],p[3]])
+        '''array_access : name '[' expression ']' '''
+        if p[3].type != "int":
+            print("line {}: the array index in not of type int".format(p.lineno(2)))
+        p[0] = Node("ArrayAccess", children=[p[1],p[3]], type=p[1].type, arraylen=p[1].arraylen, modifiers=p[1].modifiers, dims=p[1].dims-1)
+        if (p[3].value >= p[0].arraylen[-p[0].dims+1]):
+            print("line {}: the array index '{}' is out of range".format(p.lineno(2), p[3].value))
+
+    def p_array_access1(self, p):
+        '''array_access : primary_no_new_array '[' expression ']' '''
+        if p[3].type != "int":
+            print("line {}: the array index in not of type int".format(p.lineno(2)))
+        p[0] = Node("ArrayAccess", children=[p[1],p[3]], type=p[1].type, arraylen=p[1].arraylen, modifiers=p[1].modifiers, dims=p[1].dims-1)
+        if (p[3].value >= p[0].arraylen[-p[0].dims+1]):
+            print("line {}: the array index '{}' is out of range".format(p.lineno(2), p[3].value))
 
     def p_array_access2(self, p):
         '''array_access : array_creation_with_array_initializer '[' expression ']' '''
         p[1] = Node("ImplicitCastExpr", children=[p[1]])
-        p[0] = Node("ArrayAccess", type=p[1].type, children=[p[1], p[3]])
+        p[0] = Node("ArrayAccess", type=p[1].type, children=[p[1], p[3]], modifiers=p[1].modifiers, dims=p[1].dims, arraylen=p[1].arraylen)
 
     def p_array_creation_with_array_initializer(self, p):
         '''array_creation_with_array_initializer : NEW primitive_type dim_with_or_without_exprs array_initializer
                                                  | NEW class_or_interface_type dim_with_or_without_exprs array_initializer'''
-        p[0] = Node("ArrayInitialization", type=p[2].type, children=[p[3], p[4]])
+        p[0] = Node("ArrayInitialization", type=p[2].type, children=[p[3], p[4]], dims=p[3].dims, arraylen=p[3].arraylen)
 
     def p_dim_with_or_without_exprs(self, p):
         '''dim_with_or_without_exprs : dim_with_or_without_expr
                                      | dim_with_or_without_exprs dim_with_or_without_expr'''
         if len(p) == 2:
-            p[0] = Node("Dimensions", children=p[1])
+            p[0] = p[1]
         elif len(p) == 3:
-            p[1].children.append(p[2])
+            p[1].dims += 1
+            p[1].arraylen.extend(p[2].arraylen)
             p[0] = p[1]
 
     def p_dim_with_or_without_expr(self, p):
         '''dim_with_or_without_expr : '[' expression ']'
                                     | '[' ']' '''
         if len(p) == 3:
-            p[0] = p[1]
+            p[1] = Node(dims=1, arraylen=0)
         elif len(p) == 4:
-            p[0] = Node("NullStmt")
+            p[2].dims = 1
+            p[2].arraylen = [p[2].value]
+            p[0] = p[2]
 
     def p_array_creation_without_array_initializer(self, p):
         '''array_creation_without_array_initializer : NEW primitive_type dim_with_or_without_exprs
                                                     | NEW class_or_interface_type dim_with_or_without_exprs'''
-        p[0] = Node("ArrayInitialization", type=p[2].type, children=[p[3]])
+        p[0] = Node("ArrayInitialization", type=p[2].type, children=[p[3]], dims=p[3].dims, arraylen=p[3].arraylen)
 
 class NameParser(object):
 
@@ -1298,7 +1311,7 @@ class NameParser(object):
         '''simple_name : NAME'''
         entry = symbol_table.get_entry(p[1])
         if entry:
-            p[0] = Node("DeclsRefExpr", value=p[1], type=entry['type'])
+            p[0] = Node("DeclsRefExpr", value=p[1], type=entry['type'], dims=entry['dims'], arraylen=entry['arraylen'], modifiers=entry['modifiers'])
         else:
             print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1]))
             p[0] = Node("DeclsRefExpr", value=p[1])
