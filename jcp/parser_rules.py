@@ -32,7 +32,7 @@ class Node:
             ast = ast + self.name + " " + self.type + " " + self.value
             for modifier in self.modifiers:
                 if modifier:
-                    ast = ast + modifier
+                    ast = ast + " " + modifier
             ast = ast + "\n"
             if self.children == [  ]:
                 return
@@ -79,7 +79,9 @@ class ExpressionParser(object):
 
     def p_assignment(self, p):
         '''assignment : postfix_expression assignment_operator assignment_expression'''
-        if p[1].type == p[3].type and p[1].dims == 0:
+        if p[1].type == "error":
+            p[0] = Node("BinaryOperator", value=p[2].value, type="error", children=[p[1], p[3]])
+        elif p[1].type == p[3].type and p[1].dims == 0:
             p[0] = Node("BinaryOperator", value=p[2].value, children=[p[1], p[3]])
         else:
             print("line {}: Type mismatch".format(p[2].lineno))
@@ -1314,7 +1316,7 @@ class NameParser(object):
             p[0] = Node("DeclsRefExpr", value=p[1], type=entry['type'], dims=entry['dims'], arraylen=entry['arraylen'], modifiers=entry['modifiers'])
         else:
             print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1]))
-            p[0] = Node("DeclsRefExpr", value=p[1])
+            p[0] = Node("DeclsRefExpr", value=p[1], type="error")
 
     def p_qualified_name(self, p):
         '''qualified_name : name '.' simple_name'''
@@ -1699,6 +1701,7 @@ class ClassParser(object):
 
     def p_class_declaration(self, p):
         '''class_declaration : class_header class_body'''
+        symbol_table.end_scope()
         p[0] = Node("ClassDecl", children=[p[1],p[2]])
 
     def p_class_header(self, p):
@@ -1716,6 +1719,7 @@ class ClassParser(object):
 
     def p_class_header_name1(self, p):
         '''class_header_name1 : modifiers_opt CLASS NAME'''
+        symbol_table.begin_scope()
         p[0] = Node("ClassName", value=p[3], modifiers=p[1].modifiers)
 
     def p_class_header_extends_opt(self, p):
@@ -1797,8 +1801,15 @@ class ClassParser(object):
     def p_field_declaration(self, p):
         '''field_declaration : modifiers_opt type variable_declarators ';' '''
         for node in p[3].children:
+            if (node.type != "") and (node.type == "" or node.type != p[2].type):
+                print("line {}: variable '{}' (type '{}') initialized to type '{}'".format(node.lineno, node.value, p[2].type, node.type))
+                p[3].type = "error"
             node.type = p[2].type
             node.modifiers = p[1].modifiers
+            if symbol_table.get_entry(node.value):
+                print("line {}: variable '{}' is already declared".format(node.lineno, node.value))
+            else:
+                node.sym_entry = symbol_table.insert(node.value, {'type':node.type, 'modifiers':node.modifiers, 'dims':node.dims, 'arraylen':node.arraylen})
         p[3].name = "FieldDecl"
         p[0] = p[3]
 
@@ -1851,10 +1862,20 @@ class ClassParser(object):
         if len(p) == 4:
             p[3].type = p[2].type
             p[3].modifiers = p[1].modifiers
+            entry = symbol_table.get_entry(p[3].value)
+            if entry:
+                print("line {}: variable '{}' is already declared".format(p[3].lineno, p[3].value))
+            else:
+                p[3].sym_entry = symbol_table.insert(p[3].value, {'type':p[3].type, 'dims':p[3].dims, 'arraylen':p[3].arraylen, 'modifiers':p[3].modifiers})
             p[0] = p[3]
         else:
             p[4].type = p[2].type
             p[4].modifiers = p[1].modifiers
+            entry = symbol_table.get_entry(p[4].value)
+            if entry:
+                print("line {}: variable '{}' is already declared".format(p[4].lineno, p[4].value))
+            else:
+                p[4].sym_entry = symbol_table.insert(p[4].value, {'type':p[4].type, 'dims':p[4].dims, 'arraylen':p[4].arraylen, 'modifiers':p[4].modifiers})
             p[0] = p[4]
 
     def p_method_header_throws_clause_opt(self, p):
@@ -1891,6 +1912,9 @@ class ClassParser(object):
         if len(p) == 2:
             p[0] = p[1]
         else:
+            print("Symbol Table for function: {}".format(p[1].children[0].value))
+            symbol_table.print_table()
+            symbol_table.end_scope()
             p[0] = Node("MethodDecl", children=[p[1],p[2]])
 
     def p_abstract_method_declaration(self, p):
@@ -1905,6 +1929,7 @@ class ClassParser(object):
         '''method_header_name : modifiers_opt type_parameters type NAME '('
                               | modifiers_opt type NAME '(' '''
         if len(p) == 5:
+            symbol_table.begin_scope()
             p[0] = Node("MethodName", value=p[3], type=p[2].type, modifiers=p[1].modifiers)
         else:
             #TODO:Not done because of type_parameters
@@ -2315,6 +2340,7 @@ class CompilationUnitParser(object):
 
     def p_compilation_unit6(self, p):
         '''compilation_unit : type_declarations'''
+        p[1].name = "CompilationUnit"
         p[0] = p[1]
 
     def p_compilation_unit7(self, p):
@@ -2389,9 +2415,10 @@ class CompilationUnitParser(object):
         '''type_declarations : type_declaration
                              | type_declarations type_declaration'''
         if len(p) == 2:
-            p[0] = p[1]
+            p[0] = Node(children=[p[1]])
         else:
-            p[0] = ptg.two_child_node("type_declarations", p[1], p[2])
+            p[1].children.append(p[2])
+            p[0] = p[1]
 
 class JavaParser(ExpressionParser, NameParser, LiteralParser, TypeParser, ClassParser, StatementParser, CompilationUnitParser):
     tokens = lexer.tokens

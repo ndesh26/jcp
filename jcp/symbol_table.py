@@ -41,8 +41,7 @@ class Table:
 
     def print_table(self):
         for key, value in self.entries.items():
-            print(key)
-            print(value)
+            print("{}:\t\t{}".format(key,value))
 
 class SymbolTable:
 
