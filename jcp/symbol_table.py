@@ -80,3 +80,6 @@ class SymbolTable:
             return self.classes[name][method]
         else:
             return None
+
+    def insert_up(self, name, attributes={}):
+        return self.table.parent_table.insert(name, attributes)

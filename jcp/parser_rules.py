@@ -798,12 +798,17 @@ class StatementParser(object):
         '''method_invocation : NAME '(' argument_list_opt ')' '''
         entry = symbol_table.get_entry(p[1])
         if entry:
-            p[1] = Node("DeclsRefExpr", value=p[1], type=entry['type'])
+            p[1] = Node("DeclsRefExpr", value=p[1], type=entry['type'], modifiers=entry['modifiers'])
+            p[0] = Node("MethodInvocation", children=[p[1]]+p[3].children)
+            p[0].type = p[1].type.split(" ", 1)[0]
+            args = p[1].type.split(" ", 1)[1][1:-1].split(",", 1)
+            for arg, node in zip(args, p[3].children):
+                if arg != node.type:
+                    print("line {}: the function is expecting arg of type '{}' but the arg provided is of type '{}'".format(p.lineno(1), arg, node.type))
         else:
             print("line {}: the method '{}' has not been declared in this scope".format(p.lineno(2), p[1]))
-            p[1] = Node("DeclsRefExpr", value=p[1])
-        tmp = Node("ImplicitCastExpr", children=[p[1]], type="method pointer")
-        p[0] = Node("MethodInvocation", children=[tmp]+p[3].children)
+            p[1] = Node("DeclsRefExpr", value=p[1], type="error")
+            p[0] = Node("MethodInvocation", children=[p[1]]+p[3].children)
 
     def p_method_invocation2(self, p):
         '''method_invocation : name '.' type_arguments NAME '(' argument_list_opt ')'
@@ -1965,7 +1970,6 @@ class ClassParser(object):
             symbol_table.print_table()
             symbol_table.end_scope()
             p[0] = Node("MethodDecl", children=[p[1],p[2]])
-            p[0].sym_entry = symbol_table.insert(p[1].children[0].value, {'type':p[1].type, 'modifiers': p[1].children[0].modifiers})
 
     def p_abstract_method_declaration(self, p):
         '''abstract_method_declaration : method_header ';' '''
@@ -1975,9 +1979,14 @@ class ClassParser(object):
         '''method_header : method_header_name formal_parameter_list_opt ')' method_header_extended_dims method_header_throws_clause_opt'''
         p[0] = Node("MethodHeader", children=[p[1], p[2], p[4], p[5]])
         p[0].type = p[1].type + " ("
+        length = len(p[2].children)
         for node in p[2].children:
-            p[0].type += node.type + ","
+            if node == p[2].children[length - 1]:
+                p[0].type += node.type
+            else:
+                p[0].type += node.type + ","
         p[0].type += ")"
+        p[0].sym_entry = symbol_table.insert_up(p[1].value, {'type':p[0].type, 'modifiers': p[1].modifiers})
 
     def p_method_header_name(self, p):
         '''method_header_name : modifiers_opt type_parameters type NAME '('
