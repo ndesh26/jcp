@@ -1,6 +1,7 @@
 import ptg
 import lexer
 import symbol_table
+import pydot
 
 ast = ""
 symbol_table = symbol_table.SymbolTable()
@@ -47,6 +48,23 @@ class Node:
                             node.print_tree(k+1)
                     else:
                         print("Error {}".format(node))
+
+    def print_dot(self, graph, id=0):
+        parent = pydot.Node(id, label=self.name + "\n" + self.value)
+        id += 1
+        graph.add_node(parent)
+        for node in self.children:
+            if isinstance(node, Node):
+                if node.name:
+                    (child,id) = node.print_dot(graph, id)
+                    graph.add_edge(pydot.Edge(parent, child))
+        return (parent,id)
+
+    def print_png(self):
+        graph = pydot.Dot(graph_type='graph')
+        self.print_dot(graph=graph)
+        graph.write_png('out.png')
+
 
 def check_type(name, type, node):
     if node.name == "InitListExpr":
@@ -2429,6 +2447,7 @@ class JavaParser(ExpressionParser, NameParser, LiteralParser, TypeParser, ClassP
         p[0].print_tree()
         print(ast)
         symbol_table.print_table()
+        p[0].print_png()
 
     def p_goal_expression(self, p):
         '''goal : MINUSMINUS expression'''
