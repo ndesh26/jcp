@@ -1273,6 +1273,15 @@ class StatementParser(object):
         '''array_access : name '[' expression ']' '''
         if p[3].type != "int":
             print("line {}: the array index in not of type int".format(p.lineno(2)))
+        if p[1].dims < 1:
+            print("line {}: the variable '{}' is not a array".format(p.lineno(2), p[1].value))
+            p[0] = Node("ArrayAccess", children=[p[1],p[3]], type="error", arraylen=p[1].arraylen, modifiers=p[1].modifiers, dims=0)
+            return
+        if p[1].dims == 1:
+            p[0] = Node("ArrayAccess", children=[p[1],p[3]], type="error", arraylen=p[1].arraylen, modifiers=p[1].modifiers, dims=0)
+            if (p[3].value >= p[0].arraylen[0]):
+                print("line {}: the array index '{}' is out of range".format(p.lineno(2), p[3].value))
+            return
         p[0] = Node("ArrayAccess", children=[p[1],p[3]], type=p[1].type, arraylen=p[1].arraylen, modifiers=p[1].modifiers, dims=p[1].dims-1)
         if (p[3].value >= p[0].arraylen[-p[0].dims+1]):
             print("line {}: the array index '{}' is out of range".format(p.lineno(2), p[3].value))
@@ -1281,6 +1290,10 @@ class StatementParser(object):
         '''array_access : primary_no_new_array '[' expression ']' '''
         if p[3].type != "int":
             print("line {}: the array index in not of type int".format(p.lineno(2)))
+        if p[1].dims < 1:
+            print("line {}: the variable is indexed more than the dimension it has".format(p.lineno(2)))
+            p[0] = Node("ArrayAccess", children=[p[1],p[3]], type="error", arraylen=p[1].arraylen, modifiers=p[1].modifiers, dims=0)
+            return
         p[0] = Node("ArrayAccess", children=[p[1],p[3]], type=p[1].type, arraylen=p[1].arraylen, modifiers=p[1].modifiers, dims=p[1].dims-1)
         if (p[3].value >= p[0].arraylen[-p[0].dims+1]):
             print("line {}: the array index '{}' is out of range".format(p.lineno(2), p[3].value))
