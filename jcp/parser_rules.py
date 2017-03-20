@@ -163,6 +163,16 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 6:
+            if p[1].type == "":
+                entry = symbol_table.get_entry(p[1].value)
+                if entry:
+                    p[1].type = entry['type']
+                    p[1].dims = entry['dims']
+                    p[1].arraylen = entry['arraylen']
+                    p[1].modifiers = entry['modifiers']
+                else:
+                    print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                    p[1].type = "error"
             if p[3].type == p[5].type:
                 p[0] = Node("ConditionalOperator", value="", type=p[3].type, children=[p[1], p[3], p[5]])
             elif p[3].type == "string" or p[3].type == "float" or p[3].type == "char":
@@ -192,6 +202,16 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
+            if p[1].type == "":
+                entry = symbol_table.get_entry(p[1].value)
+                if entry:
+                    p[1].type = entry['type']
+                    p[1].dims = entry['dims']
+                    p[1].arraylen = entry['arraylen']
+                    p[1].modifiers = entry['modifiers']
+                else:
+                    print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                    p[1].type = "error"
             p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
 
     def p_conditional_and_expression(self, p):
@@ -209,6 +229,16 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
+            if p[1].type == "":
+                entry = symbol_table.get_entry(p[1].value)
+                if entry:
+                    p[1].type = entry['type']
+                    p[1].dims = entry['dims']
+                    p[1].arraylen = entry['arraylen']
+                    p[1].modifiers = entry['modifiers']
+                else:
+                    print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                    p[1].type = "error"
             p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
 
 
@@ -231,6 +261,16 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
+            if p[1].type == "":
+                entry = symbol_table.get_entry(p[1].value)
+                if entry:
+                    p[1].type = entry['type']
+                    p[1].dims = entry['dims']
+                    p[1].arraylen = entry['arraylen']
+                    p[1].modifiers = entry['modifiers']
+                else:
+                    print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                    p[1].type = "error"
             if p[1].type in ["int", "char"] and p[3].type in ["int", "char"]:
                 p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
             else:
@@ -256,6 +296,16 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
+            if p[1].type == "":
+                entry = symbol_table.get_entry(p[1].value)
+                if entry:
+                    p[1].type = entry['type']
+                    p[1].dims = entry['dims']
+                    p[1].arraylen = entry['arraylen']
+                    p[1].modifiers = entry['modifiers']
+                else:
+                    print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                    p[1].type = "error"
             if p[1].type in ["int", "char"] and p[3].type in ["int", "char"]:
                 p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
             else:
@@ -281,6 +331,16 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
+            if p[1].type == "":
+                entry = symbol_table.get_entry(p[1].value)
+                if entry:
+                    p[1].type = entry['type']
+                    p[1].dims = entry['dims']
+                    p[1].arraylen = entry['arraylen']
+                    p[1].modifiers = entry['modifiers']
+                else:
+                    print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                    p[1].type = "error"
             if p[1].type in ["int", "char"] and p[3].type in ["int", "char"]:
                 p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
             else:
@@ -305,6 +365,16 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
+            if p[1].type == "":
+                entry = symbol_table.get_entry(p[1].value)
+                if entry:
+                    p[1].type = entry['type']
+                    p[1].dims = entry['dims']
+                    p[1].arraylen = entry['arraylen']
+                    p[1].modifiers = entry['modifiers']
+                else:
+                    print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                    p[1].type = "error"
             p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
 
     def p_instanceof_expression(self, p):
@@ -322,6 +392,16 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
+            if p[1].type == "":
+                entry = symbol_table.get_entry(p[1].value)
+                if entry:
+                    p[1].type = entry['type']
+                    p[1].dims = entry['dims']
+                    p[1].arraylen = entry['arraylen']
+                    p[1].modifiers = entry['modifiers']
+                else:
+                    print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                    p[1].type = "error"
             p[0] = Node("BinaryOperator", value=p[2], type="", children=[p[1], p[3]])
 
     def p_relational_expression(self, p):
@@ -352,6 +432,16 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
+            if p[1].type == "":
+                entry = symbol_table.get_entry(p[1].value)
+                if entry:
+                    p[1].type = entry['type']
+                    p[1].dims = entry['dims']
+                    p[1].arraylen = entry['arraylen']
+                    p[1].modifiers = entry['modifiers']
+                else:
+                    print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                    p[1].type = "error"
             if p[1].type in ["int", "float", "char"] and p[3].type in ["int", "float", "char"]:
                 p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
             else:
@@ -387,6 +477,16 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
+            if p[1].type == "":
+                entry = symbol_table.get_entry(p[1].value)
+                if entry:
+                    p[1].type = entry['type']
+                    p[1].dims = entry['dims']
+                    p[1].arraylen = entry['arraylen']
+                    p[1].modifiers = entry['modifiers']
+                else:
+                    print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                    p[1].type = "error"
             if p[1].type == "int" and p[3].type == "int":
                 p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
             elif p[1].type == "float" and p[3].type == "int":
@@ -423,6 +523,16 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
+            if p[1].type == "":
+                entry = symbol_table.get_entry(p[1].value)
+                if entry:
+                    p[1].type = entry['type']
+                    p[1].dims = entry['dims']
+                    p[1].arraylen = entry['arraylen']
+                    p[1].modifiers = entry['modifiers']
+                else:
+                    print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                    p[1].type = "error"
             if p[1].type == "int" and p[3].type == "int":
                 p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
             elif (p[1].type == "float" and p[3].type == "int") or (p[1].type == "int" and p[3].type == "float"):
@@ -463,6 +573,16 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
+            if p[1].type == "":
+                entry = symbol_table.get_entry(p[1].value)
+                if entry:
+                    p[1].type = entry['type']
+                    p[1].dims = entry['dims']
+                    p[1].arraylen = entry['arraylen']
+                    p[1].modifiers = entry['modifiers']
+                else:
+                    print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                    p[1].type = "error"
             if p[1].type == "int" and p[3].type == "int":
                 p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
             elif (p[1].type == "float" and p[3].type == "int") or (p[1].type == "int" and p[3].type == "float"):
@@ -528,6 +648,16 @@ class ExpressionParser(object):
                               | name
                               | post_increment_expression
                               | post_decrement_expression'''
+        if p[1].type == "":
+            entry = symbol_table.get_entry(p[1].value)
+            if entry:
+                p[1].type = entry['type']
+                p[1].dims = entry['dims']
+                p[1].arraylen = entry['arraylen']
+                p[1].modifiers = entry['modifiers']
+            else:
+                print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                p[1].type = "error"
         p[0] = p[1]
 
     def p_postfix_expression_not_name(self, p):
@@ -565,6 +695,16 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
+            if p[1].type == "":
+                entry = symbol_table.get_entry(p[1].value)
+                if entry:
+                    p[1].type = entry['type']
+                    p[1].dims = entry['dims']
+                    p[1].arraylen = entry['arraylen']
+                    p[1].modifiers = entry['modifiers']
+                else:
+                    print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                    p[1].type = "error"
             p[0] = p[2]
 
     def p_primary_no_new_array3(self, p):
@@ -612,18 +752,58 @@ class ExpressionParser(object):
 
     def p_cast_expression2(self, p):
         '''cast_expression : '(' name type_arguments dims_opt ')' unary_expression_not_plus_minus'''
+        if p[1].type == "":
+            entry = symbol_table.get_entry(p[1].value)
+            if entry:
+                p[1].type = entry['type']
+                p[1].dims = entry['dims']
+                p[1].arraylen = entry['arraylen']
+                p[1].modifiers = entry['modifiers']
+            else:
+                print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                p[1].type = "error"
         p[0] = Node("CastExpr", type=p[2].value+p[3], children=[p[6]], dims=p[4].dims)
 
     def p_cast_expression3(self, p):
         '''cast_expression : '(' name type_arguments '.' class_or_interface_type dims_opt ')' unary_expression_not_plus_minus'''
+        if p[1].type == "":
+            entry = symbol_table.get_entry(p[1].value)
+            if entry:
+                p[1].type = entry['type']
+                p[1].dims = entry['dims']
+                p[1].arraylen = entry['arraylen']
+                p[1].modifiers = entry['modifiers']
+            else:
+                print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                p[1].type = "error"
         p[0] = Node("CastExpr", type=p[2].value+p[3]+p[5], children=[p[8]], dims=p[6].dims)
 
     def p_cast_expression4(self, p):
         '''cast_expression : '(' name ')' unary_expression_not_plus_minus'''
+        if p[1].type == "":
+            entry = symbol_table.get_entry(p[1].value)
+            if entry:
+                p[1].type = entry['type']
+                p[1].dims = entry['dims']
+                p[1].arraylen = entry['arraylen']
+                p[1].modifiers = entry['modifiers']
+            else:
+                print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                p[1].type = "error"
         p[0] = Node("CastExpr", type=p[2].value, children=[p[4]])
 
     def p_cast_expression5(self, p):
         '''cast_expression : '(' name dims ')' unary_expression_not_plus_minus'''
+        if p[1].type == "":
+            entry = symbol_table.get_entry(p[1].value)
+            if entry:
+                p[1].type = entry['type']
+                p[1].dims = entry['dims']
+                p[1].arraylen = entry['arraylen']
+                p[1].modifiers = entry['modifiers']
+            else:
+                print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                p[1].type = "error"
         p[0] = Node("CastExpr", type=p[2].value, children=[p[5]], dims=p[3].dims)
 
 class StatementParser(object):
@@ -796,7 +976,7 @@ class StatementParser(object):
 
     def p_method_invocation(self, p):
         '''method_invocation : NAME '(' argument_list_opt ')' '''
-        entry = symbol_table.get_entry(p[1])
+        entry = symbol_table.get_entry(p[1].value)
         if entry:
             p[1] = Node("DeclsRefExpr", value=p[1], type=entry['type'], modifiers=entry['modifiers'])
             p[0] = Node("MethodInvocation", children=[p[1]]+p[3].children)
@@ -1229,6 +1409,7 @@ class StatementParser(object):
                                            | name '.' SUPER '(' argument_list_opt ')' ';'
                                            | primary '.' THIS '(' argument_list_opt ')' ';'
                                            | name '.' THIS '(' argument_list_opt ')' ';' '''
+        # TODO: Requires lookup
         p[2] = Node("MemberExpr", value=p[2]+p[3], children=[p[5]])
         p[0] = Node("ConstrInvoc", children=[p[1], p[2]])
 
@@ -1237,7 +1418,7 @@ class StatementParser(object):
                                            | name '.' type_arguments SUPER '(' argument_list_opt ')' ';'
                                            | primary '.' type_arguments THIS '(' argument_list_opt ')' ';'
                                            | name '.' type_arguments THIS '(' argument_list_opt ')' ';' '''
-        # TODO: Requires type_arguments to be implemented
+        # TODO: Requires type_arguments to be implemented and lookup
         p[0] = ptg.eight_child_node("explicit_constructor_invocation", p[1], tmp1, p[3], tmp2, tmp3, p[6], tmp4, tmp5)
 
     def p_class_instance_creation_expression(self, p):
@@ -1272,6 +1453,16 @@ class StatementParser(object):
 
     def p_class_instance_creation_expression_name(self, p):
         '''class_instance_creation_expression_name : name '.' '''
+        if p[1].type == "":
+            entry = symbol_table.get_entry(p[1].value)
+            if entry:
+                p[1].type = entry['type']
+                p[1].dims = entry['dims']
+                p[1].arraylen = entry['arraylen']
+                p[1].modifiers = entry['modifiers']
+            else:
+                print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                p[1].type = "error"
         p[0] = p[1]
 
     def p_class_body_opt(self, p):
@@ -1291,6 +1482,16 @@ class StatementParser(object):
 
     def p_array_access(self, p):
         '''array_access : name '[' expression ']' '''
+        if p[1].type == "":
+            entry = symbol_table.get_entry(p[1].value)
+            if entry:
+                p[1].type = entry['type']
+                p[1].dims = entry['dims']
+                p[1].arraylen = entry['arraylen']
+                p[1].modifiers = entry['modifiers']
+            else:
+                print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                p[1].type = "error"
         if p[3].type != "int":
             print("line {}: the array index in not of type int".format(p.lineno(2)))
         if p[1].dims < 1:
@@ -1362,15 +1563,11 @@ class NameParser(object):
 
     def p_simple_name(self, p):
         '''simple_name : NAME'''
-        entry = symbol_table.get_entry(p[1])
-        if entry:
-            p[0] = Node("DeclsRefExpr", value=p[1], type=entry['type'], dims=entry['dims'], arraylen=entry['arraylen'], modifiers=entry['modifiers'])
-        else:
-            print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1]))
-            p[0] = Node("DeclsRefExpr", value=p[1], type="error")
+        p[0] = Node("DeclsRefExpr", value=p[1])
 
     def p_qualified_name(self, p):
         '''qualified_name : name '.' simple_name'''
+        # TODO: Requires lookup
         p[0] = Node("MemberExpr", p[2] + p[3].value, "", [p[1]])
 
 class LiteralParser(object):
@@ -1498,11 +1695,15 @@ class TypeParser(object):
 
     def p_array_type2(self, p):
         '''array_type : name dims'''
-        p[1].type = p[1].value + p[2].type
+        if symbol_table.lookup_class(p[1].value) == False:
+            print("line {}: Object '{}' not defined".format(p[1].lineno, p[1].value))
+        p[1].type = p[1].value
+        p[1].dims = p[2].dims
         p[0] = p[1]
 
     def p_array_type3(self, p):
         '''array_type : generic_type '.' name dims'''
+        # TODO: Requires lookup
         p[1].type = p[1].type + '.' + p[3].value + p[4].type
         p[0] = p[1]
 
@@ -2383,23 +2584,24 @@ class CompilationUnitParser(object):
 
     def p_compilation_unit(self, p):
         '''compilation_unit : package_declaration'''
-        p[0] = ptg.one_child_node("compilation_unit", p[1])
+        p[0] = p[1]
 
     def p_compilation_unit2(self, p):
         '''compilation_unit : package_declaration import_declarations'''
-        p[0] = ptg.two_child_node("compilation_unit", p[1], p[2])
+        p[0] = p[1]
 
     def p_compilation_unit3(self, p):
         '''compilation_unit : package_declaration import_declarations type_declarations'''
-        p[0] = ptg.three_child_node("compilation_unit", p[1], p[2], p[3])
+        p[0] = Node("CompilationUnit", children=[p[1], p[2], p[3]])
 
     def p_compilation_unit4(self, p):
         '''compilation_unit : package_declaration type_declarations'''
-        p[0] = ptg.two_child_node("compilation_unit", p[1], p[2])
+        p[0] = Node("CompilationUnit", children=[p[1], p[2]])
 
     def p_compilation_unit5(self, p):
         '''compilation_unit : import_declarations'''
-        p[0] = ptg.one_child_node("compilation_unit", p[1])
+        p[1].name = "CompilationUnit"
+        p[0] = p[1]
 
     def p_compilation_unit6(self, p):
         '''compilation_unit : type_declarations'''
@@ -2408,71 +2610,56 @@ class CompilationUnitParser(object):
 
     def p_compilation_unit7(self, p):
         '''compilation_unit : import_declarations type_declarations'''
-        p[0] = ptg.two_child_node("compilation_unit", p[1], p[2])
+        p[0] = Node("CompilationUnit", children=[p[1]]+p[2].children)
 
     def p_compilation_unit8(self, p):
         '''compilation_unit : empty'''
-        p[0] = ptg.one_child_node("compilation_unit", p[1])
+        p[0] = p[1]
 
     def p_package_declaration(self, p):
         '''package_declaration : package_declaration_name ';' '''
-        tmp = ptg.node_create(";")
-        p[0] = ptg.two_child_node("package_declaration", p[1], tmp)
+        p[1].name = "PackageDecl"
+        p[0] = p[1]
 
     def p_package_declaration_name(self, p):
         '''package_declaration_name : modifiers PACKAGE name
                                     | PACKAGE name'''
         if len(p) == 3:
-            tmp = ptg.node_create(p[1])
-            p[0] = ptg.two_child_node("package_declaration_name", tmp, p[2])
+            p[0] = Node("Package", children=[p[2]])
         else:
-            tmp = ptg.node_create(p[2])
-            p[0] = ptg.three_child_node("package_declaration_name", p[1], tmp, p[3])
+            p[0] = Node("Package", children=[p[3]], modifiers=p[1].modifiers)
 
     def p_import_declarations(self, p):
         '''import_declarations : import_declaration
                                | import_declarations import_declaration'''
         if len(p) == 2:
-            p[0] = ptg.one_child_node("import_declarations", p[1])
+            p[0] = Node("ImportDecls", children=[p[1]])
         else:
-            p[0] = ptg.two_child_node("import_declarations", p[1], p[2])
+            p[1].children.append(p[2])
+            p[0] = p[1]
 
     def p_import_declaration(self, p):
         '''import_declaration : single_type_import_declaration
                               | type_import_on_demand_declaration
                               | single_static_import_declaration
                               | static_import_on_demand_declaration'''
-        p[0] = ptg.one_child_node("import_declaration", p[1])
+        p[0] = p[1]
 
     def p_single_type_import_declaration(self, p):
         '''single_type_import_declaration : IMPORT name ';' '''
-        tmp1 = ptg.node_create(p[1])
-        tmp2 = ptg.node_create(";")
-        p[0] = ptg.three_child_node("single_type_import_declaration", tmp1, p[2], tmp2)
+        p[0] = Node("Import", children=[p[2]])
 
     def p_type_import_on_demand_declaration(self, p):
         '''type_import_on_demand_declaration : IMPORT name '.' '*' ';' '''
-        tmp1 = ptg.node_create(p[1])
-        tmp2 = ptg.node_create(".")
-        tmp3 = ptg.node_create("*")
-        tmp4 = ptg.node_create(";")
-        p[0] = ptg.five_child_node("type_import_on_demand_declaration", tmp1, p[2], tmp2, tmp3, tmp4)
+        p[0] = Node("ImportDemand", children=[p[2]])
 
     def p_single_static_import_declaration(self, p):
         '''single_static_import_declaration : IMPORT STATIC name ';' '''
-        tmp1 = ptg.node_create(p[1])
-        tmp2 = ptg.node_create(p[2])
-        tmp3 = ptg.node_create(";")
-        p[0] = ptg.four_child_node("single_static_import_declaration", tmp1, tmp2, p[3], tmp3)
+        p[0] = Node("StaticImport", tmp1, tmp2, p[3], tmp3)
 
     def p_static_import_on_demand_declaration(self, p):
         '''static_import_on_demand_declaration : IMPORT STATIC name '.' '*' ';' '''
-        tmp1 = ptg.node_create(p[1])
-        tmp2 = ptg.node_create(p[2])
-        tmp3 = ptg.node_create(".")
-        tmp4 = ptg.node_create("*")
-        tmp5 = ptg.node_create(";")
-        p[0] = ptg.six_child_node("static_import_on_demand_declaration", tmp1, tmp2, p[3], tmp3, tmp4, tmp5)
+        p[0] = Node("StaticImportDemand", children=[p[3]])
 
     def p_type_declarations(self, p):
         '''type_declarations : type_declaration
