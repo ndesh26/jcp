@@ -1439,6 +1439,8 @@ class TypeParser(object):
         '''class_or_interface : name
                               | generic_type '.' name'''
         if len(p) == 2:
+            if symbol_table.lookup_class(p[1].value) == False:
+                print("line {}: Object '{}' not defined".format(p[1].lineno, p[1].value))
             p[1].type = p[1].value
             p[0] = p[1]
         elif len(p) == 4:
@@ -1719,6 +1721,7 @@ class ClassParser(object):
 
     def p_class_declaration(self, p):
         '''class_declaration : class_header class_body'''
+        symbol_table.insert_class(p[1].children[0].value)
         symbol_table.end_scope()
         p[0] = Node("ClassDecl", children=[p[1],p[2]])
 
@@ -1934,6 +1937,7 @@ class ClassParser(object):
             symbol_table.print_table()
             symbol_table.end_scope()
             p[0] = Node("MethodDecl", children=[p[1],p[2]])
+            p[0].sym_entry = symbol_table.insert(p[1].children[0].value, {'type':p[1].type, 'modifiers': p[1].children[0].modifiers})
 
     def p_abstract_method_declaration(self, p):
         '''abstract_method_declaration : method_header ';' '''
@@ -1942,6 +1946,10 @@ class ClassParser(object):
     def p_method_header(self, p):
         '''method_header : method_header_name formal_parameter_list_opt ')' method_header_extended_dims method_header_throws_clause_opt'''
         p[0] = Node("MethodHeader", children=[p[1], p[2], p[4], p[5]])
+        p[0].type = p[1].type + " ("
+        for node in p[2].children:
+            p[0].type += node.type + ","
+        p[0].type += ")"
 
     def p_method_header_name(self, p):
         '''method_header_name : modifiers_opt type_parameters type NAME '('

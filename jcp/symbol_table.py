@@ -47,6 +47,7 @@ class SymbolTable:
 
     def __init__(self):
         self.table = Table()
+        self.classes = {}
 
     def begin_scope(self):
         new_table = Table(self.table)
@@ -64,3 +65,18 @@ class SymbolTable:
 
     def print_table(self):
         self.table.print_table()
+
+    def insert_class(self, name):
+        self.classes[name] = self.table
+
+    def lookup_class(self, name):
+        if name in self.classes:
+            return True
+        else:
+            return False
+
+    def lookup_method(self, name, method):
+        if method in self.classes[name]:
+            return self.classes[name][method]
+        else:
+            return None
