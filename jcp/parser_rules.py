@@ -5,6 +5,7 @@ import pydot
 
 ast = ""
 symbol_table = symbol_table.SymbolTable()
+nat = []
 
 class Node:
     def __init__(self, name="", value="", type="", children=None, modifiers=None, dims=0, arraylen=None, sym_entry=None, lineno=0):
@@ -29,6 +30,7 @@ class Node:
 
     def print_tree(self, k=1):
         global ast
+        global nat
         if self.name:
             ast = ast + self.name + " " + self.type + " " + self.value
             for modifier in self.modifiers:
@@ -38,13 +40,26 @@ class Node:
             if self.children == [  ]:
                 return
             else:
-                for node in  self.children:
+                for node in self.children:
+                    nat.append(1)
                     if isinstance(node, Node):
                         if node.name:
                             if node == self.children[len(self.children) - 1]:
-                                ast = ast + ' |' * (k-1) + ' `-'
+                                for i in nat[:k-1]:
+                                    if i == 1:
+                                        ast = ast + ' |'
+                                    elif i == 0:
+                                        ast = ast + '  '
+                                ast = ast + ' `-'
+                                nat[k-1] = 0
                             else:
-                                ast = ast + ' |' * (k-1) + ' |-'
+                                for i in nat[:k-1]:
+                                    if i == 1:
+                                        ast = ast + ' |'
+                                    elif i == 0:
+                                        ast = ast + '  '
+                                ast = ast + ' |-'
+                                nat[k-1] = 1
                             node.print_tree(k+1)
                     else:
                         print("Error {}".format(node))
