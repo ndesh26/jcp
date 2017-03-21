@@ -2,6 +2,8 @@
 
 # Symbol Table
 
+import csv
+
 class Table:
     def __init__(self, parent=None, name=None, category=None):
         self.entries = {}
@@ -41,9 +43,25 @@ class Table:
         self.entries[name] = attributes
         return self.entries[name]
 
-    def print_table(self):
-        for key, value in self.entries.items():
-            print("{}:\t\t{}".format(key,value))
+    def print_table(self, file):
+        if file:
+            with open(file, 'w') as csvfile:
+                list = ['Name', 'Type', 'Array Length', 'Modifiers', 'Dims']
+                wr = csv.writer(csvfile, delimiter=',')
+                wr.writerow(list)
+                for key, value in self.entries.items():
+                    d = {
+                            'Name': key,
+                            'Type': self.entries[key].get('type'),
+                            'Array Length': self.entries[key].get('arraylen'),
+                            'Modifiers': self.entries[key].get('modifiers'),
+                            'Dims': self.entries[key].get('dims'),
+                            }
+                    fields = ('Name', 'Type', 'Array Length', 'Modifiers', 'Dims')
+                    cwriter = csv.DictWriter(csvfile, fields, delimiter=',')
+                    cwriter.writerow(d)
+        else:
+            print("File name not given")
 
 class SymbolTable:
 
@@ -65,8 +83,8 @@ class SymbolTable:
     def insert(self, name, attributes={}):
         return self.table.insert(name, attributes)
 
-    def print_table(self):
-        self.table.print_table()
+    def print_table(self, file):
+        self.table.print_table(file)
 
     def insert_class(self, name):
         self.classes[name] = self.table
