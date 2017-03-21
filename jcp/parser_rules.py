@@ -831,6 +831,8 @@ class StatementParser(object):
         elif len(p) == 3:
             if (p[2].type == "error"):
                 p[1].type = "error"
+            if p[2].name == "ReturnStmt":
+                p[1].value=1
             p[1].children.append(p[2])
             p[0] = p[1]
 
@@ -1053,6 +1055,8 @@ class StatementParser(object):
 
     def p_if_then_statement(self, p):
         '''if_then_statement : IF '(' expression ')' statement'''
+        if p[5].name == "":
+            p[5].name = "NullStmt"
         if p[3].type == "int" or p[3].type == "bool":
             p[0] = Node("IfStmt", children=[p[3],p[5]])
         else:
@@ -1061,6 +1065,10 @@ class StatementParser(object):
 
     def p_if_then_else_statement(self, p):
         '''if_then_else_statement : IF '(' expression ')' statement_no_short_if ELSE statement'''
+        if p[5].name == "":
+            p[5].name = "NullStmt"
+        if p[7].name == "":
+            p[7].name = "NullStmt"
         if p[3].type == "int" or p[3].type == "bool":
             p[0] = Node("IfStmt", children=[p[3], p[5], p[7]])
         else:
@@ -1071,6 +1079,10 @@ class StatementParser(object):
 
     def p_if_then_else_statement_no_short_if(self, p):
         '''if_then_else_statement_no_short_if : IF '(' expression ')' statement_no_short_if ELSE statement_no_short_if'''
+        if p[5].name == "":
+            p[5].name = "NullStmt"
+        if p[7].name == "":
+            p[7].name = "NullStmt"
         if p[3].type == "int" or p[3].type == "bool":
             p[0] = Node("IfStmt", children=[p[3], p[5], p[7]])
         else:
@@ -1081,6 +1093,8 @@ class StatementParser(object):
 
     def p_while_statement(self, p):
         '''while_statement : WHILE '(' expression ')' statement'''
+        if p[5].name == "":
+            p[5].name = "NullStmt"
         if p[3].type == "int" or p[3].type == "bool":
             p[0] = Node("WhileStmt", children=[p[3],p[5]])
         else:
@@ -1091,6 +1105,8 @@ class StatementParser(object):
 
     def p_while_statement_no_short_if(self, p):
         '''while_statement_no_short_if : WHILE '(' expression ')' statement_no_short_if'''
+        if p[5].name == "":
+            p[5].name = "NullStmt"
         if p[3].type == "int" or p[3].type == "bool":
             p[0] = Node("WhileStmt", children=[p[3],p[5]])
         else:
@@ -1107,6 +1123,8 @@ class StatementParser(object):
             p[5].name = "NullStmt"
         if p[7].name == "":
             p[7].name = "NullStmt"
+        if p[9].name == "":
+            p[9].name = "NullStmt"
         p[0] = Node("ForStmt", children=[p[3], p[5], p[7], p[9]])
         if p[3].name == "Decls":
             for node in p[3].children:
@@ -1120,6 +1138,8 @@ class StatementParser(object):
             p[5].name = "NullStmt"
         if p[7].name == "":
             p[7].name = "NullStmt"
+        if p[9].name == "":
+            p[9].name = "NullStmt"
         p[0] = Node("ForStmt", children=[p[3], p[5], p[7], p[9]])
 
     def p_for_init_opt(self, p):
@@ -2213,15 +2233,18 @@ class ClassParser(object):
     def p_method_body(self, p):
         '''method_body : '{' block_statements_opt '}' '''
         p[2].name = "MethodBody"
+        p[2].lineno = p.lineno(3)
         p[0] = p[2]
-
 
     def p_method_declaration(self, p):
         '''method_declaration : abstract_method_declaration
                               | method_header method_body'''
         if len(p) == 2:
+            symbol_table.end_scope()
             p[0] = p[1]
         else:
+            if p[2].value == "" and p[1].type.split(" ", 1)[0] != "void":
+                print("line {}: control reaches end of non-void function '{}'".format(p[2].lineno, p[1].children[0].value))
             symbol_table.print_table("csv/" + symbol_table.get_class_name() + "_" + p[1].children[0].value + "_method.csv")
             symbol_table.end_scope()
             p[0] = Node("MethodDecl", children=[p[1],p[2]])
