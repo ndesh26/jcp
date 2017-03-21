@@ -78,8 +78,8 @@ class SymbolTable:
             return False
 
     def lookup_method(self, name, method):
-        if method in self.classes[name]:
-            return self.classes[name][method]
+        if self.classes[name].lookup(method):
+            return self.classes[name].entries[method]
         else:
             return None
 
