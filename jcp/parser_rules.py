@@ -2126,7 +2126,7 @@ class ClassParser(object):
                                    | modifiers_opt NAME '(' '''
         if len(p) == 4:
             if symbol_table.table.name == p[2]:
-                symbol_table.begin_scope(name=p[2], category="Constructor")
+                symbol_table.begin_scope(name=p[2], category="constructor")
             else:
                 print("lineno {}: Illegal declaration, {} (constructor or method) in class {}".format(p.lineno(2), p[2], symbol_table.table.name))
             p[0] = Node("DeclsRefExpr", value=p[2], modifiers=p[1].modifiers)
@@ -2233,7 +2233,7 @@ class ClassParser(object):
         '''method_header_name : modifiers_opt type_parameters type NAME '('
                               | modifiers_opt type NAME '(' '''
         if len(p) == 5:
-            symbol_table.begin_scope(name=p[3], category="Method")
+            symbol_table.begin_scope(name=p[3], category="method")
             p[0] = Node("MethodName", value=p[3], type=p[2].type, modifiers=p[1].modifiers)
         else:
             #TODO:Not done because of type_parameters
