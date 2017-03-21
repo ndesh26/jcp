@@ -107,6 +107,14 @@ class SymbolTable:
     def get_name(self):
         return (self.table.name, self.table.category)
 
+    def get_class_name(self):
+        current_table = self.table
+        while(current_table != None):
+            if current_table.category == "class":
+                return current_table.name
+            current_table = current_table.parent_table
+        return None
+
     def get_method_return_type(self):
         current_table = self.table
         while(current_table != None):

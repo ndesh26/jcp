@@ -2110,12 +2110,8 @@ class ClassParser(object):
 
     def p_constructor_declaration(self, p):
         '''constructor_declaration : constructor_header method_body'''
-        if symbol_table.get_name() == (p[1].children[0].value, "class"):
-            print("Symbol Table for Constructor: {}".format(p[1].children[0].value))
-            symbol_table.print_table(p[1].children[0].value + "_Constructor.txt")
-            symbol_table.end_scope()
-        else:
-            print("Symbol Table not generated for illegal declared constructor or method")
+        symbol_table.print_table("csv/" + p[1].children[0].value + "_constructor.csv")
+        symbol_table.end_scope()
         p[0] = Node("ConstrDecl", children=[p[1], p[2]])
 
     def p_constructor_header(self, p):
@@ -2127,10 +2123,9 @@ class ClassParser(object):
         '''constructor_header_name : modifiers_opt type_parameters NAME '('
                                    | modifiers_opt NAME '(' '''
         if len(p) == 4:
-            if symbol_table.table.name == p[2]:
-                symbol_table.begin_scope(name=p[2], category="constructor")
-            else:
+            if symbol_table.get_name() != (p[2], "class"):
                 print("lineno {}: Illegal declaration, {} (constructor or method) in class {}".format(p.lineno(2), p[2], symbol_table.table.name))
+            symbol_table.begin_scope(name=p[2], category="constructor")
             p[0] = Node("DeclsRefExpr", value=p[2], modifiers=p[1].modifiers)
         else:
             # TODO: type_parameters has to be implemented
@@ -2209,8 +2204,7 @@ class ClassParser(object):
         if len(p) == 2:
             p[0] = p[1]
         else:
-            print("Symbol Table for function: {}".format(p[1].children[0].value))
-            symbol_table.print_table(p[1].children[0].value + "_Method.txt")
+            symbol_table.print_table("csv/" + symbol_table.get_class_name() + "_" + p[1].children[0].value + "_method.csv")
             symbol_table.end_scope()
             p[0] = Node("MethodDecl", children=[p[1],p[2]])
 
@@ -2220,7 +2214,12 @@ class ClassParser(object):
 
     def p_method_header(self, p):
         '''method_header : method_header_name formal_parameter_list_opt ')' method_header_extended_dims method_header_throws_clause_opt'''
-        p[0] = Node("MethodHeader", children=[p[1], p[2], p[4], p[5]])
+        if p[4].name == "" and p[5].name == "":
+            p[0] = Node("MethodHeader", children=[p[1], p[2]])
+        elif p[4].name == "" and p[5].name != "":
+            p[0] = Node("MethodHeader", children=[p[1], p[2], p[5]])
+        elif p[4].name != "" and p[5].name == "":
+            p[0] = Node("MethodHeader", children=[p[1], p[2], p[4]])
         p[0].type = p[1].type + " ("
         length = len(p[2].children)
         for node in p[2].children:
@@ -2719,7 +2718,9 @@ class JavaParser(ExpressionParser, NameParser, LiteralParser, TypeParser, ClassP
         '''goal : PLUSPLUS compilation_unit'''
         p[0] = p[2]
         p[0].print_tree()
-        print(ast)
+        target = open("ast.txt", 'w')
+        target.write(ast)
+        target.close()
         p[0].print_png()
 
     def p_goal_expression(self, p):
