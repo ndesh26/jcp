@@ -3,9 +3,11 @@
 # Symbol Table
 
 class Table:
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, name=None, category=None):
         self.entries = {}
         self.parent_table = parent
+        self.name = name
+        self.category = category
 
     def lookup(self, name):
         if name in self.entries:
@@ -49,8 +51,8 @@ class SymbolTable:
         self.table = Table()
         self.classes = {}
 
-    def begin_scope(self):
-        new_table = Table(self.table)
+    def begin_scope(self, name, category):
+        new_table = Table(self.table, name, category)
         self.table = new_table
         return self.table
 
