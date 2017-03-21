@@ -2112,7 +2112,7 @@ class ClassParser(object):
         '''constructor_declaration : constructor_header method_body'''
         if symbol_table.get_name() == (p[1].children[0].value, "class"):
             print("Symbol Table for Constructor: {}".format(p[1].children[0].value))
-            symbol_table.print_table()
+            symbol_table.print_table(p[1].children[0].value + "_Constructor.txt")
             symbol_table.end_scope()
         else:
             print("Symbol Table not generated for illegal declared constructor or method")
@@ -2210,7 +2210,7 @@ class ClassParser(object):
             p[0] = p[1]
         else:
             print("Symbol Table for function: {}".format(p[1].children[0].value))
-            symbol_table.print_table()
+            symbol_table.print_table(p[1].children[0].value + "_Method.txt")
             symbol_table.end_scope()
             p[0] = Node("MethodDecl", children=[p[1],p[2]])
 
