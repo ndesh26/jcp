@@ -1974,7 +1974,7 @@ class ClassParser(object):
 
     def p_class_header_name1(self, p):
         '''class_header_name1 : modifiers_opt CLASS NAME'''
-        symbol_table.begin_scope()
+        symbol_table.begin_scope(name=p[3], category=p[2])
         p[0] = Node("ClassName", value=p[3], modifiers=p[1].modifiers)
 
     def p_class_header_extends_opt(self, p):
@@ -2075,7 +2075,13 @@ class ClassParser(object):
 
     def p_constructor_declaration(self, p):
         '''constructor_declaration : constructor_header method_body'''
-        p[0] = Node("ConstructorDecl", children=[p[1],p[2]])
+        if symbol_table.table.name == p[1].children[0].value:
+            print("Symbol Table for Constructor: {}".format(p[1].children[0].value))
+            symbol_table.print_table()
+            symbol_table.end_scope()
+        else:
+            print("Symbol Table not generated for illegal declared constructor or method")
+        p[0] = Node("ConstrDecl", children=[p[1], p[2]])
 
     def p_constructor_header(self, p):
         '''constructor_header : constructor_header_name formal_parameter_list_opt ')' method_header_throws_clause_opt'''
@@ -2086,12 +2092,13 @@ class ClassParser(object):
         '''constructor_header_name : modifiers_opt type_parameters NAME '('
                                    | modifiers_opt NAME '(' '''
         if len(p) == 4:
-            lparen = ptg.node_create(p[3])
-            tmp = ptg.node_create(p[2])
-            p[0] = ptg.three_child_node("constructor_header_name", p[1], tmp, lparen)
+            if symbol_table.table.name == p[2]:
+                symbol_table.begin_scope(name=p[2], category="Constructor")
+            else:
+                print("lineno {}: Illegal declaration, {} (constructor or method) in class {}".format(p.lineno(2), p[2], symbol_table.table.name))
+            p[0] = Node("DeclsRefExpr", value=p[2], modifiers=p[1].modifiers)
         else:
-            lparen = ptg.node_create(p[4])
-            tmp = ptg.node_create(p[3])
+            # TODO: type_parameters has to be implemented
             p[0] = ptg.four_child_node("constructor_header_name", p[1], p[2], tmp, lparen)
 
     def p_formal_parameter_list_opt(self, p):
@@ -2193,7 +2200,7 @@ class ClassParser(object):
         '''method_header_name : modifiers_opt type_parameters type NAME '('
                               | modifiers_opt type NAME '(' '''
         if len(p) == 5:
-            symbol_table.begin_scope()
+            symbol_table.begin_scope(name=p[3], category="Method")
             p[0] = Node("MethodName", value=p[3], type=p[2].type, modifiers=p[1].modifiers)
         else:
             #TODO:Not done because of type_parameters
