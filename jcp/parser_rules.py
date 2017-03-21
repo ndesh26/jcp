@@ -2,6 +2,7 @@ import ptg
 import lexer
 import symbol_table
 import pydot
+from ast import literal_eval
 
 ast = ""
 symbol_table = symbol_table.SymbolTable()
@@ -32,7 +33,7 @@ class Node:
         global ast
         global nat
         if self.name:
-            ast = ast + self.name + " " + self.type + " " + self.value
+            ast = ast + self.name + " " + self.type + " " + "{}".format(self.value)
             for modifier in self.modifiers:
                 if modifier:
                     ast = ast + " " + modifier
@@ -65,7 +66,7 @@ class Node:
                         print("Error {}".format(node))
 
     def print_dot(self, graph, id=0):
-        parent = pydot.Node(id, label=self.name + "\n" + self.value)
+        parent = pydot.Node(id, label=self.name + "\n" + "{}".format(self.value))
         id += 1
         graph.add_node(parent)
         for node in self.children:
@@ -1625,8 +1626,12 @@ class NameParser(object):
 class LiteralParser(object):
 
     def p_literal1(self, p):
-        '''literal : INT_LITERAL'''
-        p[0] = Node("IntegerLiteral", value=p[1], type="int")
+        '''literal : NUM'''
+        value = literal_eval(p[1])
+        if isinstance(value, int):
+            p[0] = Node("IntegerLiteral", value=value, type="int")
+        if isinstance(value, float):
+            p[0] = Node("FloatLiteral", value=value, type="float")
 
     def p_literal2(self, p):
         '''literal : CHAR_LITERAL'''
@@ -1644,10 +1649,6 @@ class LiteralParser(object):
     def p_literal5(self, p):
         '''literal : NULL'''
         p[0] = Node("Null", value=p[1], type="null")
-
-    def p_literal6(self, p):
-        '''literal : FLOAT_LITERAL'''
-        p[0] = Node("FloatingLiteral", value=p[1], type="float")
 
 class TypeParser(object):
 
