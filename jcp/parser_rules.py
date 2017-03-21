@@ -34,6 +34,9 @@ class Node:
         global nat
         if self.name:
             ast = ast + self.name + " " + self.type + " " + "{}".format(self.value)
+            if self.name == "DeclsRefExpr":
+                for length in self.arraylen:
+                    ast += "[{}]".format(length)
             for modifier in self.modifiers:
                 if modifier:
                     ast = ast + " " + modifier
