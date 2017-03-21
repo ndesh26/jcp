@@ -171,7 +171,7 @@ class ExpressionParser(object):
                     p[1].arraylen = entry['arraylen']
                     p[1].modifiers = entry['modifiers']
                 else:
-                    print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                    print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
             if p[3].type == p[5].type:
                 p[0] = Node("ConditionalOperator", value="", type=p[3].type, children=[p[1], p[3], p[5]])
@@ -210,7 +210,7 @@ class ExpressionParser(object):
                     p[1].arraylen = entry['arraylen']
                     p[1].modifiers = entry['modifiers']
                 else:
-                    print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                    print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
             p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
 
@@ -237,7 +237,7 @@ class ExpressionParser(object):
                     p[1].arraylen = entry['arraylen']
                     p[1].modifiers = entry['modifiers']
                 else:
-                    print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                    print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
             p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
 
@@ -269,7 +269,7 @@ class ExpressionParser(object):
                     p[1].arraylen = entry['arraylen']
                     p[1].modifiers = entry['modifiers']
                 else:
-                    print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                    print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
             if p[1].type in ["int", "char"] and p[3].type in ["int", "char"]:
                 p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
@@ -304,7 +304,7 @@ class ExpressionParser(object):
                     p[1].arraylen = entry['arraylen']
                     p[1].modifiers = entry['modifiers']
                 else:
-                    print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                    print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
             if p[1].type in ["int", "char"] and p[3].type in ["int", "char"]:
                 p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
@@ -339,7 +339,7 @@ class ExpressionParser(object):
                     p[1].arraylen = entry['arraylen']
                     p[1].modifiers = entry['modifiers']
                 else:
-                    print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                    print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
             if p[1].type in ["int", "char"] and p[3].type in ["int", "char"]:
                 p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
@@ -373,7 +373,7 @@ class ExpressionParser(object):
                     p[1].arraylen = entry['arraylen']
                     p[1].modifiers = entry['modifiers']
                 else:
-                    print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                    print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
             p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
 
@@ -400,7 +400,7 @@ class ExpressionParser(object):
                     p[1].arraylen = entry['arraylen']
                     p[1].modifiers = entry['modifiers']
                 else:
-                    print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                    print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
             p[0] = Node("BinaryOperator", value=p[2], type="", children=[p[1], p[3]])
 
@@ -440,7 +440,7 @@ class ExpressionParser(object):
                     p[1].arraylen = entry['arraylen']
                     p[1].modifiers = entry['modifiers']
                 else:
-                    print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                    print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
             if p[1].type in ["int", "float", "char"] and p[3].type in ["int", "float", "char"]:
                 p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
@@ -485,7 +485,7 @@ class ExpressionParser(object):
                     p[1].arraylen = entry['arraylen']
                     p[1].modifiers = entry['modifiers']
                 else:
-                    print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                    print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
             if p[1].type == "int" and p[3].type == "int":
                 p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
@@ -656,7 +656,7 @@ class ExpressionParser(object):
                 p[1].arraylen = entry['arraylen']
                 p[1].modifiers = entry['modifiers']
             else:
-                print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                print("line {}: the variable '{}' is undeclared".format(p[1].lineno, p[1].value))
                 p[1].type = "error"
         p[0] = p[1]
 
@@ -809,8 +809,8 @@ class ExpressionParser(object):
 class StatementParser(object):
 
     def p_block(self, p):
-        '''block : '{' block_statements_opt '}' '''
-        p[0] = p[2]
+        '''block : begin_scope '{' block_statements_opt '}' end_scope '''
+        p[0] = p[3]
 
     def p_block_statements_opt(self, p):
         '''block_statements_opt : block_statements'''
@@ -1107,6 +1107,9 @@ class StatementParser(object):
         if p[7].name == "":
             p[7].name = "NullStmt"
         p[0] = Node("ForStmt", children=[p[3], p[5], p[7], p[9]])
+        if p[3].name == "Decls":
+            for node in p[3].children:
+                symbol_table.remove(node.value)
 
     def p_for_statement_no_short_if(self, p):
         '''for_statement_no_short_if : FOR '(' for_init_opt ';' expression_opt ';' for_update_opt ')' statement_no_short_if'''
@@ -1480,7 +1483,7 @@ class StatementParser(object):
                 p[1].arraylen = entry['arraylen']
                 p[1].modifiers = entry['modifiers']
             else:
-                print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                 p[1].type = "error"
         p[0] = p[1]
 
@@ -1509,7 +1512,7 @@ class StatementParser(object):
                 p[1].arraylen = entry['arraylen']
                 p[1].modifiers = entry['modifiers']
             else:
-                print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
+                print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                 p[1].type = "error"
         if p[3].type != "int":
             print("line {}: the array index in not of type int".format(p.lineno(2)))
@@ -1582,16 +1585,33 @@ class NameParser(object):
 
     def p_simple_name(self, p):
         '''simple_name : NAME'''
-        p[0] = Node("DeclsRefExpr", value=p[1])
+        p[0] = Node("DeclsRefExpr", value=p[1], lineno=p.lineno(1))
 
     def p_qualified_name(self, p):
         '''qualified_name : name '.' simple_name'''
-        entry = symbol_table.get_entry(p[1].value)
-        if entry:
-            p[1].type = entry['type']
-            p[1].dims = entry['dims']
-            p[1].arraylen = entry['arraylen']
-            p[1].modifiers = entry['modifiers']
+        if p[1].type == "error":
+            p[0] = Node("FieldAccessExpr", value=p[2] + p[3].value, type="error", children=[p[1]])
+
+        elif p[1].value[0] != ".":
+            entry = symbol_table.get_entry(p[1].value)
+            if entry:
+                p[1].type = entry['type']
+                p[1].dims = entry['dims']
+                p[1].arraylen = entry['arraylen']
+                p[1].modifiers = entry['modifiers']
+                if symbol_table.lookup_class(p[1].type):
+                    entry = symbol_table.lookup_method(p[1].type, p[3].value)
+                else:
+                    entry = None
+                if entry:
+                    p[0] = Node("FieldAccessExpr", value=p[2] + p[3].value, type=entry['type'], children=[p[1]], modifiers=entry['modifiers'], arraylen=entry['arraylen'], dims=entry['dims'])
+                else:
+                    print("line {}: there is no field named '{}' for object of type '{}'".format(p.lineno(2), p[3].value, p[1].type))
+                    p[0] = Node("FieldAccessExpr", value=p[2] + p[3].value, type="error", children=[p[1]])
+            else:
+                print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
+                p[0] = Node("FieldAccessExpr", value=p[2] + p[3].value, type="error", children=[p[1]])
+        else:
             if symbol_table.lookup_class(p[1].type):
                 entry = symbol_table.lookup_method(p[1].type, p[3].value)
             else:
@@ -1601,9 +1621,6 @@ class NameParser(object):
             else:
                 print("line {}: there is no field named '{}' for object of type '{}'".format(p.lineno(2), p[3].value, p[1].type))
                 p[0] = Node("FieldAccessExpr", value=p[2] + p[3].value, type="error", children=[p[1]])
-        else:
-            print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
-            p[0] = Node("FieldAccessExpr", value=p[2] + p[3].value, type="error", children=[p[1]])
 
 class LiteralParser(object):
 
@@ -2738,3 +2755,11 @@ class JavaParser(ExpressionParser, NameParser, LiteralParser, TypeParser, ClassP
     def p_empty(self, p):
         '''empty :'''
         p[0] = Node()
+
+    def p_begin_scope(self, p):
+        '''begin_scope : '''
+        symbol_table.begin_scope()
+
+    def p_end_scope(self, p):
+        '''end_scope : '''
+        symbol_table.end_scope()

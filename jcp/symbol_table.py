@@ -63,13 +63,16 @@ class Table:
         else:
             print("File name not given")
 
+    def remove(self, name):
+        self.entries.pop(name, None)
+
 class SymbolTable:
 
     def __init__(self):
         self.table = Table()
         self.classes = {}
 
-    def begin_scope(self, name, category):
+    def begin_scope(self, name = "", category = ""):
         new_table = Table(self.table, name, category)
         self.table = new_table
         return self.table
@@ -122,3 +125,6 @@ class SymbolTable:
                 return current_table.parent_table.get_entry(current_table.name)['type'].split(" ", 1)[0]
             current_table = current_table.parent_table
         return None
+
+    def remove(self, name):
+        self.table.remove(name)
