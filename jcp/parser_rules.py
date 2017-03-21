@@ -860,7 +860,7 @@ class StatementParser(object):
             if entry:
                 print("line {}: variable '{}' is already declared".format(node.lineno, node.value))
             else:
-                node.sym_entry = symbol_table.insert(node.value, {'type':node.type, 'dims':node.dims, 'arraylen':node.arraylen, 'modifiers':None})
+                node.sym_entry = symbol_table.insert(node.value, {'type':node.type, 'dims':node.dims, 'arraylen':node.arraylen, 'modifiers':[]})
         p[0] = p[2]
 
     def p_local_variable_declaration2(self, p):
@@ -976,7 +976,7 @@ class StatementParser(object):
 
     def p_method_invocation(self, p):
         '''method_invocation : NAME '(' argument_list_opt ')' '''
-        entry = symbol_table.get_entry(p[1].value)
+        entry = symbol_table.get_entry(p[1])
         if entry:
             p[1] = Node("DeclsRefExpr", value=p[1], type=entry['type'], modifiers=entry['modifiers'])
             p[0] = Node("MethodInvocation", children=[p[1]]+p[3].children)
@@ -1002,13 +1002,30 @@ class StatementParser(object):
     def p_method_invocation4(self, p):
         '''method_invocation : name '.' NAME '(' argument_list_opt ')'
                              | primary '.' NAME '(' argument_list_opt ')' '''
-        entry = symbol_table.get_entry(p[1].value+p[2]+p[3])
+        entry = symbol_table.get_entry(p[1].value)
         if entry:
-            p[3] = Node("MemberExpr", value=p[2]+p[3], children=[p[1]], type=entry['type'])
+            p[1].type = entry['type']
+            p[1].dims = entry['dims']
+            p[1].arraylen = entry['arraylen']
+            p[1].modifiers = entry['modifiers']
+            entry = symbol_table.lookup_method(p[1].type, p[3])
+            if entry:
+                p[3] = Node("ObjectMethodExpr", value=p[2]+p[3], children=[p[1]], type=entry['type'])
+                p[0] = Node("MethodInvocation", children=[p[3]]+p[5].children)
+                p[0].type = p[3].type.split(" ", 1)[0]
+                args = p[3].type.split(" ", 1)[1][1:-1].split(",", 1)
+                for arg, node in zip(args, p[5].children):
+                    if arg != node.type:
+                        print("line {}: the function is expecting arg of type '{}' but the arg provided is of type '{}'".format(p.lineno(2), arg, node.type))
+            else:
+                print("line {}: there is no method named '{}' for object of type '{}'".format(p.lineno(2), p[3], p[1].type))
+                p[3] = Node("ObjectMethodExpr", value=p[2]+p[3], children=[p[1]], type="error")
+                p[0] = Node("MethodInvocation", children=[p[3]]+p[5].children)
         else:
-            print("line {}: the method '{}' has not been declared in this scope".format(p.lineno(2), p[1]))
-            p[3] = Node("MemberExpr", value=p[2]+p[3], children=[p[1]])
-        p[0] = Node("MethodInvocation", children=[p[3]]+p[5].children)
+            print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
+            p[1].type="error"
+            p[3] = Node("ObjectMethodExpr", value=p[2]+p[3], children=[p[1]])
+            p[0] = Node("MethodInvocation", children=[p[3]]+p[5].children)
 
     def p_method_invocation5(self, p):
         '''method_invocation : SUPER '.' NAME '(' argument_list_opt ')' '''
@@ -1567,8 +1584,24 @@ class NameParser(object):
 
     def p_qualified_name(self, p):
         '''qualified_name : name '.' simple_name'''
-        # TODO: Requires lookup
-        p[0] = Node("MemberExpr", p[2] + p[3].value, "", [p[1]])
+        entry = symbol_table.get_entry(p[1].value)
+        if entry:
+            p[1].type = entry['type']
+            p[1].dims = entry['dims']
+            p[1].arraylen = entry['arraylen']
+            p[1].modifiers = entry['modifiers']
+            if symbol_table.lookup_class(p[1].type):
+                entry = symbol_table.lookup_method(p[1].type, p[3].value)
+            else:
+                entry = None
+            if entry:
+                p[0] = Node("FieldAccessExpr", value=p[2] + p[3].value, type=entry['type'], children=[p[1]], modifiers=entry['modifiers'], arraylen=entry['arraylen'], dims=entry['dims'])
+            else:
+                print("line {}: there is no field named '{}' for object of type '{}'".format(p.lineno(2), p[3].value, p[1].type))
+                p[0] = Node("FieldAccessExpr", value=p[2] + p[3].value, type="error", children=[p[1]])
+        else:
+            print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
+            p[0] = Node("FieldAccessExpr", value=p[2] + p[3].value, type="error", children=[p[1]])
 
 class LiteralParser(object):
 
