@@ -85,3 +85,14 @@ class SymbolTable:
 
     def insert_up(self, name, attributes={}):
         return self.table.parent_table.insert(name, attributes)
+
+    def get_name(self):
+        return (self.table.name, self.table.category)
+
+    def get_method_return_type(self):
+        current_table = self.table
+        while(current_table != None):
+            if current_table.category == "method":
+                return current_table.parent_table.get_entry(current_table.name)['type'].split(" ", 1)[0]
+            current_table = current_table.parent_table
+        return None

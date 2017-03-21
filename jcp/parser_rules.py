@@ -1303,6 +1303,8 @@ class StatementParser(object):
     def p_return_statement(self, p):
         '''return_statement : RETURN expression_opt ';' '''
         p[0] = Node("ReturnStmt", children=[p[2]])
+        if p[2].type != symbol_table.get_method_return_type():
+            print("line {}: the return statement returns expressions of type '{}' instead of '{}'".format(p.lineno(1), p[2].type, symbol_table.get_method_return_type()))
 
     def p_synchronized_statement(self, p):
         '''synchronized_statement : SYNCHRONIZED '(' expression ')' block'''
@@ -2108,7 +2110,7 @@ class ClassParser(object):
 
     def p_constructor_declaration(self, p):
         '''constructor_declaration : constructor_header method_body'''
-        if symbol_table.table.name == p[1].children[0].value:
+        if symbol_table.get_name() == (p[1].children[0].value, "class"):
             print("Symbol Table for Constructor: {}".format(p[1].children[0].value))
             symbol_table.print_table()
             symbol_table.end_scope()
@@ -2718,7 +2720,6 @@ class JavaParser(ExpressionParser, NameParser, LiteralParser, TypeParser, ClassP
         p[0] = p[2]
         p[0].print_tree()
         print(ast)
-        symbol_table.print_table()
         p[0].print_png()
 
     def p_goal_expression(self, p):
