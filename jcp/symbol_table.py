@@ -4,12 +4,25 @@
 
 import csv
 
+width = {'int':4, 'float':8, 'short':4, 'long':8, 'double':8, 'char':1}
+
+def type_width(name):
+    global width
+    if (isinstance(name, str)):
+        return width[name]
+    else:
+        if (name["type"] in width):
+            return width[name["type"]]
+        else:
+            return 0
+
 class Table:
     def __init__(self, parent=None, name=None, category=None):
         self.entries = {}
         self.parent_table = parent
         self.name = name
         self.category = category
+        self.width = 0
 
     def lookup(self, name):
         if name in self.entries:
@@ -41,6 +54,7 @@ class Table:
 
     def insert(self, name, attributes={}):
         self.entries[name] = attributes
+        self.width = self.width + type_width(self.entries[name])
         return self.entries[name]
 
     def print_table(self, file):
@@ -82,6 +96,9 @@ class SymbolTable:
 
     def get_entry(self, name):
         return self.table.get_method_entry(name)
+
+    def get_width(self):
+        return self.width
 
     def insert(self, name, attributes={}):
         return self.table.insert(name, attributes)
