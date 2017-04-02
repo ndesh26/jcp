@@ -6,6 +6,7 @@ import csv
 
 width = {'int':4, 'float':8, 'short':4, 'long':8, 'double':8, 'char':1}
 temp_no = 0
+target_no = 0
 
 def type_width(name):
     global width
@@ -152,3 +153,9 @@ class SymbolTable:
         name = '_t' + str(temp_no)
         temp_no += 1
         return self.table.insert(name, {'value': name, 'type' : type})
+
+    def get_target(self):
+        global target_no
+        target = '_L' + str(target_no)
+        target_no += 1
+        return target
