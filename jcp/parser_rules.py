@@ -866,7 +866,7 @@ class StatementParser(object):
             if entry:
                 print("line {}: variable '{}' is already declared".format(node.lineno, node.value))
             else:
-                node.sym_entry = symbol_table.insert(node.value, {'type':node.type, 'dims':node.dims, 'arraylen':node.arraylen, 'modifiers':[]})
+                node.sym_entry = symbol_table.insert(node.value, {'value': node.value, 'type':node.type, 'dims':node.dims, 'arraylen':node.arraylen, 'modifiers':[]})
         p[0] = p[2]
 
     def p_local_variable_declaration2(self, p):
@@ -880,7 +880,7 @@ class StatementParser(object):
             if symbol_table.get_entry(node.value):
                 print("line {}: variable '{}' is already declared".format(node.lineno, node.value))
             else:
-                node.sym_entry = symbol_table.insert(node.value, {'type':node.type, 'modifiers':node.modifiers, 'dims':node.dims, 'arraylen':node.arraylen})
+                node.sym_entry = symbol_table.insert(node.value, {'value': node.value, 'type':node.type, 'modifiers':node.modifiers, 'dims':node.dims, 'arraylen':node.arraylen})
         p[0] = p[3]
 
     def p_variable_declarators(self, p):
@@ -1201,14 +1201,14 @@ class StatementParser(object):
         '''enhanced_for_statement_header_init : FOR '(' type NAME dims_opt'''
         symbol_table.begin_scope()
         p[4] = Node("VarDecl", value=p[4], type=p[3].type, dims=p[5].dims)
-        p[4].sym_entry = symbol_table.insert(p[4].value, {'type':p[4].type, 'dims':p[4].dims, 'arraylen': 0, 'modifiers':None})
+        p[4].sym_entry = symbol_table.insert(p[4].value, {'value': p[4].value, 'type':p[4].type, 'dims':p[4].dims, 'arraylen': 0, 'modifiers':None})
         p[0] = Node("EnhancedForHead", children=[p[4]])
 
     def p_enhanced_for_statement_header_init2(self, p):
         '''enhanced_for_statement_header_init : FOR '(' modifiers type NAME dims_opt'''
         symbol_table.begin_scope()
         p[5] = Node("VarDecl", type=p[4].type, dims=p[6].dims, modifiers=p[3].modifiers)
-        p[4].sym_entry = symbol_table.insert(p[4].value, {'type':p[4].type, 'dims':p[4].dims, 'modifiers':p[4].modifiers, 'arraylen':0})
+        p[4].sym_entry = symbol_table.insert(p[4].value, {'value': p[4].value, 'type':p[4].type, 'dims':p[4].dims, 'modifiers':p[4].modifiers, 'arraylen':0})
         p[0] = Node("EnhancedForHead", children=[p[5]])
 
     def p_statement_no_short_if(self, p):
@@ -2140,7 +2140,7 @@ class ClassParser(object):
             if symbol_table.get_entry(node.value):
                 print("line {}: variable '{}' is already declared".format(node.lineno, node.value))
             else:
-                node.sym_entry = symbol_table.insert(node.value, {'type':node.type, 'modifiers':node.modifiers, 'dims':node.dims, 'arraylen':node.arraylen})
+                node.sym_entry = symbol_table.insert(node.value, {'value': node.value, 'type':node.type, 'modifiers':node.modifiers, 'dims':node.dims, 'arraylen':node.arraylen})
         p[3].name = "FieldDecl"
         p[0] = p[3]
 
@@ -2199,7 +2199,7 @@ class ClassParser(object):
             if entry:
                 print("line {}: variable '{}' is already declared".format(p[3].lineno, p[3].value))
             else:
-                p[3].sym_entry = symbol_table.insert(p[3].value, {'type':p[3].type, 'dims':p[3].dims, 'arraylen':p[3].arraylen, 'modifiers':p[3].modifiers})
+                p[3].sym_entry = symbol_table.insert(p[3].value, {'value': p[3].value, 'type':p[3].type, 'dims':p[3].dims, 'arraylen':p[3].arraylen, 'modifiers':p[3].modifiers})
             p[0] = p[3]
         else:
             p[4].type = p[2].type
@@ -2208,7 +2208,7 @@ class ClassParser(object):
             if entry:
                 print("line {}: variable '{}' is already declared".format(p[4].lineno, p[4].value))
             else:
-                p[4].sym_entry = symbol_table.insert(p[4].value, {'type':p[4].type, 'dims':p[4].dims, 'arraylen':p[4].arraylen, 'modifiers':p[4].modifiers})
+                p[4].sym_entry = symbol_table.insert(p[4].value, {'value': p[4].value, 'type':p[4].type, 'dims':p[4].dims, 'arraylen':p[4].arraylen, 'modifiers':p[4].modifiers})
             p[0] = p[4]
 
     def p_method_header_throws_clause_opt(self, p):
@@ -2272,7 +2272,7 @@ class ClassParser(object):
             else:
                 p[0].type += node.type + ","
         p[0].type += ")"
-        p[0].sym_entry = symbol_table.insert_up(p[1].value, {'type':p[0].type, 'modifiers': p[1].modifiers})
+        p[0].sym_entry = symbol_table.insert_up(p[1].value, {'value': p[1].value, 'type':p[0].type, 'modifiers': p[1].modifiers})
 
     def p_method_header_name(self, p):
         '''method_header_name : modifiers_opt type_parameters type NAME '('
@@ -2770,6 +2770,11 @@ class JavaParser(ExpressionParser, NameParser, LiteralParser, TypeParser, ClassP
     def p_goal_expression(self, p):
         '''goal : MINUSMINUS expression'''
         p[0] = p[2]
+        p[0].print_tree()
+        target = open("ast.txt", 'w')
+        target.write(ast)
+        target.close()
+        p[0].print_png()
 
     def p_goal_statement(self, p):
         '''goal : '*' block_statement'''
