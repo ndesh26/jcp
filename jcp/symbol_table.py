@@ -5,6 +5,7 @@
 import csv
 
 width = {'int':4, 'float':8, 'short':4, 'long':8, 'double':8, 'char':1}
+temp_no = 0
 
 def type_width(name):
     global width
@@ -145,3 +146,9 @@ class SymbolTable:
 
     def remove(self, name):
         self.table.remove(name)
+
+    def get_temp(self, type):
+        global temp_no
+        name = '_t' + str(temp_no)
+        temp_no += 1
+        return self.table.insert(name, {'value': name, 'type' : type})
