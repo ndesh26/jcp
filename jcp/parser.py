@@ -25,7 +25,7 @@ else:
     content = _file.read()
 if not os.path.exists("csv"):
     os.makedirs("csv")
-result = parser.parse("--"+content, debug=debug)
+result = parser.parse("++"+content, debug=debug)
 tac = code.Tac()
 tac.generate_tac(result)
 tac.print_tac()
