@@ -3,6 +3,7 @@ import sys
 import ply.yacc as yacc
 from parser_rules import JavaParser
 import ptg
+code = __import__('3addrcode')
 
 if len(sys.argv) < 2:
     print("Usage: {} [-g] filename".format(sys.argv[0]))
@@ -24,5 +25,7 @@ else:
     content = _file.read()
 if not os.path.exists("csv"):
     os.makedirs("csv")
-result = parser.parse("++"+content, debug=debug)
-# ptg.end()
+result = parser.parse("--"+content, debug=debug)
+tac = code.Tac()
+tac.generate_tac(result)
+tac.print_tac()
