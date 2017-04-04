@@ -13,10 +13,7 @@ class BinOp(Ins):
         self.dst = dst
 
     def __repr__(self):
-        if self.label == "":
-            return self.dst['value'] + ' = ' + '{}'.format(self.arg1['value']) + ' ' + self.op + ' ' + '{}'.format(self.arg2['value'])
-        else:
-            return self.label + ':' + self.dst['value'] + ' = ' + '{}'.format(self.arg1['value']) + ' ' + self.op + ' ' + '{}'.format(self.arg2['value'])
+        return '\t' + self.dst['value'] + ' = ' + '{}'.format(self.arg1['value']) + ' ' + self.op + ' ' + '{}'.format(self.arg2['value'])
 
 class AssignOp(Ins):
     def __init__(self, label="", op="", arg=None, dst=None):
@@ -25,19 +22,23 @@ class AssignOp(Ins):
         self.dst = dst
 
     def __repr__(self):
-        if self.label == "":
-            return self.dst['value'] + ' = ' + '{}'.format(self.arg['value'])
-        else:
-            return self.label + ':' + self.dst['value'] + ' = ' + '{}'.format(self.arg['value'])
+        return '\t' + self.dst['value'] + ' = ' + '{}'.format(self.arg['value'])
 
-class IfStmt(Ins):
+class BranchOp(Ins):
     def __init__(self, label="", op="", arg=None, target=""):
         Ins.__init__(self, label, op)
         self.arg = arg
         self.target = target
 
     def __repr__(self):
-        return 'IfZ ' + '{}'.format(self.arg['value']) + ' Goto ' + self.target
+        return '\tIfZ ' + '{}'.format(self.arg['value']) + ' Goto ' + self.target
+
+class GotoStmt(Ins):
+    def __init__(self, label=""):
+        Ins.__init__(self, label)
+
+    def __repr__(self):
+        return '\tGoto' + self.label
 
 class Label(Ins):
     def __init__(self, label=""):
@@ -68,17 +69,44 @@ class Tac(object):
         elif node.name == "IfStmt":
             arg1 = self.generate_tac(node.children[0])
             iflbl = symbol_table.get_target()
-            ifop = IfStmt(arg=arg1, target=iflbl)
+            ifop = BranchOp(arg=arg1, target=iflbl)
             self.code.append(ifop)
-            arg2 = self.generate_tac(node.children[2])
+            if len(node.children) == 3:
+                arg2 = self.generate_tac(node.children[2])
+                afterlbl = symbol_table.get_target()
+                afterop = Label(label="\tGoto"+afterlbl)
+                self.code.append(afterop)
+                ifop = Label(label=iflbl+":")
+                self.code.append(ifop)
+                arg3 = self.generate_tac(node.children[1])
+                afterop = Label(label=afterlbl+":")
+                self.code.append(afterop)
+            else:
+                ifop = Label(label=iflbl+":")
+                self.code.append(ifop)
+                arg3 = self.generate_tac(node.children[1])
+
+        elif node.name == "WhileStmt":
+            arg1 = self.generate_tac(node.children[0])
+            whilelbl = symbol_table.get_target()
+            whileop = Label(label=whilelbl+":")
+            self.code.append(whileop)
+            branchlbl = symbol_table.get_target()
+            whileop = BranchOp(arg=arg1, target=branchlbl)
+            self.code.append(whileop)
             afterlbl = symbol_table.get_target()
-            afterop = Label(label="Goto"+afterlbl)
+            afterop = Label(label="\tGoto"+afterlbl)
             self.code.append(afterop)
-            ifop = Label(label=iflbl+":")
-            self.code.append(ifop)
-            arg3 = self.generate_tac(node.children[1])
+            whileop = Label(label=branchlbl+":")
+            self.code.append(whileop)
+            arg2 = self.generate_tac(node.children[1])
+            whilestart = GotoStmt(label=whilelbl)
+            self.code.append(whilestart)
             afterop = Label(label=afterlbl+":")
             self.code.append(afterop)
+
+        elif node.name == "MethodDeclaration":
+            return None
 
         elif node.name == "IntegerLiteral":
             return {'value': node.value, 'type': "int"}
