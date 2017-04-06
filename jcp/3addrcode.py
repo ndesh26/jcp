@@ -38,7 +38,7 @@ class GotoStmt(Ins):
         Ins.__init__(self, label)
 
     def __repr__(self):
-        return '\tGoto' + self.label
+        return '\tGoto ' + self.label
 
 class Label(Ins):
     def __init__(self, label=""):
@@ -82,9 +82,14 @@ class Tac(object):
                 afterop = Label(label=afterlbl+":")
                 self.code.append(afterop)
             else:
+                afterlbl = symbol_table.get_target()
+                afterop = Label(label="\tGoto"+afterlbl)
+                self.code.append(afterop)
                 ifop = Label(label=iflbl+":")
                 self.code.append(ifop)
                 arg3 = self.generate_tac(node.children[1])
+                afterop = Label(label=afterlbl+":")
+                self.code.append(afterop)
 
         elif node.name == "WhileStmt":
             arg1 = self.generate_tac(node.children[0])
