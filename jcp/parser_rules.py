@@ -837,6 +837,8 @@ class StatementParser(object):
             p[0] = Node("BlockStmts", children=[p[1]])
             if (p[1].type == "error"):
                 p[0].type = "error"
+            if p[1].name == "ReturnStmt":
+                p[0].value=1
         elif len(p) == 3:
             if (p[2].type == "error"):
                 p[1].type = "error"
