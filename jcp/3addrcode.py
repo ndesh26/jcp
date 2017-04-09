@@ -47,9 +47,25 @@ class Label(Ins):
     def __repr__(self):
         return self.label
 
+class BeginFunc(Ins):
+    def __init__(self, width=0):
+        Ins(self)
+        self.width = width
+
+    def __repr__(self):
+        return '\tBeginFunc {}'.format(self.width)
+
+class EndFunc(Ins):
+    def __init__(self):
+        Ins(self)
+
+    def __repr__(self):
+        return '\tEndFunc'
+
 class Tac(object):
     def __init__(self):
         self.code = []
+        self.table = None # represents the table of currently processing funtion
 
     def generate_tac(self, node):
         if node.name == "BinaryOperator":
@@ -61,7 +77,7 @@ class Tac(object):
             else:
                 arg1 = self.generate_tac(node.children[0])
                 arg2 = self.generate_tac(node.children[1])
-                dst = symbol_table.get_temp(node.type)
+                dst = symbol_table.get_temp(node.type, self.table)
                 binop = BinOp(op=node.value, arg1=arg1, arg2=arg2, dst=dst)
                 self.code.append(binop)
                 return dst
@@ -110,8 +126,16 @@ class Tac(object):
             afterop = Label(label=afterlbl+":")
             self.code.append(afterop)
 
-        elif node.name == "MethodDeclaration":
-            return None
+        elif node.name == "MethodDecl":
+            func = Label(label=node.children[0].sym_entry['value']+":")
+            self.code.append(func)
+            begin_func = BeginFunc()
+            self.code.append(begin_func)
+            self.table = node.children[0].sym_entry['table'];
+            self.generate_tac(node.children[1])
+            begin_func.width = node.children[0].sym_entry['table'].get_width()
+            end_func = EndFunc()
+            self.code.append(end_func)
 
         elif node.name == "IntegerLiteral":
             return {'value': node.value, 'type': "int"}

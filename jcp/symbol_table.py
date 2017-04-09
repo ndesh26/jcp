@@ -82,6 +82,9 @@ class Table:
     def remove(self, name):
         self.entries.pop(name, None)
 
+    def get_width(self):
+        return self.width;
+
 class SymbolTable:
 
     def __init__(self):
@@ -100,7 +103,7 @@ class SymbolTable:
         return self.table.get_method_entry(name)
 
     def get_width(self):
-        return self.width
+        return self.table.get_width()
 
     def insert(self, name, attributes={}):
         return self.table.insert(name, attributes)
@@ -124,6 +127,7 @@ class SymbolTable:
             return None
 
     def insert_up(self, name, attributes={}):
+        attributes['table'] = self.table;
         return self.table.parent_table.insert(name, attributes)
 
     def get_name(self):
@@ -148,11 +152,14 @@ class SymbolTable:
     def remove(self, name):
         self.table.remove(name)
 
-    def get_temp(self, type):
+    def get_temp(self, type, table=None):
         global temp_no
         name = '_t' + str(temp_no)
         temp_no += 1
-        return self.table.insert(name, {'value': name, 'type' : type})
+        if table == None:
+            return self.table.insert(name, {'value': name, 'type' : type})
+        else:
+            return table.insert(name, {'value': name, 'type' : type})
 
     def get_target(self):
         global target_no
