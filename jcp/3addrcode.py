@@ -1,4 +1,5 @@
 from parser_rules import symbol_table
+from symbol_table import type_width
 
 class Ins(object):
     def __init__(self, label="", op=""):
@@ -61,6 +62,34 @@ class EndFunc(Ins):
 
     def __repr__(self):
         return '\tEndFunc'
+
+class PushParam(Ins):
+    def __init__(self, param):
+        Ins(self)
+        self.param = param
+
+    def __repr__(self):
+        return '\tPushParam {}'.format(self.param['value'])
+
+class PopParam(Ins):
+    def __init__(self, width):
+        Ins(self)
+        self.width = width
+
+    def __repr__(self):
+        return '\tPopParam {}'.format(self.width)
+
+class Call(Ins):
+    def __init__(self, func, dst=None):
+        Ins(self)
+        self.func = func
+        self.dst = dst
+
+    def __repr__(self):
+        if self.dst == None:
+            return '\tCall {}'.format(self.func['value'])
+        else:
+            return '\t{} = Call {}'.format(self.dst['value'], self.func['value'])
 
 class Tac(object):
     def __init__(self):
@@ -157,6 +186,24 @@ class Tac(object):
             begin_func.width = node.children[0].sym_entry['table'].get_width()
             end_func = EndFunc()
             self.code.append(end_func)
+
+        elif node.name == "MethodInvocation":
+            k = 0
+            if len(node.children) != 1:
+                for i in (len(node.children) - 1, 1):
+                    param = self.generate_tac(node.children[i])
+                    k += type_width(param['type'])
+                    self.code.append(PushParam(param))
+            if node.type != "void":
+                dst = symbol_table.get_temp(node.type, self.table)
+            else:
+                dst = None
+            call = Call(func=node.children[0].sym_entry, dst=dst)
+            self.code.append(call)
+            if k != 0:
+                self.code.append(PopParam(k))
+            return dst
+
 
         elif node.name == "IntegerLiteral":
             return {'value': node.value, 'type': "int"}
