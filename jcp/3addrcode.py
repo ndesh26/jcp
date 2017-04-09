@@ -126,6 +126,27 @@ class Tac(object):
             afterop = Label(label=afterlbl+":")
             self.code.append(afterop)
 
+        elif node.name == "ForStmt":
+            arg1 = self.generate_tac(node.children[0].children[0])
+            forchecklbl = symbol_table.get_target()
+            forcheckop = Label(label=forchecklbl+":")
+            self.code.append(forcheckop)
+            arg2 = self.generate_tac(node.children[1])
+            forbodylbl = symbol_table.get_target()
+            forendlbl = symbol_table.get_target()
+            checkop = BranchOp(arg=arg2, target=forbodylbl)
+            self.code.append(checkop)
+            afterop = Label(label="\tGoto"+forendlbl)
+            self.code.append(afterop)
+            forbodyop = Label(label=forbodylbl+":")
+            self.code.append(forbodyop)
+            arg4 = self.generate_tac(node.children[3])
+            arg3 = self.generate_tac(node.children[2].children[0])
+            loopcheckop = Label(label="\tGoto"+forchecklbl)
+            self.code.append(loopcheckop)
+            forendop = Label(label=forendlbl+":")
+            self.code.append(forendop)
+
         elif node.name == "MethodDecl":
             func = Label(label=node.children[0].sym_entry['value']+":")
             self.code.append(func)
