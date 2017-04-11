@@ -700,17 +700,16 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
-            if p[1].type == "":
-                entry = symbol_table.get_entry(p[1].value)
+            if p[2].type == "":
+                entry = symbol_table.get_entry(p[2].value)
                 if entry:
-                    p[1].type = entry['type']
-                    p[1].dims = entry['dims']
-                    p[1].arraylen = entry['arraylen']
-                    p[1].modifiers = entry['modifiers']
-                    p[1].sym_entry = entry
+                    p[2].type = entry['type']
+                    p[2].dims = entry['dims']
+                    p[2].arraylen = entry['arraylen']
+                    p[2].modifiers = entry['modifiers']
                 else:
-                    print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
-                    p[1].type = "error"
+                    print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[2].value))
+                    p[2].type = "error"
             p[0] = p[2]
 
     def p_primary_no_new_array3(self, p):
@@ -1526,8 +1525,40 @@ class StatementParser(object):
 
     def p_field_access(self, p):
         '''field_access : primary '.' NAME'''
-        p[2] = Node("MemberExpr", value=p[2]+p[3])
-        p[0] = Node("FieldAccess", children=[p[1], p[2]])
+        p[3] = Node("MemberExpr", value=p[3])
+        if p[1].type == "error":
+            p[0] = Node("FieldAccessExpr", value=p[2] + p[3].value, type="error", children=[p[1]])
+
+        elif p[1].value[0] != ".":
+            entry = symbol_table.get_entry(p[1].value)
+            if entry:
+                p[1].type = entry['type']
+                p[1].dims = entry['dims']
+                p[1].arraylen = entry['arraylen']
+                p[1].modifiers = entry['modifiers']
+                if symbol_table.lookup_class(p[1].type):
+                    entry = symbol_table.lookup_method(p[1].type, p[3].value)
+                else:
+                    entry = None
+                if entry:
+                    p[0] = Node("FieldAccessExpr", value=p[2] + p[3].value, type=entry['type'], children=[p[1]], modifiers=entry['modifiers'], arraylen=entry['arraylen'], dims=entry['dims'])
+                else:
+                    print("line {}: there is no field named '{}' for object of type '{}'".format(p.lineno(2), p[3].value, p[1].type))
+                    p[0] = Node("FieldAccessExpr", value=p[2] + p[3].value, type="error", children=[p[1]])
+            else:
+                print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
+                p[0] = Node("FieldAccessExpr", value=p[2] + p[3].value, type="error", children=[p[1]])
+        else:
+            if symbol_table.lookup_class(p[1].type):
+                entry = symbol_table.lookup_method(p[1].type, p[3].value)
+            else:
+                entry = None
+            if entry:
+                p[0] = Node("FieldAccessExpr", value=p[2] + p[3].value, type=entry['type'], children=[p[1]], modifiers=entry['modifiers'], arraylen=entry['arraylen'], dims=entry['dims'])
+            else:
+                print("line {}: there is no field named '{}' for object of type '{}'".format(p.lineno(2), p[3].value, p[1].type))
+                p[0] = Node("FieldAccessExpr", value=p[2] + p[3].value, type="error", children=[p[1]])
+
 
     def p_field_access2(self, p):
         '''field_access : SUPER '.' NAME'''
@@ -1550,15 +1581,15 @@ class StatementParser(object):
             print("line {}: the array index in not of type int".format(p.lineno(2)))
         if p[1].dims < 1:
             print("line {}: the variable '{}' is not a array".format(p.lineno(2), p[1].value))
-            p[0] = Node("ArrayAccess", children=[p[1],p[3]], type="error", arraylen=p[1].arraylen, modifiers=p[1].modifiers, dims=0)
+            p[0] = Node("ArrayAccess", value=p[1].value, children=[p[1],p[3]], type="error", arraylen=p[1].arraylen, modifiers=p[1].modifiers, dims=0)
             return
         if p[1].dims == 1:
-            p[0] = Node("ArrayAccess", children=[p[1],p[3]], type="error", arraylen=p[1].arraylen, modifiers=p[1].modifiers, dims=0)
-            if (p[3].value >= p[0].arraylen[0]):
+            p[0] = Node("ArrayAccess",value=p[1].value ,children=[p[1],p[3]], type=p[1].type, arraylen=p[1].arraylen, modifiers=p[1].modifiers, dims=0)
+            if (isinstance(p[3].value, int) and p[3].value >= p[0].arraylen[0]):
                 print("line {}: the array index '{}' is out of range".format(p.lineno(2), p[3].value))
             return
-        p[0] = Node("ArrayAccess", children=[p[1],p[3]], type=p[1].type, arraylen=p[1].arraylen, modifiers=p[1].modifiers, dims=p[1].dims-1)
-        if (p[3].value >= p[0].arraylen[-p[0].dims+1]):
+        p[0] = Node("ArrayAccess",value=p[1].value, children=[p[1],p[3]], type=p[1].type, arraylen=p[1].arraylen, modifiers=p[1].modifiers, dims=p[1].dims-1)
+        if (p[0].arraylen and p[3].value >= p[0].arraylen[-p[0].dims+1]):
             print("line {}: the array index '{}' is out of range".format(p.lineno(2), p[3].value))
 
     def p_array_access1(self, p):
@@ -1570,7 +1601,7 @@ class StatementParser(object):
             p[0] = Node("ArrayAccess", children=[p[1],p[3]], type="error", arraylen=p[1].arraylen, modifiers=p[1].modifiers, dims=0)
             return
         p[0] = Node("ArrayAccess", children=[p[1],p[3]], type=p[1].type, arraylen=p[1].arraylen, modifiers=p[1].modifiers, dims=p[1].dims-1)
-        if (p[3].value >= p[0].arraylen[-p[0].dims+1]):
+        if (p[0].arraylen and p[3].value >= p[0].arraylen[-p[0].dims+1]):
             print("line {}: the array index '{}' is out of range".format(p.lineno(2), p[3].value))
 
     def p_array_access2(self, p):
