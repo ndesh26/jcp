@@ -25,6 +25,8 @@ class Table:
         self.name = name
         self.category = category
         self.width = 0
+        self.arg_size = 0
+        self.args = True
 
     def lookup(self, name):
         if name in self.entries:
@@ -55,8 +57,11 @@ class Table:
         return None
 
     def insert(self, name, attributes={}):
+        attributes['offset'] = self.width
         self.entries[name] = attributes
         self.width = self.width + type_width(self.entries[name])
+        if self.args:
+            self.arg_size = self.arg_size + type_width(self.entries[name])
         return self.entries[name]
 
     def print_table(self, file):
@@ -84,6 +89,12 @@ class Table:
 
     def get_width(self):
         return self.width;
+
+    def args_completed(self):
+        self.args = False
+
+    def get_arg_size(self):
+        return self.arg_size
 
 class SymbolTable:
 
@@ -166,3 +177,9 @@ class SymbolTable:
         target = '_L' + str(target_no)
         target_no += 1
         return target
+
+    def args_completed(self):
+        self.table.args_completed();
+
+    def get_arg_size(self):
+        return self.table.get_arg_size()

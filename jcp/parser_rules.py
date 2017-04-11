@@ -1,11 +1,11 @@
 import ptg
 import lexer
-import symbol_table
+import symbol_table as st
 import pydot
 from ast import literal_eval
 
 ast = ""
-symbol_table = symbol_table.SymbolTable()
+symbol_table = st.SymbolTable()
 nat = []
 
 class Node:
@@ -874,6 +874,7 @@ class StatementParser(object):
                 print("line {}: variable '{}' is already declared".format(node.lineno, node.value))
             else:
                 node.sym_entry = symbol_table.insert(node.value, {'value': node.value, 'type':node.type, 'dims':node.dims, 'arraylen':node.arraylen, 'modifiers':[]})
+                node.sym_entry['offset'] = symbol_table.get_arg_size() - node.sym_entry['offset'] - st.type_width(node.type)
         p[0] = p[2]
 
     def p_local_variable_declaration2(self, p):
@@ -2214,10 +2215,12 @@ class ClassParser(object):
     def p_formal_parameter_list_opt(self, p):
         '''formal_parameter_list_opt : formal_parameter_list'''
         p[0] = p[1]
+        symbol_table.args_completed()
 
     def p_formal_parameter_list_opt2(self, p):
         '''formal_parameter_list_opt : empty'''
         p[0] = p[1]
+        symbol_table.args_completed()
 
     def p_formal_parameter_list(self, p):
         '''formal_parameter_list : formal_parameter
@@ -2239,6 +2242,7 @@ class ClassParser(object):
                 print("line {}: variable '{}' is already declared".format(p[3].lineno, p[3].value))
             else:
                 p[3].sym_entry = symbol_table.insert(p[3].value, {'value': p[3].value, 'type':p[3].type, 'dims':p[3].dims, 'arraylen':p[3].arraylen, 'modifiers':p[3].modifiers})
+                p[3].sym_entry['offset'] += 8
             p[0] = p[3]
         else:
             p[4].type = p[2].type
@@ -2248,6 +2252,7 @@ class ClassParser(object):
                 print("line {}: variable '{}' is already declared".format(p[4].lineno, p[4].value))
             else:
                 p[4].sym_entry = symbol_table.insert(p[4].value, {'value': p[4].value, 'type':p[4].type, 'dims':p[4].dims, 'arraylen':p[4].arraylen, 'modifiers':p[4].modifiers})
+                p[4].sym_entry['offset'] += 8
             p[0] = p[4]
 
     def p_method_header_throws_clause_opt(self, p):

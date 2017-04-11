@@ -205,6 +205,9 @@ class Tac(object):
             return dst
 
 
+        elif node.name == "FloatLiteral":
+            return {'value': node.value, 'type': "int"}
+
         elif node.name == "IntegerLiteral":
             return {'value': node.value, 'type': "int"}
 
