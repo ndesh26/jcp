@@ -111,6 +111,40 @@ class Tac(object):
                 self.code.append(binop)
                 return dst
 
+        elif node.name == "VarDecl":
+            if node.children[0].name == "InitListExpr":
+                arg1 = node.sym_entry
+                i = 0
+                element = symbol_table.get_temp(node.type, self.table)
+                size = {'value': type_width(node.type), 'type': node.type, 'arraylen': []}
+                elementop = AssignOp(arg=size, dst=element)
+                self.code.append(elementop)
+                for child in node.children[0].children:
+                    arg2 = self.generate_tac(child)
+                    if i == 0:
+                        assignop = AssignOp(arg=arg2, dst=arg1)
+                    else:
+                        index = symbol_table.get_temp(child.type, self.table)
+                        indexval = {'value': i, 'type': child.type, 'arraylen': []}
+                        indexop = AssignOp(arg=indexval, dst=index)
+                        self.code.append(indexop)
+                        ref = symbol_table.get_temp(child.type, self.table)
+                        refop = BinOp(op="*", arg1=element, arg2=index, dst=ref)
+                        self.code.append(refop)
+                        pointer = symbol_table.get_temp(child.type, self.table)
+                        accessop = BinOp(op="+", arg1=arg1, arg2=ref, dst=pointer)
+                        self.code.append(accessop)
+                        assignop = AssignOp(arg=arg2, dst=pointer)
+                    self.code.append(assignop)
+                    i = i + 1
+ 
+            elif node.children[0].name is not "ArrayInitialization":
+                arg1 = node.sym_entry
+                arg2 = self.generate_tac(node.children[0])
+                assignop = AssignOp(arg=arg2, dst=arg1)
+                self.code.append(assignop)
+
+
         elif node.name == "IfStmt":
             arg1 = self.generate_tac(node.children[0])
             iflbl = symbol_table.get_target()
