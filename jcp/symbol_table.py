@@ -22,7 +22,11 @@ def type_width(name):
                     size *= i
                 size *= width[name["type"]]
                 return size
+        elif "(" in name["type"]:
+            return 4
         else:
+            if "width" in name:
+                return name["width"]
             return 0
 
 class Table:
@@ -124,6 +128,8 @@ class SymbolTable:
         return self.table.get_width()
 
     def insert(self, name, attributes={}):
+        if type_width(attributes) == 0:
+            attributes['width'] = self.get_class_width(attributes['type'])
         return self.table.insert(name, attributes)
 
     def print_table(self, file):
@@ -137,6 +143,9 @@ class SymbolTable:
             return True
         else:
             return False
+
+    def get_class_width(self, name):
+        return self.classes[name].get_width();
 
     def lookup_method(self, name, method):
         if self.classes[name].lookup(method):

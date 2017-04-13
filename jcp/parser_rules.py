@@ -874,7 +874,7 @@ class StatementParser(object):
                 print("line {}: variable '{}' is already declared".format(node.lineno, node.value))
             else:
                 node.sym_entry = symbol_table.insert(node.value, {'value': node.value, 'type':node.type, 'dims':node.dims, 'arraylen':node.arraylen, 'modifiers':[]})
-                node.sym_entry['offset'] = symbol_table.get_arg_size() - node.sym_entry['offset'] - st.type_width(node.type)
+                node.sym_entry['offset'] = symbol_table.get_arg_size() - node.sym_entry['offset'] - st.type_width(node.sym_entry)
         p[0] = p[2]
 
     def p_local_variable_declaration2(self, p):
