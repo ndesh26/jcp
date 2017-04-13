@@ -206,10 +206,10 @@ class Tac(object):
 
 
         elif node.name == "FloatLiteral":
-            return {'value': node.value, 'type': "int"}
+            return {'value': node.value, 'type': "int", 'arraylen': []}
 
         elif node.name == "IntegerLiteral":
-            return {'value': node.value, 'type': "int"}
+            return {'value': node.value, 'type': "int", 'arraylen': []}
 
         elif node.name == "DeclsRefExpr":
             return node.sym_entry

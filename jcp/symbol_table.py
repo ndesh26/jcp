@@ -14,7 +14,14 @@ def type_width(name):
         return width[name]
     else:
         if (name["type"] in width):
-            return width[name["type"]]
+            if name['arraylen'] == []:
+                return width[name["type"]]
+            else:
+                size = 1
+                for i in name['arraylen']:
+                    size *= i
+                size *= width[name["type"]]
+                return size
         else:
             return 0
 
@@ -168,9 +175,9 @@ class SymbolTable:
         name = '_t' + str(temp_no)
         temp_no += 1
         if table == None:
-            return self.table.insert(name, {'value': name, 'type' : type})
+            return self.table.insert(name, {'value': name, 'type' : type, 'arraylen': []})
         else:
-            return table.insert(name, {'value': name, 'type' : type})
+            return table.insert(name, {'value': name, 'type' : type, 'arraylen': []})
 
     def get_target(self):
         global target_no
