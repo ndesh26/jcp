@@ -110,9 +110,19 @@ class Tac(object):
     def generate_tac(self, node):
         if node.name == "BinaryOperator":
             if node.value == "=":
+                if node.children[0].name == "ArrayAccess":
+                    dstp = True
+                else:
+                    dstp = False
+
+                if node.children[1].name == "ArrayAccess":
+                    argp = True
+                else:
+                    argp = False
+
                 arg1 = self.generate_tac(node.children[0])
                 arg2 = self.generate_tac(node.children[1])
-                assignop = AssignOp(arg=arg2, dst=arg1)
+                assignop = AssignOp(arg=arg2, dst=arg1, dstp=dstp, argp=argp)
                 self.code.append(assignop)
             else:
                 arg1 = self.generate_tac(node.children[0])
@@ -248,6 +258,20 @@ class Tac(object):
 
         elif node.name == "DeclsRefExpr":
             return node.sym_entry
+
+        elif node.name == "ArrayAccess":
+            arg1 = self.generate_tac(node.children[0])
+            index = self.generate_tac(node.children[1])
+            size = type_width(node.type)
+            length = len(node.arraylen)- node.dims
+            for i in node.arraylen[length:]:
+                size *= i
+            dst = symbol_table.get_temp(node.type, self.table)
+            multi = BinOp(op="*", arg1={'value': size, 'type': "int", 'arraylen': []}, arg2=index, dst=dst)
+            binop = BinOp(op="+", arg1=arg1, arg2=dst, dst=dst)
+            self.code.append(multi)
+            self.code.append(binop)
+            return dst
 
         else:
             for n in node.children:

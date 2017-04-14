@@ -1575,6 +1575,7 @@ class StatementParser(object):
                 p[1].dims = entry['dims']
                 p[1].arraylen = entry['arraylen']
                 p[1].modifiers = entry['modifiers']
+                p[1].sym_entry = entry
             else:
                 print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                 p[1].type = "error"
