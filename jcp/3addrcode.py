@@ -107,7 +107,7 @@ class Tac(object):
         self.code = []
         self.table = None # represents the table of currently processing funtion
 
-    def generate_tac(self, node):
+    def generate_tac(self, node, parent=None):
         if node.name == "BinaryOperator":
             if node.value == "=":
                 if node.children[0].name == "ArrayAccess":
@@ -135,25 +135,33 @@ class Tac(object):
         elif node.name == "VarDecl":
             if node.children and node.children[0].name == "InitListExpr":
                 arg1 = node.sym_entry
-                i = 0
                 element = symbol_table.get_temp(node.type, self.table)
                 size = {'value': type_width(node.type), 'type': node.type, 'arraylen': []}
                 index = symbol_table.get_temp(node.type, self.table)
                 indexop = AssignOp(arg=arg1, dst=index)
                 self.code.append(indexop)
-                for child in node.children[0].children:
-                    arg2 = self.generate_tac(child)
-                    assignop = AssignOp(arg=arg2, dst=index, dstp=True)
-                    indexinc = BinOp(op="+", arg1=index, arg2=size, dst=index)
-                    self.code.append(assignop)
-                    self.code.append(indexinc)
-                    i = i + 1
+                arg = self.generate_tac(node.children[0], parent=index)
 
             elif node.children and node.children[0].name is not "ArrayInitialization":
                 arg1 = node.sym_entry
                 arg2 = self.generate_tac(node.children[0])
                 assignop = AssignOp(arg=arg2, dst=arg1)
                 self.code.append(assignop)
+
+        elif node.name == "InitListExpr":
+            if node.children[0].name is not "InitListExpr":
+                size = {'value': type_width(node.children[0].type), 'type': node.children[0].type, 'arraylen': []}
+                for child in node.children:
+                    arg2 = self.generate_tac(child)
+                    assignop = AssignOp(arg=arg2, dst=parent, dstp=True)
+                    indexinc = BinOp(op="+", arg1=parent, arg2=size, dst=parent)
+                    self.code.append(assignop)
+                    self.code.append(indexinc)
+            else:
+                j = 0
+                while j < len(node.children) and node.children[j].name == "InitListExpr":
+                    arg = self.generate_tac(node.children[j], parent=parent)
+                    j = j + 1
 
 
         elif node.name == "IfStmt":
