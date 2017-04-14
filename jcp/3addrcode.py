@@ -36,22 +36,6 @@ class AssignOp(Ins):
             dst = '{}'.format(self.dst['value'])
         return '\t' + dst + ' = ' + arg
 
-class BranchOp(Ins):
-    def __init__(self, label="", op="", arg=None, target=""):
-        Ins.__init__(self, label, op)
-        self.arg = arg
-        self.target = target
-
-    def __repr__(self):
-        return '\tIfZ ' + '{}'.format(self.arg['value']) + ' Goto ' + self.target
-
-class GotoStmt(Ins):
-    def __init__(self, label=""):
-        Ins.__init__(self, label)
-
-    def __repr__(self):
-        return '\tGoto ' + self.label
-
 class Label(Ins):
     def __init__(self, label=""):
         Ins.__init__(self, label)
@@ -102,12 +86,30 @@ class Call(Ins):
         else:
             return '\t{} = Call {}'.format(self.dst['value'], self.func['value'])
 
+class Cmp(Ins):
+    def __init__(self, arg1, arg2):
+        Ins(self)
+        self.arg1 = arg1
+        self.arg2 = arg2
+
+    def __repr__(self):
+        return '\tCMP {}, {}'.format(self.arg1['value'], self.arg2['value'])
+
+class Jmp(Ins):
+    def __init__(self, cond, target):
+        Ins(self)
+        self.cond = cond
+        self.target = target
+
+    def __repr__(self):
+        return '\t{} {}'.format(self.cond, self.target)
+
 class Tac(object):
     def __init__(self):
         self.code = []
         self.table = None # represents the table of currently processing funtion
 
-    def generate_tac(self, node, parent=None):
+    def generate_tac(self, node, parent=None, true_lbl=None, false_lbl=None):
         if node.name == "BinaryOperator":
             if node.value == "=":
                 if node.children[0].name == "ArrayAccess":
@@ -119,11 +121,36 @@ class Tac(object):
                     argp = True
                 else:
                     argp = False
-
                 arg1 = self.generate_tac(node.children[0])
                 arg2 = self.generate_tac(node.children[1])
                 assignop = AssignOp(arg=arg2, dst=arg1, dstp=dstp, argp=argp)
                 self.code.append(assignop)
+
+            elif node.value == "&&":
+                arg1_true_lbl = symbol_table.get_target()
+                arg1 = self.generate_tac(node.children[0], true_lbl=arg1_true_lbl, false_lbl=false_lbl)
+                arg1_true = Label(label=arg1_true_lbl+":")
+                self.code.append(arg1_true)
+                arg2 = self.generate_tac(node.children[1], true_lbl=true_lbl, false_lbl=false_lbl)
+
+            elif node.value == "||":
+                arg1_false_lbl = symbol_table.get_target()
+                arg1 = self.generate_tac(node.children[0], true_lbl=true_lbl, false_lbl=arg1_false_lbl)
+                arg1_false = Label(label=arg1_false_lbl+":")
+                self.code.append(arg1_false)
+                arg2 = self.generate_tac(node.children[1], true_lbl=true_lbl, false_lbl=false_lbl)
+
+            elif node.value in ["<", ">", ">=", "<=", "==", "!="]:
+                arg1 = self.generate_tac(node.children[0])
+                arg2 = self.generate_tac(node.children[1])
+                cmp = Cmp(arg1=arg1, arg2=arg2)
+                self.code.append(cmp)
+                cond_map = {'<': 'JL', '>': 'JG', '>=': 'JGE', '<=': 'JLE', '==': 'JE', '!=': 'JNE'}
+                true_jmp = Jmp(cond=cond_map[node.value], target=true_lbl)
+                self.code.append(true_jmp)
+                goto_false = Jmp(cond='JMP', target=false_lbl)
+                self.code.append(goto_false)
+
             else:
                 arg1 = self.generate_tac(node.children[0])
                 arg2 = self.generate_tac(node.children[1])
@@ -140,7 +167,7 @@ class Tac(object):
                 index = symbol_table.get_temp(node.type, self.table)
                 indexop = AssignOp(arg=arg1, dst=index)
                 self.code.append(indexop)
-                arg = self.generate_tac(node.children[0], parent=index)
+                self.generate_tac(node.children[0], parent=index)
 
             elif node.children and node.children[0].name is not "ArrayInitialization":
                 arg1 = node.sym_entry
@@ -165,69 +192,62 @@ class Tac(object):
 
 
         elif node.name == "IfStmt":
-            arg1 = self.generate_tac(node.children[0])
-            iflbl = symbol_table.get_target()
-            ifop = BranchOp(arg=arg1, target=iflbl)
-            self.code.append(ifop)
-            if len(node.children) == 3:
-                arg2 = self.generate_tac(node.children[2])
-                afterlbl = symbol_table.get_target()
-                afterop = Label(label="\tGoto"+afterlbl)
-                self.code.append(afterop)
-                ifop = Label(label=iflbl+":")
-                self.code.append(ifop)
-                arg3 = self.generate_tac(node.children[1])
-                afterop = Label(label=afterlbl+":")
-                self.code.append(afterop)
+            if len(node.children) == 2: # in this target points to else case
+                if_true_lbl = symbol_table.get_target()
+                if_next_lbl = symbol_table.get_target()
+                arg1 = self.generate_tac(node.children[0], true_lbl=if_true_lbl, false_lbl=if_next_lbl)
+                true_label = Label(label=if_true_lbl+":")
+                self.code.append(true_label)
+                arg1 = self.generate_tac(node.children[1])
+                end = Label(label=if_next_lbl+":")
+                self.code.append(end)
             else:
-                afterlbl = symbol_table.get_target()
-                afterop = Label(label="\tGoto"+afterlbl)
-                self.code.append(afterop)
-                ifop = Label(label=iflbl+":")
-                self.code.append(ifop)
-                arg3 = self.generate_tac(node.children[1])
-                afterop = Label(label=afterlbl+":")
-                self.code.append(afterop)
+                if_true_lbl = symbol_table.get_target()
+                if_false_lbl = symbol_table.get_target()
+                if_next_lbl = symbol_table.get_target()
+                arg1 = self.generate_tac(node.children[0], true_lbl=if_true_lbl, false_lbl=if_false_lbl)
+                true_label = Label(label=if_true_lbl+":")
+                self.code.append(true_label)
+                arg1 = self.generate_tac(node.children[1])
+                goto = Jmp(cond='JMP', target=if_next_lbl)
+                self.code.append(goto)
+                false_label = Label(label=if_false_lbl+":")
+                self.code.append(end)
+                arg1 = self.generate_tac(node.children[2])
+                end = Label(label=if_next_lbl+":")
+                self.code.append(end)
 
         elif node.name == "WhileStmt":
-            arg1 = self.generate_tac(node.children[0])
-            whilelbl = symbol_table.get_target()
-            whileop = Label(label=whilelbl+":")
-            self.code.append(whileop)
-            branchlbl = symbol_table.get_target()
-            whileop = BranchOp(arg=arg1, target=branchlbl)
-            self.code.append(whileop)
-            afterlbl = symbol_table.get_target()
-            afterop = Label(label="\tGoto"+afterlbl)
-            self.code.append(afterop)
-            whileop = Label(label=branchlbl+":")
-            self.code.append(whileop)
-            arg2 = self.generate_tac(node.children[1])
-            whilestart = GotoStmt(label=whilelbl)
-            self.code.append(whilestart)
-            afterop = Label(label=afterlbl+":")
-            self.code.append(afterop)
+            while_true_lbl = symbol_table.get_target()
+            while_begin_lbl = symbol_table.get_target()
+            while_next_lbl = symbol_table.get_target()
+            begin_label = Label(label=while_begin_lbl+":")
+            self.code.append(begin_label)
+            self.generate_tac(node.children[0], true_lbl=while_true_lbl, false_lbl=while_next_lbl)
+            true_label = Label(label=while_true_lbl+":")
+            self.code.append(true_label)
+            self.generate_tac(node.children[1])
+            goto_begin = Jmp(cond='JMP', target=while_begin_lbl)
+            self.code.append(goto_begin)
+            next_label = Label(label=while_next_lbl+":")
+            self.code.append(next_label)
 
         elif node.name == "ForStmt":
-            arg1 = self.generate_tac(node.children[0].children[0])
-            forchecklbl = symbol_table.get_target()
-            forcheckop = Label(label=forchecklbl+":")
-            self.code.append(forcheckop)
-            arg2 = self.generate_tac(node.children[1])
-            forbodylbl = symbol_table.get_target()
-            forendlbl = symbol_table.get_target()
-            checkop = BranchOp(arg=arg2, target=forbodylbl)
-            self.code.append(checkop)
-            afterop = Label(label="\tGoto"+forendlbl)
-            self.code.append(afterop)
-            forbodyop = Label(label=forbodylbl+":")
-            self.code.append(forbodyop)
-            arg4 = self.generate_tac(node.children[3])
-            arg3 = self.generate_tac(node.children[2].children[0])
-            loopcheckop = Label(label="\tGoto"+forchecklbl)
-            self.code.append(loopcheckop)
-            forendop = Label(label=forendlbl+":")
-            self.code.append(forendop)
+            self.generate_tac(node.children[0].children[0])
+            for_cond_label = symbol_table.get_target()
+            for_true_label = symbol_table.get_target()
+            for_false_label = symbol_table.get_target()
+            for_cond = Label(label=for_cond_label+":")
+            self.code.append(for_cond)
+            self.generate_tac(node.children[1], true_lbl=for_true_label, false_lbl=for_false_label)
+            for_true = Label(label=for_true_label+":")
+            self.code.append(for_true)
+            self.generate_tac(node.children[3])
+            self.generate_tac(node.children[2])
+            goto_cond = Jmp(cond='JMP', target=for_cond_label)
+            self.code.append(goto_cond)
+            for_false = Label(label=for_false_label+":")
+            self.code.append(for_false)
 
         elif node.name == "MethodDecl":
             func = Label(label=node.children[0].sym_entry['value']+":")
@@ -263,6 +283,14 @@ class Tac(object):
 
         elif node.name == "IntegerLiteral":
             return {'value': node.value, 'type': "int", 'arraylen': []}
+
+        elif node.name == "Boolean":
+            if node.value == "true":
+                goto = Jmp(cond='JMP', target=true_lbl)
+            else:
+                goto = Jmp(cond='JMP', target=false_lbl)
+            self.code.append(goto)
+            return {'value': node.value, 'type': "bool", 'arraylen': []}
 
         elif node.name == "DeclsRefExpr":
             return node.sym_entry
