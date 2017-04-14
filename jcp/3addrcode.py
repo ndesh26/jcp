@@ -17,13 +17,24 @@ class BinOp(Ins):
         return '\t' + self.dst['value'] + ' = ' + '{}'.format(self.arg1['value']) + ' ' + self.op + ' ' + '{}'.format(self.arg2['value'])
 
 class AssignOp(Ins):
-    def __init__(self, label="", op="", arg=None, dst=None):
+    def __init__(self, label="", op="", arg=None, dst=None, argp=False, dstp=False):
         Ins.__init__(self, label, op)
         self.arg = arg
         self.dst = dst
+        self.argp = argp
+        self.dstp = dstp
 
     def __repr__(self):
-        return '\t' + self.dst['value'] + ' = ' + '{}'.format(self.arg['value'])
+        if self.argp:
+            arg = '*({})'.format(self.arg['value'])
+        else:
+            arg = '{}'.format(self.arg['value'])
+
+        if self.dstp:
+            dst = '*({})'.format(self.dst['value'])
+        else:
+            dst = '{}'.format(self.dst['value'])
+        return '\t' + dst + ' = ' + arg
 
 class BranchOp(Ins):
     def __init__(self, label="", op="", arg=None, target=""):
@@ -112,33 +123,23 @@ class Tac(object):
                 return dst
 
         elif node.name == "VarDecl":
-            if node.children[0].name == "InitListExpr":
+            if node.children and node.children[0].name == "InitListExpr":
                 arg1 = node.sym_entry
                 i = 0
                 element = symbol_table.get_temp(node.type, self.table)
                 size = {'value': type_width(node.type), 'type': node.type, 'arraylen': []}
-                elementop = AssignOp(arg=size, dst=element)
-                self.code.append(elementop)
+                index = symbol_table.get_temp(node.type, self.table)
+                indexop = AssignOp(arg=arg1, dst=index)
+                self.code.append(indexop)
                 for child in node.children[0].children:
                     arg2 = self.generate_tac(child)
-                    if i == 0:
-                        assignop = AssignOp(arg=arg2, dst=arg1)
-                    else:
-                        index = symbol_table.get_temp(child.type, self.table)
-                        indexval = {'value': i, 'type': child.type, 'arraylen': []}
-                        indexop = AssignOp(arg=indexval, dst=index)
-                        self.code.append(indexop)
-                        ref = symbol_table.get_temp(child.type, self.table)
-                        refop = BinOp(op="*", arg1=element, arg2=index, dst=ref)
-                        self.code.append(refop)
-                        pointer = symbol_table.get_temp(child.type, self.table)
-                        accessop = BinOp(op="+", arg1=arg1, arg2=ref, dst=pointer)
-                        self.code.append(accessop)
-                        assignop = AssignOp(arg=arg2, dst=pointer)
+                    assignop = AssignOp(arg=arg2, dst=index, dstp=True)
+                    indexinc = BinOp(op="+", arg1=index, arg2=size, dst=index)
                     self.code.append(assignop)
+                    self.code.append(indexinc)
                     i = i + 1
- 
-            elif node.children[0].name is not "ArrayInitialization":
+
+            elif node.children and node.children[0].name is not "ArrayInitialization":
                 arg1 = node.sym_entry
                 arg2 = self.generate_tac(node.children[0])
                 assignop = AssignOp(arg=arg2, dst=arg1)
