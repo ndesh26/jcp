@@ -179,6 +179,28 @@ class Tac(object):
                 self.code.append(binop)
                 return dst
 
+        elif node.name == "UnaryOperator":
+            if node.value == "post++":
+                arg = self.generate_tac(node.children[0])
+                dst = symbol_table.get_temp(node.type, self.table)
+                assignop = AssignOp(arg=arg, dst=dst)
+                self.code.append(assignop)
+                dst2 = symbol_table.get_temp(node.type, self.table)
+                binop = BinOp(op="+", arg1=arg, arg2={'value':1, 'type': 'int', 'arraylen': []}, dst=dst2)
+                self.code.append(binop)
+                assignop = AssignOp(arg=dst2, dst=arg)
+                self.code.append(assignop)
+                return dst
+
+            if node.value == "pre++":
+                arg = self.generate_tac(node.children[0])
+                dst = symbol_table.get_temp(node.type, self.table)
+                binop = BinOp(op="+", arg1=arg, arg2={'value':1, 'type': 'int', 'arraylen': []}, dst=dst)
+                self.code.append(binop)
+                assignop = AssignOp(arg=dst, dst=arg)
+                self.code.append(assignop)
+                return dst
+
         elif node.name == "VarDecl":
             if node.children and node.children[0].name == "InitListExpr":
                 arg1 = node.sym_entry
