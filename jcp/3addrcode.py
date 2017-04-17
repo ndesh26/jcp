@@ -67,12 +67,24 @@ class PushParam(Ins):
         return '\tPushParam {}'.format(self.param['value'])
 
 class PopParam(Ins):
-    def __init__(self, width):
+    def __init__(self, width, dst=None):
         Ins(self)
         self.width = width
+        self.dst = dst
 
     def __repr__(self):
-        return '\tPopParam {}'.format(self.width)
+        if self.dst:
+            return '\t{} = PopParam {}'.format(self.dst['value'], self.width)
+        else:
+            return '\tPopParam {}'.format(self.width)
+
+class SetStack(Ins):
+    def __init__(self, change):
+        Ins(self)
+        self.change = change
+
+    def __repr__(self):
+        return '\tSetStack {}'.format(self.change)
 
 class Call(Ins):
     def __init__(self, func, dst=None):
@@ -103,6 +115,14 @@ class Jmp(Ins):
 
     def __repr__(self):
         return '\t{} {}'.format(self.cond, self.target)
+
+class Ret(Ins):
+    def __init__(self, value):
+        Ins(self)
+        self.value = value
+
+    def __repr__(self):
+        return '\tReturn {}'.format(self.value['value'])
 
 class Tac(object):
     def __init__(self):
@@ -256,27 +276,31 @@ class Tac(object):
             self.code.append(begin_func)
             self.table = node.children[0].sym_entry['table'];
             self.generate_tac(node.children[1])
-            begin_func.width = node.children[0].sym_entry['table'].get_width()
+            begin_func.width = node.children[0].sym_entry['table'].get_width() - node.children[0].sym_entry['table'].get_arg_size()
             end_func = EndFunc()
             self.code.append(end_func)
 
         elif node.name == "MethodInvocation":
             k = 0
+            if node.type != "void":
+                self.code.append(SetStack(-type_width(node.type)))
             if len(node.children) != 1:
-                for i in (len(node.children) - 1, 1):
+                for i in range(len(node.children) - 1, 0, -1):
                     param = self.generate_tac(node.children[i])
                     k += type_width(param['type'])
                     self.code.append(PushParam(param))
-            if node.type != "void":
-                dst = symbol_table.get_temp(node.type, self.table)
-            else:
-                dst = None
-            call = Call(func=node.children[0].sym_entry, dst=dst)
+            call = Call(func=node.children[0].sym_entry)
             self.code.append(call)
             if k != 0:
-                self.code.append(PopParam(k))
+                self.code.append(SetStack(k))
+            if node.type != "void":
+                dst = symbol_table.get_temp(node.type, self.table)
+                self.code.append(PopParam(-type_width(node.type), dst))
             return dst
 
+        elif node.name == "ReturnStmt":
+            arg = self.generate_tac(node.children[0])
+            self.code.append(Ret(value=arg))
 
         elif node.name == "FloatLiteral":
             return {'value': node.value, 'type': "int", 'arraylen': []}
