@@ -129,7 +129,7 @@ class Tac(object):
         self.code = []
         self.table = None # represents the table of currently processing funtion
 
-    def generate_tac(self, node, parent=None, true_lbl=None, false_lbl=None):
+    def generate_tac(self, node, parent=None, true_lbl=None, false_lbl=None, end_lbl=None, start_lbl=None):
         if node.name == "BinaryOperator":
             if node.value == "=":
                 if node.children[0].name == "ArrayAccess":
@@ -272,7 +272,8 @@ class Tac(object):
             self.generate_tac(node.children[0], true_lbl=while_true_lbl, false_lbl=while_next_lbl)
             true_label = Label(label=while_true_lbl+":")
             self.code.append(true_label)
-            self.generate_tac(node.children[1])
+            self.generate_tac(node.children[1],
+                              end_lbl=while_next_lbl, start_lbl=while_begin_lbl)
             goto_begin = Jmp(cond='JMP', target=while_begin_lbl)
             self.code.append(goto_begin)
             next_label = Label(label=while_next_lbl+":")
@@ -288,12 +289,44 @@ class Tac(object):
             self.generate_tac(node.children[1], true_lbl=for_true_label, false_lbl=for_false_label)
             for_true = Label(label=for_true_label+":")
             self.code.append(for_true)
-            self.generate_tac(node.children[3])
+            self.generate_tac(node.children[3],
+                              end_lbl=for_false_label, start_lbl=for_cond_label)
             self.generate_tac(node.children[2])
             goto_cond = Jmp(cond='JMP', target=for_cond_label)
             self.code.append(goto_cond)
             for_false = Label(label=for_false_label+":")
             self.code.append(for_false)
+
+        elif node.name == "SwitchStmt":
+            arg1 = self.generate_tac(node.children[0])
+            switch_end_lbl = symbol_table.get_target()
+            switch_next_lbl = symbol_table.get_target()
+            for case in node.children[1:]:
+                arg2 = self.generate_tac(case.children[0])
+                if case.name != "DefaultStmt":
+                    cmp = Cmp(arg1=arg1, arg2=arg2)
+                    self.code.append(cmp)
+                    goto_cond = Jmp(cond='JNE', target=switch_next_lbl)
+                    self.code.append(goto_cond)
+                if len(case.children) > 1 and case.name != "DefaultStmt":
+                    self.generate_tac(case.children[1], end_lbl=switch_end_lbl)
+                elif case.name != "DefaultStmt":
+                    self.generate_tac(case.children[0], end_lbl=switch_end_lbl)
+                if case.name != "DefaultStmt":
+                    switch_next = Label(label=switch_next_lbl+":")
+                    self.code.append(switch_next)
+                    switch_next_lbl = symbol_table.get_target()
+            switch_end = Label(label=switch_end_lbl+":")
+            self.code.append(switch_end)
+
+
+        elif node.name == "BreakStmt":
+            goto_cond = Jmp(cond='JMP', target=end_lbl)
+            self.code.append(goto_cond)
+
+        elif node.name == "ContinueStmt":
+            goto_cond = Jmp(cond='JMP', target=start_lbl)
+            self.code.append(goto_cond)
 
         elif node.name == "MethodDecl":
             func = Label(label=node.children[0].sym_entry['value']+":")
@@ -361,7 +394,7 @@ class Tac(object):
 
         else:
             for n in node.children:
-                self.generate_tac(n);
+                self.generate_tac(n, true_lbl=true_lbl, false_lbl=false_lbl, end_lbl=end_lbl, start_lbl=start_lbl);
 
     def print_tac(self):
         for ins in self.code:
