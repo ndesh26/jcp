@@ -1268,7 +1268,7 @@ class StatementParser(object):
             print("line {}: the switch statement requires expression of type int, char, byte or string".format(p.lineno(1)))
             return
         for node in p[5].children:
-            if p[3].type != node.type:
+            if node.name != "DefaultStmt" and p[3].type != node.type:
                 print("line {}: expression '{}' is not of type '{}'".format(node.lineno, node.children[0].value, p[3].type))
                 p[0].type = "error"
             for node1 in node.children:
@@ -1297,21 +1297,21 @@ class StatementParser(object):
         '''switch_block_statements : switch_block_statement
                                    | switch_block_statements switch_block_statement'''
         if len(p) == 2:
-            p[0] = Node("CompoundStmt", children=[p[1]])
+            p[0] = Node("CompoundStmt", children=p[1].children)
         elif len(p) == 3:
-            p[1].children.append(p[2])
+            p[1].children.extend(p[2].children)
             p[0] = p[1]
 
     def p_switch_block_statement(self, p):
         '''switch_block_statement : switch_labels block_statements'''
-        p[1].children.append(p[2])
+        p[1].children[-1].children.append(p[2])
         p[0] = p[1]
 
     def p_switch_labels(self, p):
         '''switch_labels : switch_label
                          | switch_labels switch_label'''
         if len(p) == 2:
-            p[0] = p[1]
+            p[0] = Node("CaseStmts", children=[p[1]], type=p[1].type, lineno=p[1].lineno)
         elif len(p) == 3:
             p[1].children.append(p[2])
             p[0] = p[1]
