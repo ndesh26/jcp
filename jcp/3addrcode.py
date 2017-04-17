@@ -201,6 +201,10 @@ class Tac(object):
                 self.code.append(assignop)
                 return dst
 
+            if node.value == "!":
+                arg1 = self.generate_tac(node.children[0], true_lbl=false_lbl, false_lbl=true_lbl)
+
+
         elif node.name == "VarDecl":
             if node.children and node.children[0].name == "InitListExpr":
                 arg1 = node.sym_entry
