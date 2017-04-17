@@ -174,6 +174,7 @@ class ExpressionParser(object):
                     p[1].dims = entry['dims']
                     p[1].arraylen = entry['arraylen']
                     p[1].modifiers = entry['modifiers']
+                    p[1].sym_entry = entry
                 else:
                     print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
@@ -213,6 +214,7 @@ class ExpressionParser(object):
                     p[1].dims = entry['dims']
                     p[1].arraylen = entry['arraylen']
                     p[1].modifiers = entry['modifiers']
+                    p[1].sym_entry = entry
                 else:
                     print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
@@ -240,6 +242,7 @@ class ExpressionParser(object):
                     p[1].dims = entry['dims']
                     p[1].arraylen = entry['arraylen']
                     p[1].modifiers = entry['modifiers']
+                    p[1].sym_entry = entry
                 else:
                     print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
@@ -272,6 +275,7 @@ class ExpressionParser(object):
                     p[1].dims = entry['dims']
                     p[1].arraylen = entry['arraylen']
                     p[1].modifiers = entry['modifiers']
+                    p[1].sym_entry = entry
                 else:
                     print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
@@ -307,6 +311,7 @@ class ExpressionParser(object):
                     p[1].dims = entry['dims']
                     p[1].arraylen = entry['arraylen']
                     p[1].modifiers = entry['modifiers']
+                    p[1].sym_entry = entry
                 else:
                     print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
@@ -342,6 +347,7 @@ class ExpressionParser(object):
                     p[1].dims = entry['dims']
                     p[1].arraylen = entry['arraylen']
                     p[1].modifiers = entry['modifiers']
+                    p[1].sym_entry = entry
                 else:
                     print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
@@ -376,6 +382,7 @@ class ExpressionParser(object):
                     p[1].dims = entry['dims']
                     p[1].arraylen = entry['arraylen']
                     p[1].modifiers = entry['modifiers']
+                    p[1].sym_entry = entry
                 else:
                     print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
@@ -403,6 +410,7 @@ class ExpressionParser(object):
                     p[1].dims = entry['dims']
                     p[1].arraylen = entry['arraylen']
                     p[1].modifiers = entry['modifiers']
+                    p[1].sym_entry = entry
                 else:
                     print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
@@ -443,6 +451,7 @@ class ExpressionParser(object):
                     p[1].dims = entry['dims']
                     p[1].arraylen = entry['arraylen']
                     p[1].modifiers = entry['modifiers']
+                    p[1].sym_entry = entry
                 else:
                     print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
@@ -488,6 +497,7 @@ class ExpressionParser(object):
                     p[1].dims = entry['dims']
                     p[1].arraylen = entry['arraylen']
                     p[1].modifiers = entry['modifiers']
+                    p[1].sym_entry = entry
                 else:
                     print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
@@ -534,6 +544,7 @@ class ExpressionParser(object):
                     p[1].dims = entry['dims']
                     p[1].arraylen = entry['arraylen']
                     p[1].modifiers = entry['modifiers']
+                    p[1].sym_entry = entry
                 else:
                     print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
                     p[1].type = "error"
@@ -584,6 +595,7 @@ class ExpressionParser(object):
                     p[1].dims = entry['dims']
                     p[1].arraylen = entry['arraylen']
                     p[1].modifiers = entry['modifiers']
+                    p[1].sym_entry = entry
                 else:
                     print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
                     p[1].type = "error"
@@ -707,6 +719,7 @@ class ExpressionParser(object):
                     p[2].dims = entry['dims']
                     p[2].arraylen = entry['arraylen']
                     p[2].modifiers = entry['modifiers']
+                    p[2].sym_entry = entry
                 else:
                     print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[2].value))
                     p[2].type = "error"
@@ -1514,6 +1527,7 @@ class StatementParser(object):
                 p[1].dims = entry['dims']
                 p[1].arraylen = entry['arraylen']
                 p[1].modifiers = entry['modifiers']
+                p[1].sym_entry = entry
             else:
                 print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                 p[1].type = "error"
@@ -1537,6 +1551,7 @@ class StatementParser(object):
                 p[1].dims = entry['dims']
                 p[1].arraylen = entry['arraylen']
                 p[1].modifiers = entry['modifiers']
+                p[1].sym_entry = entry
                 if symbol_table.lookup_class(p[1].type):
                     entry = symbol_table.lookup_method(p[1].type, p[3].value)
                 else:
@@ -1664,6 +1679,7 @@ class NameParser(object):
                 p[1].dims = entry['dims']
                 p[1].arraylen = entry['arraylen']
                 p[1].modifiers = entry['modifiers']
+                p[1].sym_entry = entry
                 if symbol_table.lookup_class(p[1].type):
                     entry = symbol_table.lookup_method(p[1].type, p[3].value)
                 else:
