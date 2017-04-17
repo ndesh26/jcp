@@ -180,22 +180,22 @@ class Tac(object):
                 return dst
 
         elif node.name == "UnaryOperator":
-            if node.value == "post++":
+            if "post" in node.value:
                 arg = self.generate_tac(node.children[0])
                 dst = symbol_table.get_temp(node.type, self.table)
                 assignop = AssignOp(arg=arg, dst=dst)
                 self.code.append(assignop)
                 dst2 = symbol_table.get_temp(node.type, self.table)
-                binop = BinOp(op="+", arg1=arg, arg2={'value':1, 'type': 'int', 'arraylen': []}, dst=dst2)
+                binop = BinOp(op=node.value[-1], arg1=arg, arg2={'value':1, 'type': 'int', 'arraylen': []}, dst=dst2)
                 self.code.append(binop)
                 assignop = AssignOp(arg=dst2, dst=arg)
                 self.code.append(assignop)
                 return dst
 
-            if node.value == "pre++":
+            if "pre" in node.value:
                 arg = self.generate_tac(node.children[0])
                 dst = symbol_table.get_temp(node.type, self.table)
-                binop = BinOp(op="+", arg1=arg, arg2={'value':1, 'type': 'int', 'arraylen': []}, dst=dst)
+                binop = BinOp(op=node.value[-1], arg1=arg, arg2={'value':1, 'type': 'int', 'arraylen': []}, dst=dst)
                 self.code.append(binop)
                 assignop = AssignOp(arg=dst, dst=arg)
                 self.code.append(assignop)
