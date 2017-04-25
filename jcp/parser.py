@@ -28,4 +28,5 @@ if not os.path.exists("csv"):
 result = parser.parse("++"+content, debug=debug)
 tac = code.Tac()
 tac.generate_tac(result)
-tac.print_tac()
+# tac.print_tac()
+tac.print_x86()

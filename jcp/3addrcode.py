@@ -35,6 +35,20 @@ class BinOp(Ins):
             dst = '{}'.format(self.dst['value'])
         return '\t' + dst + ' = ' + arg1 + ' ' + self.op + ' ' + arg2
 
+    def __tox86__(self):
+        if 'offset' in self.arg1.keys():
+            source_1 = '\t' + 'mov eax, ' + '{}'.format(self.arg1['offset'])
+        else:
+            source_1 = '\t' + 'mov eax, ' + '{}'.format(self.arg1['value'])
+        if 'offset' in self.arg2.keys():
+            source_2 = '\t' + 'mov ebx, ' + '{}'.format(self.arg2['offset'])
+        else:
+            source_2 = '\t' + 'mov ebx, ' + '{}'.format(self.arg2['value'])
+        operation = '\t' + 'add eax, ebx'
+        store = '\t' + 'mov -' + '{}'.format(self.dst['offset']) + '(ebp), eax'
+        block = "\n".join([source_1, source_2, operation, store])
+        return block
+
 class AssignOp(Ins):
     def __init__(self, label="", op="", arg=None, dst=None, argp=False, dstp=False):
         Ins.__init__(self, label, op)
@@ -55,12 +69,18 @@ class AssignOp(Ins):
             dst = '{}'.format(self.dst['value'])
         return '\t' + dst + ' = ' + arg
 
+    def __tox86__(self):
+        return 'AssignOp x86'
+
 class Label(Ins):
     def __init__(self, label=""):
         Ins.__init__(self, label)
 
     def __repr__(self):
         return self.label
+
+    def __tox86__(self):
+        return 'Label x86'
 
 class BeginFunc(Ins):
     def __init__(self, width=0):
@@ -70,12 +90,18 @@ class BeginFunc(Ins):
     def __repr__(self):
         return '\tBeginFunc {}'.format(self.width)
 
+    def __tox86__(self):
+        return 'BeginFunc x86'
+
 class EndFunc(Ins):
     def __init__(self):
         Ins(self)
 
     def __repr__(self):
         return '\tEndFunc'
+
+    def __tox86__(self):
+        return 'EndFunc x86'
 
 class PushParam(Ins):
     def __init__(self, param):
@@ -84,6 +110,9 @@ class PushParam(Ins):
 
     def __repr__(self):
         return '\tPushParam {}'.format(self.param['value'])
+
+    def __tox86__(self):
+        return 'PushParam x86'
 
 class PopParam(Ins):
     def __init__(self, width, dst=None):
@@ -97,6 +126,9 @@ class PopParam(Ins):
         else:
             return '\tPopParam {}'.format(self.width)
 
+    def __tox86__(self):
+        return 'PopParam x86'
+
 class SetStack(Ins):
     def __init__(self, change):
         Ins(self)
@@ -104,6 +136,9 @@ class SetStack(Ins):
 
     def __repr__(self):
         return '\tSetStack {}'.format(self.change)
+
+    def __tox86__(self):
+        return 'SetStack x86'
 
 class Call(Ins):
     def __init__(self, func, dst=None):
@@ -117,6 +152,9 @@ class Call(Ins):
         else:
             return '\t{} = Call {}'.format(self.dst['value'], self.func['value'])
 
+    def __tox86__(self):
+        return 'Call x86'
+
 class Cmp(Ins):
     def __init__(self, arg1, arg2):
         Ins(self)
@@ -125,6 +163,9 @@ class Cmp(Ins):
 
     def __repr__(self):
         return '\tCMP {}, {}'.format(self.arg1['value'], self.arg2['value'])
+
+    def __tox86__(self):
+        return 'x86 Cmp'
 
 class Jmp(Ins):
     def __init__(self, cond, target):
@@ -135,6 +176,9 @@ class Jmp(Ins):
     def __repr__(self):
         return '\t{} {}'.format(self.cond, self.target)
 
+    def __tox86__(self):
+        return 'Jmp x86'
+
 class Ret(Ins):
     def __init__(self, value):
         Ins(self)
@@ -142,6 +186,9 @@ class Ret(Ins):
 
     def __repr__(self):
         return '\tReturn {}'.format(self.value['value'])
+
+    def __tox86__(self):
+        return 'Ret x86'
 
 class Tac(object):
     def __init__(self):
@@ -277,7 +324,7 @@ class Tac(object):
                 goto = Jmp(cond='JMP', target=if_next_lbl)
                 self.code.append(goto)
                 false_label = Label(label=if_false_lbl+":")
-                self.code.append(end)
+                self.code.append(false_label)
                 arg1 = self.generate_tac(node.children[2])
                 end = Label(label=if_next_lbl+":")
                 self.code.append(end)
@@ -427,3 +474,7 @@ class Tac(object):
     def print_tac(self):
         for ins in self.code:
             print(repr(ins))
+
+    def print_x86(self):
+        for ins in self.code:
+            print(ins.__tox86__())
