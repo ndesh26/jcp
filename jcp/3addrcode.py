@@ -1,3 +1,5 @@
+import copy
+
 from parser_rules import symbol_table
 from symbol_table import type_width
 
@@ -7,14 +9,31 @@ class Ins(object):
         self.op = op
 
 class BinOp(Ins):
-    def __init__(self, label="", op="", arg1=None, arg2=None, dst=None):
+    def __init__(self, label="", op="", arg1=None, arg2=None, dst=None, arg1a=False, arg2a=False, dsta=False):
         Ins.__init__(self, label, op)
         self.arg1 = arg1
         self.arg2 = arg2
         self.dst = dst
+        self.arg1a = arg1a
+        self.arg2a = arg2a
+        self.dsta = dsta
 
     def __repr__(self):
-        return '\t' + self.dst['value'] + ' = ' + '{}'.format(self.arg1['value']) + ' ' + self.op + ' ' + '{}'.format(self.arg2['value'])
+        if self.arg1a:
+            arg1 = '&{}'.format(self.arg1['value'])
+        else:
+            arg1 = '{}'.format(self.arg1['value'])
+
+        if self.arg2a:
+            arg2 = '&{}'.format(self.arg2['value'])
+        else:
+            arg2 = '{}'.format(self.arg2['value'])
+
+        if self.dsta:
+            dst = '&{}'.format(self.dst['value'])
+        else:
+            dst = '{}'.format(self.dst['value'])
+        return '\t' + dst + ' = ' + arg1 + ' ' + self.op + ' ' + arg2
 
 class AssignOp(Ins):
     def __init__(self, label="", op="", arg=None, dst=None, argp=False, dstp=False):
@@ -378,16 +397,25 @@ class Tac(object):
         elif node.name == "DeclsRefExpr":
             return node.sym_entry
 
+        elif node.name == "FieldAccessExpr":
+            arg = self.generate_tac(node.children[0])
+            field = copy.deepcopy(node.sym_entry)
+            field['value'] = arg['value'] + '.' + field['value']
+            field['offset'] += arg['offset']
+            return field
+
         elif node.name == "ArrayAccess":
             arg1 = self.generate_tac(node.children[0])
             index = self.generate_tac(node.children[1])
             size = type_width(node.type)
+            if size == 0:
+                size = symbol_table.get_class_width(node.type)
             length = len(node.arraylen)- node.dims
             for i in node.arraylen[length:]:
                 size *= i
             dst = symbol_table.get_temp(node.type, self.table)
             multi = BinOp(op="*", arg1={'value': size, 'type': "int", 'arraylen': []}, arg2=index, dst=dst)
-            binop = BinOp(op="+", arg1=arg1, arg2=dst, dst=dst)
+            binop = BinOp(op="+", arg1=arg1, arg2=dst, dst=dst, arg1a=True)
             self.code.append(multi)
             self.code.append(binop)
             return dst

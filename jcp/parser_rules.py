@@ -1557,7 +1557,7 @@ class StatementParser(object):
                 else:
                     entry = None
                 if entry:
-                    p[0] = Node("FieldAccessExpr", value=p[2] + p[3].value, type=entry['type'], children=[p[1]], modifiers=entry['modifiers'], arraylen=entry['arraylen'], dims=entry['dims'])
+                    p[0] = Node("FieldAccessExpr", value=p[2] + p[3].value, type=entry['type'], children=[p[1]], modifiers=entry['modifiers'], arraylen=entry['arraylen'], dims=entry['dims'], sym_entry=entry)
                 else:
                     print("line {}: there is no field named '{}' for object of type '{}'".format(p.lineno(2), p[3].value, p[1].type))
                     p[0] = Node("FieldAccessExpr", value=p[2] + p[3].value, type="error", children=[p[1]])
@@ -1570,7 +1570,7 @@ class StatementParser(object):
             else:
                 entry = None
             if entry:
-                p[0] = Node("FieldAccessExpr", value=p[2] + p[3].value, type=entry['type'], children=[p[1]], modifiers=entry['modifiers'], arraylen=entry['arraylen'], dims=entry['dims'])
+                p[0] = Node("FieldAccessExpr", value=p[2] + p[3].value, type=entry['type'], children=[p[1]], modifiers=entry['modifiers'], arraylen=entry['arraylen'], dims=entry['dims'], sym_entry=entry)
             else:
                 print("line {}: there is no field named '{}' for object of type '{}'".format(p.lineno(2), p[3].value, p[1].type))
                 p[0] = Node("FieldAccessExpr", value=p[2] + p[3].value, type="error", children=[p[1]])
@@ -1602,7 +1602,7 @@ class StatementParser(object):
             return
         if p[1].dims == 1:
             p[0] = Node("ArrayAccess",value=p[1].value ,children=[p[1],p[3]], type=p[1].type, arraylen=p[1].arraylen, modifiers=p[1].modifiers, dims=0)
-            if (isinstance(p[3].value, int) and p[3].value >= p[0].arraylen[0]):
+            if (p[0].arraylen and isinstance(p[3].value, int) and p[3].value >= p[0].arraylen[0]):
                 print("line {}: the array index '{}' is out of range".format(p.lineno(2), p[3].value))
             return
         p[0] = Node("ArrayAccess",value=p[1].value, children=[p[1],p[3]], type=p[1].type, arraylen=p[1].arraylen, modifiers=p[1].modifiers, dims=p[1].dims-1)
@@ -1685,7 +1685,7 @@ class NameParser(object):
                 else:
                     entry = None
                 if entry:
-                    p[0] = Node("FieldAccessExpr", value=p[2] + p[3].value, type=entry['type'], children=[p[1]], modifiers=entry['modifiers'], arraylen=entry['arraylen'], dims=entry['dims'])
+                    p[0] = Node("FieldAccessExpr", value=p[2] + p[3].value, type=entry['type'], children=[p[1]], modifiers=entry['modifiers'], arraylen=entry['arraylen'], dims=entry['dims'], sym_entry=entry)
                 else:
                     print("line {}: there is no field named '{}' for object of type '{}'".format(p.lineno(2), p[3].value, p[1].type))
                     p[0] = Node("FieldAccessExpr", value=p[2] + p[3].value, type="error", children=[p[1]])
@@ -1698,7 +1698,7 @@ class NameParser(object):
             else:
                 entry = None
             if entry:
-                p[0] = Node("FieldAccessExpr", value=p[2] + p[3].value, type=entry['type'], children=[p[1]], modifiers=entry['modifiers'], arraylen=entry['arraylen'], dims=entry['dims'])
+                p[0] = Node("FieldAccessExpr", value=p[2] + p[3].value, type=entry['type'], children=[p[1]], modifiers=entry['modifiers'], arraylen=entry['arraylen'], dims=entry['dims'], sym_entry=entry)
             else:
                 print("line {}: there is no field named '{}' for object of type '{}'".format(p.lineno(2), p[3].value, p[1].type))
                 p[0] = Node("FieldAccessExpr", value=p[2] + p[3].value, type="error", children=[p[1]])

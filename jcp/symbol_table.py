@@ -11,7 +11,10 @@ target_no = 0
 def type_width(name):
     global width
     if (isinstance(name, str)):
-        return width[name]
+        if name in width:
+            return width[name]
+        else:
+            return 0
     else:
         if (name["type"] in width):
             if name['arraylen'] == []:
@@ -26,7 +29,14 @@ def type_width(name):
             return 4
         else:
             if "width" in name:
-                return name["width"]
+                if name['arraylen'] == []:
+                    return name["width"]
+                else:
+                    size = 1
+                    for i in name['arraylen']:
+                        size *= i
+                    size *= name["width"]
+                    return size
             return 0
 
 class Table:
