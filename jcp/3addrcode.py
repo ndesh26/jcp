@@ -37,11 +37,15 @@ class BinOp(Ins):
 
     def __tox86__(self):
         if 'offset' in self.arg1.keys():
-            source_1 = '\t' + 'mov eax, ' + '{}(ebp)'.format(self.arg1['offset'])
+            if self.arg1a:
+                source_1 = '\t' + 'mov eax, ebp\n'
+                source_1 += '\t' + 'add eax, ' + '{}'.format(self.arg1['offset'])
+            else:
+                source_1 = '\t' + 'mov eax, ' + '{}(ebp)'.format(self.arg1['offset'])
         else:
             source_1 = '\t' + 'mov eax, ' + '{}'.format(self.arg1['value'])
         if 'offset' in self.arg2.keys():
-            source_2 = '\t' + 'mov ebx, ' + '{}'.format(self.arg2['offset'])
+            source_2 = '\t' + 'mov ebx, ' + '{}(ebp)'.format(self.arg2['offset'])
         else:
             source_2 = '\t' + 'mov ebx, ' + '{}'.format(self.arg2['value'])
         operation = '\t' + 'add eax, ebx'
