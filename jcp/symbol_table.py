@@ -194,9 +194,13 @@ class SymbolTable:
         name = '_t' + str(temp_no)
         temp_no += 1
         if table == None:
-            return self.table.insert(name, {'value': name, 'type' : type, 'arraylen': []})
+            entry = self.table.insert(name, {'value': name, 'type' : type, 'arraylen': []})
+            entry['offset'] = self.table.get_arg_size() - entry['offset'] - type_width(entry)
+            return entry
         else:
-            return table.insert(name, {'value': name, 'type' : type, 'arraylen': []})
+            entry = table.insert(name, {'value': name, 'type' : type, 'arraylen': []})
+            entry['offset'] = table.get_arg_size() - entry['offset'] - type_width(entry)
+            return entry
 
     def get_target(self):
         global target_no

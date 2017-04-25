@@ -37,7 +37,7 @@ class BinOp(Ins):
 
     def __tox86__(self):
         if 'offset' in self.arg1.keys():
-            source_1 = '\t' + 'mov eax, ' + '{}'.format(self.arg1['offset'])
+            source_1 = '\t' + 'mov eax, ' + '{}(ebp)'.format(self.arg1['offset'])
         else:
             source_1 = '\t' + 'mov eax, ' + '{}'.format(self.arg1['value'])
         if 'offset' in self.arg2.keys():
@@ -45,7 +45,7 @@ class BinOp(Ins):
         else:
             source_2 = '\t' + 'mov ebx, ' + '{}'.format(self.arg2['value'])
         operation = '\t' + 'add eax, ebx'
-        store = '\t' + 'mov -' + '{}'.format(self.dst['offset']) + '(ebp), eax'
+        store = '\t' + 'mov ' + '{}'.format(self.dst['offset']) + '(ebp), eax'
         block = "\n".join([source_1, source_2, operation, store])
         return block
 
@@ -70,7 +70,13 @@ class AssignOp(Ins):
         return '\t' + dst + ' = ' + arg
 
     def __tox86__(self):
-        return 'AssignOp x86'
+        if 'offset' in self.arg.keys():
+            source = '\t' + 'mov eax, ' + '{}(ebp)'.format(self.arg['offset'])
+        else:
+            source = '\t' + 'mov eax, ' + '{}'.format(self.arg['value'])
+        store = '\t' + 'mov ' + '{}'.format(self.dst['offset']) + '(ebp), eax'
+        block = "\n".join([source, store])
+        return block
 
 class Label(Ins):
     def __init__(self, label=""):
