@@ -227,7 +227,10 @@ class Ret(Ins):
         return '\tReturn {}'.format(self.value['value'])
 
     def __tox86__(self):
-        move = '\tmov eax, [ebp{}]'.format(self.value['offset'])
+        if 'offset' in self.value:
+            move = '\tmov eax, [ebp{}]'.format(self.value['offset'])
+        else:
+            move = '\tmov eax, {}'.format(self.value['value'])
         move += '\n\tmov [ebx], eax'
         return move
 
