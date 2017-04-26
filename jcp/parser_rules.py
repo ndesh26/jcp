@@ -6,7 +6,7 @@ from ast import literal_eval
 
 ast = ""
 symbol_table = st.SymbolTable()
-symbol_table.insert('printf', {'value': 'printf', 'type':'void (int)', 'modifiers': ''})
+symbol_table.insert('printInt', {'value': 'printInt', 'type':'void (int)', 'modifiers': ''})
 nat = []
 
 class Node:

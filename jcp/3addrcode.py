@@ -54,6 +54,37 @@ class BinOp(Ins):
         block = "\n".join([source_1, source_2, operation, store])
         return block
 
+class UnaryOp(Ins):
+    def __init__(self, label="", op="", arg=None, dst=None, argp=False, dstp=False):
+        Ins.__init__(self, label, op)
+        self.arg = arg
+        self.dst = dst
+        self.argp = argp
+        self.dstp = dstp
+
+    def __repr__(self):
+        if self.argp:
+            arg = '*({})'.format(self.arg['value'])
+        else:
+            arg = '{}'.format(self.arg['value'])
+
+        if self.dstp:
+            dst = '*({})'.format(self.dst['value'])
+        else:
+            dst = '{}'.format(self.dst['value'])
+        return '\t' + dst + ' = ' + self.op + arg
+
+    def __tox86__(self):
+        if 'offset' in self.arg.keys():
+            source = '\t' + 'mov eax, ' + '[ebp{}]'.format(self.arg['offset']) if self.arg['offset'] < 0 else '[ebp+{}]'.format(self.arg['offset'])
+        else:
+            source = '\t' + 'mov eax, ' + '{}'.format(self.arg['value'])
+        if self.op == "-":
+            neg = '\tneg eax'
+        store = '\t' + 'mov ' + '[ebp{}], eax'.format(self.dst['offset']) if self.dst['offset'] < 0 else '[ebp+{}], eax'.format(self.dst['offset'])
+        block = "\n".join([source, neg, store])
+        return block
+
 class AssignOp(Ins):
     def __init__(self, label="", op="", arg=None, dst=None, argp=False, dstp=False):
         Ins.__init__(self, label, op)
@@ -313,6 +344,13 @@ class Tac(object):
 
             if node.value == "!":
                 arg1 = self.generate_tac(node.children[0], true_lbl=false_lbl, false_lbl=true_lbl)
+
+            if node.value == "-":
+                arg1 = self.generate_tac(node.children[0])
+                dst = symbol_table.get_temp(node.type, self.table)
+                unaryop = UnaryOp(op="-", arg=arg1, dst=dst)
+                self.code.append(unaryop)
+                return dst
 
 
         elif node.name == "VarDecl":
