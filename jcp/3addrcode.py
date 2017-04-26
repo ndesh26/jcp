@@ -183,7 +183,10 @@ class PopParam(Ins):
             return '\tPopParam {}'.format(self.width)
 
     def __tox86__(self):
-        return '\tpop eax'
+        pop = '\tpop eax'
+        store = '\tmov ' + '[ebp{}], eax'.format(self.dst['offset']) if self.dst['offset'] < 0 else '[ebp+{}], eax'.format(self.dst['offset'])
+        block = "\n".join([pop, store])
+        return block
 
 class SetStack(Ins):
     def __init__(self, change):
@@ -195,8 +198,7 @@ class SetStack(Ins):
 
     def __tox86__(self):
         update = '\tadd esp, {}'.format(self.change)
-        ret_val = '\tmov ebx, esp'
-        block = "\n".join([update, ret_val])
+        block = "\n".join([update])
         return block
 
 class Call(Ins):
@@ -250,9 +252,10 @@ class Jmp(Ins):
         return '\t' + jump_map[self.cond] + ' ' + self.target
 
 class Ret(Ins):
-    def __init__(self, value):
+    def __init__(self, value, arg_size):
         Ins(self)
         self.value = value
+        self.arg_size = arg_size
 
     def __repr__(self):
         return '\tReturn {}'.format(self.value['value'])
@@ -262,7 +265,7 @@ class Ret(Ins):
             move = '\tmov eax, [ebp{}]'.format(self.value['offset'])
         else:
             move = '\tmov eax, {}'.format(self.value['value'])
-        move += '\n\tmov [ebx], eax'
+        move += '\n\tmov [ebp+{}], eax'.format(self.arg_size+8)
         return move
 
 class Tac(object):
@@ -507,7 +510,7 @@ class Tac(object):
 
         elif node.name == "ReturnStmt":
             arg = self.generate_tac(node.children[0])
-            self.code.append(Ret(value=arg))
+            self.code.append(Ret(value=arg, arg_size=self.table.get_arg_size()))
 
         elif node.name == "FloatLiteral":
             return {'value': node.value, 'type': "int", 'arraylen': []}
