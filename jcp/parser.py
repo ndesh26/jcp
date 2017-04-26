@@ -1,6 +1,7 @@
 import os
 import sys
 import ply.yacc as yacc
+from subprocess import call
 from parser_rules import JavaParser
 import ptg
 code = __import__('3addrcode')
@@ -29,4 +30,9 @@ result = parser.parse("++"+content, debug=debug)
 tac = code.Tac()
 tac.generate_tac(result)
 tac.print_tac()
+sys.stdout = open("test.s", "w")
+print("global main\n\nsection .text\n")
 tac.print_x86()
+call('nasm -f elf32 test.s', shell=True)
+call('cc -m32 test.o -o test', shell=True)
+sys.stdout.close()
