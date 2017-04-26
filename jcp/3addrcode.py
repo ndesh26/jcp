@@ -41,15 +41,16 @@ class BinOp(Ins):
                 source_1 = '\t' + 'mov eax, ebp\n'
                 source_1 += '\t' + 'add eax, ' + '{}'.format(self.arg1['offset'])
             else:
-                source_1 = '\t' + 'mov eax, ' + '{}(ebp)'.format(self.arg1['offset'])
+                source_1 = '\t' + 'mov eax, ' + '[ebp{}]'.format(self.arg1['offset']) if self.arg1['offset'] < 0 else '[ebp+{}]'.format(self.arg1['offset'])
         else:
             source_1 = '\t' + 'mov eax, ' + '{}'.format(self.arg1['value'])
         if 'offset' in self.arg2.keys():
-            source_2 = '\t' + 'mov ebx, ' + '{}(ebp)'.format(self.arg2['offset'])
+            source_2 = '\t' + 'mov ebx, ' + '[ebp{}]'.format(self.arg2['offset']) if self.arg2['offset'] < 0 else '[ebp+{}]'.format(self.arg2['offset'])
         else:
             source_2 = '\t' + 'mov ebx, ' + '{}'.format(self.arg2['value'])
-        operation = '\t' + 'add eax, ebx'
-        store = '\t' + 'mov ' + '{}'.format(self.dst['offset']) + '(ebp), eax'
+        op_map = {'+': 'add', '-': 'sub', '*': 'mul', '/': 'div'}
+        operation = '\t' + op_map[self.op] + ' eax, ebx'
+        store = '\t' + 'mov ' + '[ebp{}], eax'.format(self.dst['offset']) if self.dst['offset'] < 0 else '[ebp+{}], eax'.format(self.dst['offset'])
         block = "\n".join([source_1, source_2, operation, store])
         return block
 
@@ -75,10 +76,10 @@ class AssignOp(Ins):
 
     def __tox86__(self):
         if 'offset' in self.arg.keys():
-            source = '\t' + 'mov eax, ' + '{}(ebp)'.format(self.arg['offset'])
+            source = '\t' + 'mov eax, ' + '[ebp{}]'.format(self.arg['offset']) if self.arg['offset'] < 0 else '[ebp+{}]'.format(self.arg['offset'])
         else:
             source = '\t' + 'mov eax, ' + '{}'.format(self.arg['value'])
-        store = '\t' + 'mov ' + '{}'.format(self.dst['offset']) + '(ebp), eax'
+        store = '\t' + 'mov ' + '[ebp{}], eax'.format(self.dst['offset']) if self.dst['offset'] < 0 else '[ebp+{}], eax'.format(self.dst['offset'])
         block = "\n".join([source, store])
         return block
 
@@ -90,7 +91,7 @@ class Label(Ins):
         return self.label
 
     def __tox86__(self):
-        return 'Label x86'
+        return self.label
 
 class BeginFunc(Ins):
     def __init__(self, width=0):
@@ -101,7 +102,11 @@ class BeginFunc(Ins):
         return '\tBeginFunc {}'.format(self.width)
 
     def __tox86__(self):
-        return 'BeginFunc x86'
+        save_ebp = '\tpush ebp'
+        update = '\tmov ebp, esp'
+        frame_allocate = '\tsub esp, {}'.format(self.width)
+        block = "\n".join([save_ebp, update, frame_allocate])
+        return block
 
 class EndFunc(Ins):
     def __init__(self):
@@ -111,7 +116,11 @@ class EndFunc(Ins):
         return '\tEndFunc'
 
     def __tox86__(self):
-        return 'EndFunc x86'
+        frame_deallocate = '\tmov esp, ebp'
+        remove = '\tpop ebp'
+        ret = '\tret'
+        block = "\n".join([frame_deallocate, remove, ret])
+        return block
 
 class PushParam(Ins):
     def __init__(self, param):
@@ -122,7 +131,13 @@ class PushParam(Ins):
         return '\tPushParam {}'.format(self.param['value'])
 
     def __tox86__(self):
-        return 'PushParam x86'
+        if 'offset' in self.param.keys():
+            move = '\tmov eax, ' + '[ebp{}]'.format(self.param['offset']) if self.param['offset'] < 0 else '[ebp+{}]'.format(self.param['offset'])
+        else:
+            move = '\tmov eax, {}'.format(self.param['value'])
+        push = '\tpush eax'
+        block = "\n".join([move, push])
+        return block
 
 class PopParam(Ins):
     def __init__(self, width, dst=None):
@@ -137,7 +152,7 @@ class PopParam(Ins):
             return '\tPopParam {}'.format(self.width)
 
     def __tox86__(self):
-        return 'PopParam x86'
+        return '\tpop eax'
 
 class SetStack(Ins):
     def __init__(self, change):
@@ -148,7 +163,10 @@ class SetStack(Ins):
         return '\tSetStack {}'.format(self.change)
 
     def __tox86__(self):
-        return 'SetStack x86'
+        update = '\tadd esp, {}'.format(self.change)
+        ret_val = '\tmov ebx, esp'
+        block = "\n".join([update, ret_val])
+        return block
 
 class Call(Ins):
     def __init__(self, func, dst=None):
@@ -163,7 +181,7 @@ class Call(Ins):
             return '\t{} = Call {}'.format(self.dst['value'], self.func['value'])
 
     def __tox86__(self):
-        return 'Call x86'
+        return '\tcall {}'.format(self.func['value'])
 
 class Cmp(Ins):
     def __init__(self, arg1, arg2):
@@ -175,7 +193,17 @@ class Cmp(Ins):
         return '\tCMP {}, {}'.format(self.arg1['value'], self.arg2['value'])
 
     def __tox86__(self):
-        return 'x86 Cmp'
+        if 'offset' in self.arg1.keys():
+            source_1 = '\t' + 'mov eax, ' + '[ebp{}]'.format(self.arg1['offset']) if self.arg1['offset'] < 0 else '[ebp+{}]'.format(self.arg1['offset'])
+        else:
+            source_1 = '\t' + 'mov eax, ' + '{}'.format(self.arg1['value'])
+        if 'offset' in self.arg2.keys():
+            source_2 = '\t' + 'mov ebx, ' + '[ebp{}]'.format(self.arg2['offset']) if self.arg2['offset'] < 0 else '[ebp+{}]'.format(self.arg2['offset'])
+        else:
+            source_2 = '\t' + 'mov ebx, ' + '{}'.format(self.arg2['value'])
+        compare = '\t' + 'cmp eax, ebx'
+        block = "\n".join([source_1, source_2, compare])
+        return block
 
 class Jmp(Ins):
     def __init__(self, cond, target):
@@ -187,7 +215,8 @@ class Jmp(Ins):
         return '\t{} {}'.format(self.cond, self.target)
 
     def __tox86__(self):
-        return 'Jmp x86'
+        jump_map = {'JL': 'jl', 'JG': 'jg', 'JGE': 'jge', 'JLE': 'jle', 'JE': 'je', 'JNE': 'jne', 'JMP': 'jmp'}
+        return '\t' + jump_map[self.cond] + ' ' + self.target
 
 class Ret(Ins):
     def __init__(self, value):
@@ -198,7 +227,9 @@ class Ret(Ins):
         return '\tReturn {}'.format(self.value['value'])
 
     def __tox86__(self):
-        return 'Ret x86'
+        move = '\tmov eax, [ebp{}]'.format(self.value['offset'])
+        move += '\n\tmov [ebx], eax'
+        return move
 
 class Tac(object):
     def __init__(self):
@@ -431,7 +462,7 @@ class Tac(object):
             if node.type != "void":
                 dst = symbol_table.get_temp(node.type, self.table)
                 self.code.append(PopParam(-type_width(node.type), dst))
-            return dst
+                return dst
 
         elif node.name == "ReturnStmt":
             arg = self.generate_tac(node.children[0])
