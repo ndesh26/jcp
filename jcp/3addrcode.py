@@ -41,16 +41,19 @@ class BinOp(Ins):
                 source_1 = '\t' + 'mov eax, ebp\n'
                 source_1 += '\t' + 'add eax, ' + '{}'.format(self.arg1['offset'])
             else:
-                source_1 = '\t' + 'mov eax, ' + '[ebp{}]'.format(self.arg1['offset']) if self.arg1['offset'] < 0 else '[ebp+{}]'.format(self.arg1['offset'])
+                source_1 = '\t' + 'mov eax, ' + ('[ebp{}]'.format(self.arg1['offset']) if self.arg1['offset'] < 0 else '[ebp+{}]'.format(self.arg1['offset']))
         else:
             source_1 = '\t' + 'mov eax, ' + '{}'.format(self.arg1['value'])
         if 'offset' in self.arg2.keys():
-            source_2 = '\t' + 'mov ebx, ' + '[ebp{}]'.format(self.arg2['offset']) if self.arg2['offset'] < 0 else '[ebp+{}]'.format(self.arg2['offset'])
+            source_2 = '\t' + 'mov ebx, ' + ('[ebp{}]'.format(self.arg2['offset']) if self.arg2['offset'] < 0 else '[ebp+{}]'.format(self.arg2['offset']))
         else:
             source_2 = '\t' + 'mov ebx, ' + '{}'.format(self.arg2['value'])
-        op_map = {'+': 'add', '-': 'sub', '*': 'mul', '/': 'div'}
-        operation = '\t' + op_map[self.op] + ' eax, ebx'
-        store = '\t' + 'mov ' + '[ebp{}], eax'.format(self.dst['offset']) if self.dst['offset'] < 0 else '[ebp+{}], eax'.format(self.dst['offset'])
+        op_map = {'+': 'add', '-': 'sub', '*': 'imul', '/': 'div'}
+        if op_map[self.op] in ['imul', 'div']:
+            operation = '\t' + op_map[self.op] + ' ebx'
+        else:
+            operation = '\t' + op_map[self.op] + ' eax, ebx'
+        store = '\t' + 'mov ' + ('[ebp{}], eax'.format(self.dst['offset']) if self.dst['offset'] < 0 else '[ebp+{}], eax'.format(self.dst['offset']))
         block = "\n".join([source_1, source_2, operation, store])
         return block
 
@@ -76,12 +79,12 @@ class UnaryOp(Ins):
 
     def __tox86__(self):
         if 'offset' in self.arg.keys():
-            source = '\t' + 'mov eax, ' + '[ebp{}]'.format(self.arg['offset']) if self.arg['offset'] < 0 else '[ebp+{}]'.format(self.arg['offset'])
+            source = '\t' + 'mov eax, ' + ('[ebp{}]'.format(self.arg['offset']) if self.arg['offset'] < 0 else '[ebp+{}]'.format(self.arg['offset']))
         else:
             source = '\t' + 'mov eax, ' + '{}'.format(self.arg['value'])
         if self.op == "-":
             neg = '\tneg eax'
-        store = '\t' + 'mov ' + '[ebp{}], eax'.format(self.dst['offset']) if self.dst['offset'] < 0 else '[ebp+{}], eax'.format(self.dst['offset'])
+        store = '\t' + 'mov ' + ('[ebp{}], eax'.format(self.dst['offset']) if self.dst['offset'] < 0 else '[ebp+{}], eax'.format(self.dst['offset']))
         block = "\n".join([source, neg, store])
         return block
 
@@ -107,10 +110,10 @@ class AssignOp(Ins):
 
     def __tox86__(self):
         if 'offset' in self.arg.keys():
-            source = '\t' + 'mov eax, ' + '[ebp{}]'.format(self.arg['offset']) if self.arg['offset'] < 0 else '[ebp+{}]'.format(self.arg['offset'])
+            source = '\t' + 'mov eax, ' + ('[ebp{}]'.format(self.arg['offset']) if self.arg['offset'] < 0 else '[ebp+{}]'.format(self.arg['offset']))
         else:
             source = '\t' + 'mov eax, ' + '{}'.format(self.arg['value'])
-        store = '\t' + 'mov ' + '[ebp{}], eax'.format(self.dst['offset']) if self.dst['offset'] < 0 else '[ebp+{}], eax'.format(self.dst['offset'])
+        store = '\t' + 'mov ' + ('[ebp{}], eax'.format(self.dst['offset']) if self.dst['offset'] < 0 else '[ebp+{}], eax'.format(self.dst['offset']))
         block = "\n".join([source, store])
         return block
 
@@ -147,11 +150,7 @@ class EndFunc(Ins):
         return '\tEndFunc'
 
     def __tox86__(self):
-        frame_deallocate = '\tmov esp, ebp'
-        remove = '\tpop ebp'
-        ret = '\tret'
-        block = "\n".join([frame_deallocate, remove, ret])
-        return block
+        return ''
 
 class PushParam(Ins):
     def __init__(self, param):
@@ -163,7 +162,7 @@ class PushParam(Ins):
 
     def __tox86__(self):
         if 'offset' in self.param.keys():
-            move = '\tmov eax, ' + '[ebp{}]'.format(self.param['offset']) if self.param['offset'] < 0 else '[ebp+{}]'.format(self.param['offset'])
+            move = '\tmov eax, ' + ('[ebp{}]'.format(self.param['offset']) if self.param['offset'] < 0 else '[ebp+{}]'.format(self.param['offset']))
         else:
             move = '\tmov eax, {}'.format(self.param['value'])
         push = '\tpush eax'
@@ -184,7 +183,7 @@ class PopParam(Ins):
 
     def __tox86__(self):
         pop = '\tpop eax'
-        store = '\tmov ' + '[ebp{}], eax'.format(self.dst['offset']) if self.dst['offset'] < 0 else '[ebp+{}], eax'.format(self.dst['offset'])
+        store = '\tmov ' + ('[ebp{}], eax'.format(self.dst['offset']) if self.dst['offset'] < 0 else '[ebp+{}], eax'.format(self.dst['offset']))
         block = "\n".join([pop, store])
         return block
 
@@ -227,13 +226,14 @@ class Cmp(Ins):
 
     def __tox86__(self):
         if 'offset' in self.arg1.keys():
-            source_1 = '\t' + 'mov eax, ' + '[ebp{}]'.format(self.arg1['offset']) if self.arg1['offset'] < 0 else '[ebp+{}]'.format(self.arg1['offset'])
+            source_1 = '\t' + 'mov eax, ' + ('[ebp{}]'.format(self.arg1['offset']) if self.arg1['offset'] < 0 else '[ebp+{}]'.format(self.arg1['offset']))
         else:
             source_1 = '\t' + 'mov eax, ' + '{}'.format(self.arg1['value'])
         if 'offset' in self.arg2.keys():
-            source_2 = '\t' + 'mov ebx, ' + '[ebp{}]'.format(self.arg2['offset']) if self.arg2['offset'] < 0 else '[ebp+{}]'.format(self.arg2['offset'])
+            source_2 = '\t' + 'mov ebx, ' + ('[ebp{}]'.format(self.arg2['offset']) if self.arg2['offset'] < 0 else '[ebp+{}]'.format(self.arg2['offset']))
         else:
             source_2 = '\t' + 'mov ebx, ' + '{}'.format(self.arg2['value'])
+        print(source_2)
         compare = '\t' + 'cmp eax, ebx'
         block = "\n".join([source_1, source_2, compare])
         return block
@@ -266,7 +266,11 @@ class Ret(Ins):
         else:
             move = '\tmov eax, {}'.format(self.value['value'])
         move += '\n\tmov [ebp+{}], eax'.format(self.arg_size+8)
-        return move
+        frame_deallocate = '\tmov esp, ebp'
+        remove = '\tpop ebp'
+        ret = '\tret'
+        block = "\n".join([move, frame_deallocate, remove, ret])
+        return block
 
 class Tac(object):
     def __init__(self):
