@@ -883,6 +883,8 @@ class StatementParser(object):
             node.type = p[1].type
             if node.dims == 0:
                 node.dims = p[1].dims
+            if node.dims != p[1].dims and p[1].dims != 0:
+                print("line {}: variable '{}'  is a {}-D array, but initialized using a {}-D initializer".format(node.lineno, node.value, node.dims, p[1].dims))
             if node.children != [  ] and node.children[0].name == "InitListExpr":
                 check_type(node.value, node.type, node.children[0])
             entry = symbol_table.get_entry(node.value)
@@ -922,8 +924,6 @@ class StatementParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
-            if p[1].dims != p[3].dims:
-                print("line {}: variable '{}'  is a {}-D array, but initialized using a {}-D initializer".format(p.lineno(2), p[1].value, p[1].dims, p[3].dims))
             p[1].type = p[3].type
             p[1].arraylen = p[3].arraylen
             p[1].children.append(p[3])
@@ -1011,7 +1011,7 @@ class StatementParser(object):
             p[1] = Node("DeclsRefExpr", value=p[1], type=entry['type'], modifiers=entry['modifiers'], sym_entry=entry)
             p[0] = Node("MethodInvocation", children=[p[1]]+p[3].children)
             p[0].type = p[1].type.split(" ", 1)[0]
-            args = p[1].type.split(" ", 1)[1][1:-1].split(",", 1)
+            args = p[1].type.split(" ", 1)[1][1:-1].split(",", len(p[3].children)-1)
             for arg, node in zip(args, p[3].children):
                 if arg != node.type:
                     print("line {}: the function is expecting arg of type '{}' but the arg provided is of type '{}'".format(p.lineno(1), arg, node.type))
@@ -1043,7 +1043,7 @@ class StatementParser(object):
                 p[3] = Node("ObjectMethodExpr", value=p[2]+p[3], children=[p[1]], type=entry['type'])
                 p[0] = Node("MethodInvocation", children=[p[3]]+p[5].children)
                 p[0].type = p[3].type.split(" ", 1)[0]
-                args = p[3].type.split(" ", 1)[1][1:-1].split(",", 1)
+                args = p[1].type.split(" ", 1)[1][1:-1].split(",", len(p[5].children)-1)
                 for arg, node in zip(args, p[5].children):
                     if arg != node.type:
                         print("line {}: the function is expecting arg of type '{}' but the arg provided is of type '{}'".format(p.lineno(2), arg, node.type))
