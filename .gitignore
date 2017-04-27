@@ -97,6 +97,7 @@ ENV/
 jcp/parser.out
 jcp/parsetab.py
 example1_graph.png
-test
+ast.txt
+csv
 check.c
 out.png
