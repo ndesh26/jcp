@@ -55,7 +55,7 @@ class Qsort
 		quicksort(x,first,l);
 
 		for(i=0;i<size;i++){
-			System.out.println(x[i]);
+			printInt(x[i]);
 		}
 	}
 

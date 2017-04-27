@@ -6,7 +6,7 @@ class main {
     };
      int main() {
          int a = 5;
-         printInt(fact(6));
+         printInt(fact(a));
          return a;
     }
 
