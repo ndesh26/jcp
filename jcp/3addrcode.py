@@ -38,12 +38,12 @@ class BinOp(Ins):
     def __tox86__(self):
         if 'offset' in self.arg1.keys():
             if self.arg1_addr:
-                source_1 = '\t' + 'mov eax, ebp\n'
-                source_1 += '\t' + 'add eax, ' + '{}'.format(self.arg1['offset'])
+                source_1 = '\t' + 'mov eax, ebp' + ' ;' + self.__repr__()
+                source_1 += '\n\t' + 'add eax, ' + '{}'.format(self.arg1['offset'])
             else:
-                source_1 = '\t' + 'mov eax, ' + ('[ebp{}]'.format(self.arg1['offset']) if self.arg1['offset'] < 0 else '[ebp+{}]'.format(self.arg1['offset']))
+                source_1 = '\t' + 'mov eax, ' + ('[ebp{}]'.format(self.arg1['offset']) if self.arg1['offset'] < 0 else '[ebp+{}]'.format(self.arg1['offset'])) + ' ;' + self.__repr__()
         else:
-            source_1 = '\t' + 'mov eax, ' + '{}'.format(self.arg1['value'])
+            source_1 = '\t' + 'mov eax, ' + '{}'.format(self.arg1['value']) + ' ;' + self.__repr__()
         if 'offset' in self.arg2.keys():
             if self.arg2_addr:
                 source_2 = '\t' + 'mov eax, ebp\n'
@@ -83,7 +83,7 @@ class UnaryOp(Ins):
 
     def __tox86__(self):
         if 'offset' in self.arg.keys():
-            source = '\t' + 'mov eax, ' + ('[ebp{}]'.format(self.arg['offset']) if self.arg['offset'] < 0 else '[ebp+{}]'.format(self.arg['offset']))
+            source = '\t' + 'mov eax, ' + ('[ebp{}]'.format(self.arg['offset']) if self.arg['offset'] < 0 else '[ebp+{}]'.format(self.arg['offset'])) + ' ;' + self.__repr__()
         else:
             source = '\t' + 'mov eax, ' + '{}'.format(self.arg['value'])
         if self.op == "-":
@@ -118,12 +118,14 @@ class AssignOp(Ins):
     def __tox86__(self):
         if 'offset' in self.arg.keys():
             if self.arg_addr:
-                source = '\t' + 'mov eax, ebp\n'
-                source += '\t' + 'add eax, ' + '{}'.format(self.arg['offset'])
+                source = '\t' + 'mov eax, ebp' + ' ;' + self.__repr__()
+                source += '\n\t' + 'add eax, ' + '{}'.format(self.arg['offset'])
             else:
                 source = '\t' + 'mov eax, ' + ('[ebp{}]'.format(self.arg['offset']) if self.arg['offset'] < 0 else '[ebp+{}]'.format(self.arg['offset']))
         else:
             source = '\t' + 'mov eax, ' + '{}'.format(self.arg['value'])
+            source += ' ;' + self.__repr__()
+
         if self.dst_pointer:
             store = '\t' + 'mov ' + ('ebx, [ebp{}]'.format(self.dst['offset']) if self.dst['offset'] < 0 else 'ebx, [ebp+{}]'.format(self.dst['offset']))
             store += '\n\tmov [ebx], eax' 
@@ -151,7 +153,7 @@ class BeginFunc(Ins):
         return '\tBeginFunc {}'.format(self.width)
 
     def __tox86__(self):
-        save_ebp = '\tpush ebp'
+        save_ebp = '\tpush ebp' + ' ;' + self.__repr__()
         update = '\tmov ebp, esp'
         frame_allocate = '\tsub esp, {}'.format(self.width)
         block = "\n".join([save_ebp, update, frame_allocate])
@@ -165,7 +167,7 @@ class EndFunc(Ins):
         return '\tEndFunc'
 
     def __tox86__(self):
-        return ''
+        return ' ;' + self.__repr__() + '\n'
 
 class PushParam(Ins):
     def __init__(self, param):
@@ -177,9 +179,9 @@ class PushParam(Ins):
 
     def __tox86__(self):
         if 'offset' in self.param.keys():
-            move = '\tmov eax, ' + ('[ebp{}]'.format(self.param['offset']) if self.param['offset'] < 0 else '[ebp+{}]'.format(self.param['offset']))
+            move = '\tmov eax, ' + ('[ebp{}]'.format(self.param['offset']) if self.param['offset'] < 0 else '[ebp+{}]'.format(self.param['offset'])) + ' ;' + self.__repr__()
         else:
-            move = '\tmov eax, {}'.format(self.param['value'])
+            move = '\tmov eax, {}'.format(self.param['value']) + ' ;' + self.__repr__()
         push = '\tpush eax'
         block = "\n".join([move, push])
         return block
@@ -197,7 +199,7 @@ class PopParam(Ins):
             return '\tPopParam {}'.format(self.width)
 
     def __tox86__(self):
-        pop = '\tpop eax'
+        pop = '\tpop eax' + ' ;' + self.__repr__()
         store = '\tmov ' + ('[ebp{}], eax'.format(self.dst['offset']) if self.dst['offset'] < 0 else '[ebp+{}], eax'.format(self.dst['offset']))
         block = "\n".join([pop, store])
         return block
@@ -211,7 +213,7 @@ class SetStack(Ins):
         return '\tSetStack {}'.format(self.change)
 
     def __tox86__(self):
-        update = '\tadd esp, {}'.format(self.change)
+        update = '\tadd esp, {}'.format(self.change) + ' ;' + self.__repr__()
         block = "\n".join([update])
         return block
 
@@ -228,7 +230,7 @@ class Call(Ins):
             return '\t{} = Call {}'.format(self.dst['value'], self.func['value'])
 
     def __tox86__(self):
-        return '\tcall {}'.format(self.func['value'])
+        return '\tcall {}'.format(self.func['value']) + ' ;' + self.__repr__()
 
 class Cmp(Ins):
     def __init__(self, arg1, arg2):
@@ -241,9 +243,9 @@ class Cmp(Ins):
 
     def __tox86__(self):
         if 'offset' in self.arg1.keys():
-            source_1 = '\t' + 'mov eax, ' + ('[ebp{}]'.format(self.arg1['offset']) if self.arg1['offset'] < 0 else '[ebp+{}]'.format(self.arg1['offset']))
+            source_1 = '\t' + 'mov eax, ' + ('[ebp{}]'.format(self.arg1['offset']) if self.arg1['offset'] < 0 else '[ebp+{}]'.format(self.arg1['offset'])) + ' ;' + self.__repr__()
         else:
-            source_1 = '\t' + 'mov eax, ' + '{}'.format(self.arg1['value'])
+            source_1 = '\t' + 'mov eax, ' + '{}'.format(self.arg1['value']) + ' ;' + self__repr__()
         if 'offset' in self.arg2.keys():
             source_2 = '\t' + 'mov ebx, ' + ('[ebp{}]'.format(self.arg2['offset']) if self.arg2['offset'] < 0 else '[ebp+{}]'.format(self.arg2['offset']))
         else:
@@ -264,7 +266,7 @@ class Jmp(Ins):
 
     def __tox86__(self):
         jump_map = {'JL': 'jl', 'JG': 'jg', 'JGE': 'jge', 'JLE': 'jle', 'JE': 'je', 'JNE': 'jne', 'JMP': 'jmp'}
-        return '\t' + jump_map[self.cond] + ' ' + self.target
+        return '\t' + jump_map[self.cond] + ' ' + self.target + ' ;' + self__repr__()
 
 class Ret(Ins):
     def __init__(self, value, arg_size):
@@ -277,9 +279,9 @@ class Ret(Ins):
 
     def __tox86__(self):
         if 'offset' in self.value:
-            move = '\tmov eax, [ebp{}]'.format(self.value['offset'])
+            move = '\tmov eax, [ebp{}]'.format(self.value['offset']) + ' ;' + self.__repr__()
         else:
-            move = '\tmov eax, {}'.format(self.value['value'])
+            move = '\tmov eax, {}'.format(self.value['value']) + ' ;' + self.__repr__()
         move += '\n\tmov [ebp+{}], eax'.format(self.arg_size+8)
         frame_deallocate = '\tmov esp, ebp'
         remove = '\tpop ebp'
