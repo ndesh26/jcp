@@ -9,27 +9,27 @@ class Ins(object):
         self.op = op
 
 class BinOp(Ins):
-    def __init__(self, label="", op="", arg1=None, arg2=None, dst=None, arg1a=False, arg2a=False, dsta=False):
+    def __init__(self, label="", op="", arg1=None, arg2=None, dst=None, arg1_addr=False, arg2_addr=False, dst_addr=False):
         Ins.__init__(self, label, op)
         self.arg1 = arg1
         self.arg2 = arg2
         self.dst = dst
-        self.arg1a = arg1a
-        self.arg2a = arg2a
-        self.dsta = dsta
+        self.arg1_addr = arg1_addr
+        self.arg2_addr = arg2_addr
+        self.dst_addr = dst_addr
 
     def __repr__(self):
-        if self.arg1a:
+        if self.arg1_addr:
             arg1 = '&{}'.format(self.arg1['value'])
         else:
             arg1 = '{}'.format(self.arg1['value'])
 
-        if self.arg2a:
+        if self.arg2_addr:
             arg2 = '&{}'.format(self.arg2['value'])
         else:
             arg2 = '{}'.format(self.arg2['value'])
 
-        if self.dsta:
+        if self.dst_addr:
             dst = '&{}'.format(self.dst['value'])
         else:
             dst = '{}'.format(self.dst['value'])
@@ -37,7 +37,7 @@ class BinOp(Ins):
 
     def __tox86__(self):
         if 'offset' in self.arg1.keys():
-            if self.arg1a:
+            if self.arg1_addr:
                 source_1 = '\t' + 'mov eax, ebp\n'
                 source_1 += '\t' + 'add eax, ' + '{}'.format(self.arg1['offset'])
             else:
@@ -45,7 +45,11 @@ class BinOp(Ins):
         else:
             source_1 = '\t' + 'mov eax, ' + '{}'.format(self.arg1['value'])
         if 'offset' in self.arg2.keys():
-            source_2 = '\t' + 'mov ebx, ' + ('[ebp{}]'.format(self.arg2['offset']) if self.arg2['offset'] < 0 else '[ebp+{}]'.format(self.arg2['offset']))
+            if self.arg2_addr:
+                source_2 = '\t' + 'mov eax, ebp\n'
+                source_2 += '\t' + 'add eax, ' + '{}'.format(self.arg2['offset'])
+            else:
+                source_2 = '\t' + 'mov ebx, ' + ('[ebp{}]'.format(self.arg2['offset']) if self.arg2['offset'] < 0 else '[ebp+{}]'.format(self.arg2['offset']))
         else:
             source_2 = '\t' + 'mov ebx, ' + '{}'.format(self.arg2['value'])
         op_map = {'+': 'add', '-': 'sub', '*': 'imul', '/': 'div'}
@@ -58,20 +62,20 @@ class BinOp(Ins):
         return block
 
 class UnaryOp(Ins):
-    def __init__(self, label="", op="", arg=None, dst=None, argp=False, dstp=False):
+    def __init__(self, label="", op="", arg=None, dst=None, arg_pointer=False, dst_pointer=False):
         Ins.__init__(self, label, op)
         self.arg = arg
         self.dst = dst
-        self.argp = argp
-        self.dstp = dstp
+        self.arg_pointer = arg_pointer
+        self.dst_pointer = dst_pointer
 
     def __repr__(self):
-        if self.argp:
+        if self.arg_pointer:
             arg = '*({})'.format(self.arg['value'])
         else:
             arg = '{}'.format(self.arg['value'])
 
-        if self.dstp:
+        if self.dst_pointer:
             dst = '*({})'.format(self.dst['value'])
         else:
             dst = '{}'.format(self.dst['value'])
@@ -89,20 +93,23 @@ class UnaryOp(Ins):
         return block
 
 class AssignOp(Ins):
-    def __init__(self, label="", op="", arg=None, dst=None, argp=False, dstp=False):
+    def __init__(self, label="", op="", arg=None, dst=None, arg_pointer=False, dst_pointer=False, arg_addr=False):
         Ins.__init__(self, label, op)
         self.arg = arg
         self.dst = dst
-        self.argp = argp
-        self.dstp = dstp
+        self.arg_pointer = arg_pointer
+        self.dst_pointer = dst_pointer
+        self.arg_addr = arg_addr
 
     def __repr__(self):
-        if self.argp:
+        if self.arg_pointer:
             arg = '*({})'.format(self.arg['value'])
+        elif self.arg_addr:
+            arg = '&{}'.format(self.arg['value'])
         else:
             arg = '{}'.format(self.arg['value'])
 
-        if self.dstp:
+        if self.dst_pointer:
             dst = '*({})'.format(self.dst['value'])
         else:
             dst = '{}'.format(self.dst['value'])
@@ -110,10 +117,18 @@ class AssignOp(Ins):
 
     def __tox86__(self):
         if 'offset' in self.arg.keys():
-            source = '\t' + 'mov eax, ' + ('[ebp{}]'.format(self.arg['offset']) if self.arg['offset'] < 0 else '[ebp+{}]'.format(self.arg['offset']))
+            if self.arg_addr:
+                source = '\t' + 'mov eax, ebp\n'
+                source += '\t' + 'add eax, ' + '{}'.format(self.arg['offset'])
+            else:
+                source = '\t' + 'mov eax, ' + ('[ebp{}]'.format(self.arg['offset']) if self.arg['offset'] < 0 else '[ebp+{}]'.format(self.arg['offset']))
         else:
             source = '\t' + 'mov eax, ' + '{}'.format(self.arg['value'])
-        store = '\t' + 'mov ' + ('[ebp{}], eax'.format(self.dst['offset']) if self.dst['offset'] < 0 else '[ebp+{}], eax'.format(self.dst['offset']))
+        if self.dst_pointer:
+            store = '\t' + 'mov ' + ('ebx, [ebp{}]'.format(self.dst['offset']) if self.dst['offset'] < 0 else 'ebx, [ebp+{}]'.format(self.dst['offset']))
+            store += '\n\tmov [ebx], eax' 
+        else:
+            store = '\t' + 'mov ' + ('[ebp{}], eax'.format(self.dst['offset']) if self.dst['offset'] < 0 else '[ebp+{}], eax'.format(self.dst['offset']))
         block = "\n".join([source, store])
         return block
 
@@ -281,17 +296,17 @@ class Tac(object):
         if node.name == "BinaryOperator":
             if node.value == "=":
                 if node.children[0].name == "ArrayAccess":
-                    dstp = True
+                    dst_pointer = True
                 else:
-                    dstp = False
+                    dst_pointer = False
 
                 if node.children[1].name == "ArrayAccess":
-                    argp = True
+                    arg_pointer = True
                 else:
-                    argp = False
+                    arg_pointer = False
                 arg1 = self.generate_tac(node.children[0])
                 arg2 = self.generate_tac(node.children[1])
-                assignop = AssignOp(arg=arg2, dst=arg1, dstp=dstp, argp=argp)
+                assignop = AssignOp(arg=arg2, dst=arg1, dst_pointer=dst_pointer, arg_pointer=arg_pointer)
                 self.code.append(assignop)
 
             elif node.value == "&&":
@@ -366,7 +381,7 @@ class Tac(object):
                 element = symbol_table.get_temp(node.type, self.table)
                 size = {'value': type_width(node.type), 'type': node.type, 'arraylen': []}
                 index = symbol_table.get_temp(node.type, self.table)
-                indexop = AssignOp(arg=arg1, dst=index)
+                indexop = AssignOp(arg=arg1, dst=index, arg_addr=True)
                 self.code.append(indexop)
                 self.generate_tac(node.children[0], parent=index)
 
@@ -381,7 +396,7 @@ class Tac(object):
                 size = {'value': type_width(node.children[0].type), 'type': node.children[0].type, 'arraylen': []}
                 for child in node.children:
                     arg2 = self.generate_tac(child)
-                    assignop = AssignOp(arg=arg2, dst=parent, dstp=True)
+                    assignop = AssignOp(arg=arg2, dst=parent, dst_pointer=True)
                     indexinc = BinOp(op="+", arg1=parent, arg2=size, dst=parent)
                     self.code.append(assignop)
                     self.code.append(indexinc)
@@ -551,7 +566,7 @@ class Tac(object):
                 size *= i
             dst = symbol_table.get_temp(node.type, self.table)
             multi = BinOp(op="*", arg1={'value': size, 'type': "int", 'arraylen': []}, arg2=index, dst=dst)
-            binop = BinOp(op="+", arg1=arg1, arg2=dst, dst=dst, arg1a=True)
+            binop = BinOp(op="+", arg1=arg1, arg2=dst, dst=dst, arg1_addr=True)
             self.code.append(multi)
             self.code.append(binop)
             return dst
