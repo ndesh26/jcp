@@ -245,7 +245,7 @@ class Cmp(Ins):
         if 'offset' in self.arg1.keys():
             source_1 = '\t' + 'mov eax, ' + ('[ebp{}]'.format(self.arg1['offset']) if self.arg1['offset'] < 0 else '[ebp+{}]'.format(self.arg1['offset'])) + ' ;' + self.__repr__()
         else:
-            source_1 = '\t' + 'mov eax, ' + '{}'.format(self.arg1['value']) + ' ;' + self__repr__()
+            source_1 = '\t' + 'mov eax, ' + '{}'.format(self.arg1['value']) + ' ;' + self.__repr__()
         if 'offset' in self.arg2.keys():
             source_2 = '\t' + 'mov ebx, ' + ('[ebp{}]'.format(self.arg2['offset']) if self.arg2['offset'] < 0 else '[ebp+{}]'.format(self.arg2['offset']))
         else:
@@ -266,7 +266,7 @@ class Jmp(Ins):
 
     def __tox86__(self):
         jump_map = {'JL': 'jl', 'JG': 'jg', 'JGE': 'jge', 'JLE': 'jle', 'JE': 'je', 'JNE': 'jne', 'JMP': 'jmp'}
-        return '\t' + jump_map[self.cond] + ' ' + self.target + ' ;' + self__repr__()
+        return '\t' + jump_map[self.cond] + ' ' + self.target + ' ;' + self.__repr__()
 
 class Ret(Ins):
     def __init__(self, value, arg_size):
@@ -275,18 +275,27 @@ class Ret(Ins):
         self.arg_size = arg_size
 
     def __repr__(self):
-        return '\tReturn {}'.format(self.value['value'])
+        if not self.value:
+            return '\tReturn'
+        else: 
+            return '\tReturn {}'.format(self.value['value'])
 
     def __tox86__(self):
-        if 'offset' in self.value:
-            move = '\tmov eax, [ebp{}]'.format(self.value['offset']) + ' ;' + self.__repr__()
+        if self.value:
+            if 'offset' in self.value:
+                move = '\tmov eax, [ebp{}]'.format(self.value['offset']) + ' ;' + self.__repr__()
+            else:
+                move = '\tmov eax, {}'.format(self.value['value']) + ' ;' + self.__repr__()
+            move += '\n\tmov [ebp+{}], eax'.format(self.arg_size+8)
+            frame_deallocate = '\tmov esp, ebp'
+            remove = '\tpop ebp'
+            ret = '\tret'
+            block = "\n".join([move, frame_deallocate, remove, ret])
         else:
-            move = '\tmov eax, {}'.format(self.value['value']) + ' ;' + self.__repr__()
-        move += '\n\tmov [ebp+{}], eax'.format(self.arg_size+8)
-        frame_deallocate = '\tmov esp, ebp'
-        remove = '\tpop ebp'
-        ret = '\tret'
-        block = "\n".join([move, frame_deallocate, remove, ret])
+            frame_deallocate = '\tmov esp, ebp' + ' ;' + self.__repr__()
+            remove = '\tpop ebp'
+            ret = '\tret'
+            block = "\n".join([frame_deallocate, remove, ret])
         return block
 
 class Tac(object):
