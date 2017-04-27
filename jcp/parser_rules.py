@@ -2313,6 +2313,8 @@ class ClassParser(object):
         else:
             if p[2].value == "" and p[1].type.split(" ", 1)[0] != "void":
                 print("line {}: control reaches end of non-void function '{}'".format(p[2].lineno, p[1].children[0].value))
+            if p[2].value == "" and p[1].type.split(" ", 1)[0] == "void":
+                p[2].children += [Node("ReturnStmt", children=[Node()])]
             symbol_table.print_table("csv/" + symbol_table.get_class_name() + "_" + p[1].children[0].value + "_method.csv")
             symbol_table.end_scope()
             p[0] = Node("MethodDecl", children=[p[1],p[2]])
