@@ -881,6 +881,8 @@ class StatementParser(object):
                 print("line {}: variable '{}' (type '{}') initialized to type '{}'".format(node.lineno, node.value, p[1].type, node.type))
                 p[2].type = "error"
             node.type = p[1].type
+            if node.dims == 0:
+                node.dims = p[1].dims
             if node.children != [  ] and node.children[0].name == "InitListExpr":
                 check_type(node.value, node.type, node.children[0])
             entry = symbol_table.get_entry(node.value)
@@ -1824,7 +1826,7 @@ class TypeParser(object):
     def p_array_type(self, p):
         '''array_type : primitive_type dims
                       | generic_type dims'''
-        p[1].type = p[1].type + p[2].type
+        p[1].dims = p[2].dims
         p[0] = p[1]
 
     def p_array_type2(self, p):
@@ -2254,6 +2256,7 @@ class ClassParser(object):
                             | modifiers_opt type ELLIPSIS variable_declarator_id'''
         if len(p) == 4:
             p[3].type = p[2].type
+            p[3].dims = p[2].dims
             p[3].modifiers = p[1].modifiers
             entry = symbol_table.get_entry(p[3].value)
             if entry:
