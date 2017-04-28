@@ -1128,7 +1128,7 @@ class StatementParser(object):
             p[0] = Node("WhileStmt", children=[p[3],p[5]])
         else:
             tmp = Node("ImplicitCastExpr", type=p[3].type, children=[p[3]])
-            p[0] = Node("WhileStmt", type="error", children=[p[3], p[5], p[7]])
+            p[0] = Node("WhileStmt", type="error", children=[p[3], p[5]])
             print("line {}: condition in while statement is not of type bool".format(p.lineno(2)))
             # print("line {}: there will be an implicit conversion form '{}' to 'int'".format(p.lineno(2), p[3].type))
 
@@ -1158,6 +1158,7 @@ class StatementParser(object):
             p[0] = Node("ForStmt", children=[p[3], p[5], p[7], p[9]])
         else:
             p[0] = Node("ForStmt", type="error", children=[p[3], p[5], p[7], p[9]])
+            print("line {}: condition in while statement is not of type bool".format(p.lineno(2)))
         if p[3].name == "Decls":
             for node in p[3].children:
                 symbol_table.remove(node.value)
@@ -2103,7 +2104,7 @@ class ClassParser(object):
         '''class_declaration : class_header class_body'''
         symbol_table.insert_class(p[1].children[0].value)
         symbol_table.end_scope()
-        p[0] = Node("ClassDecl", children=[p[1],p[2]])
+        p[0] = Node("ClassDecl", type=p[2].type, children=[p[1],p[2]])
 
     def p_class_header(self, p):
         '''class_header : class_header_name class_header_extends_opt class_header_implements_opt'''
@@ -2171,10 +2172,12 @@ class ClassParser(object):
         '''class_body_declarations : class_body_declaration
                                    | class_body_declarations class_body_declaration'''
         if len(p) == 2:
-            p[0] = Node("ClassBodyDecls", children=[p[1]])
+            p[0] = Node("ClassBodyDecls", type=p[1].type, children=[p[1]])
         else:
             p[1].children.append(p[2])
             p[0] = p[1]
+            if p[1].type == "error" or p[2].type == "error":
+                p[0].type = "error"
 
     def p_class_body_declaration(self, p):
         '''class_body_declaration : class_member_declaration
@@ -2328,6 +2331,8 @@ class ClassParser(object):
             symbol_table.print_table("csv/" + symbol_table.get_class_name() + "_" + p[1].children[0].value + "_method.csv")
             symbol_table.end_scope()
             p[0] = Node("MethodDecl", children=[p[1],p[2]])
+            if p[1].type == "error" or p[2].type == "error":
+                p[0].type = "error"
 
     def p_abstract_method_declaration(self, p):
         '''abstract_method_declaration : method_header ';' '''
@@ -2755,10 +2760,14 @@ class CompilationUnitParser(object):
     def p_compilation_unit3(self, p):
         '''compilation_unit : package_declaration import_declarations type_declarations'''
         p[0] = Node("CompilationUnit", children=[p[1], p[2], p[3]])
+        if p[3].type == "error":
+            p[0].type = "error"
 
     def p_compilation_unit4(self, p):
         '''compilation_unit : package_declaration type_declarations'''
         p[0] = Node("CompilationUnit", children=[p[1], p[2]])
+        if p[2].type == "error":
+            p[0].type = "error"
 
     def p_compilation_unit5(self, p):
         '''compilation_unit : import_declarations'''
@@ -2773,6 +2782,8 @@ class CompilationUnitParser(object):
     def p_compilation_unit7(self, p):
         '''compilation_unit : import_declarations type_declarations'''
         p[0] = Node("CompilationUnit", children=[p[1]]+p[2].children)
+        if p[2].type == "error":
+            p[0].type = "error"
 
     def p_compilation_unit8(self, p):
         '''compilation_unit : empty'''
@@ -2827,14 +2838,16 @@ class CompilationUnitParser(object):
         '''type_declarations : type_declaration
                              | type_declarations type_declaration'''
         if len(p) == 2:
-            p[0] = Node(children=[p[1]])
+            p[0] = Node(type=p[1].type, children=[p[1]])
         else:
             p[1].children.append(p[2])
             p[0] = p[1]
+            if p[2].type == "error":
+                p[0].type = "error"
 
 class JavaParser(ExpressionParser, NameParser, LiteralParser, TypeParser, ClassParser, StatementParser, CompilationUnitParser):
     tokens = lexer.tokens
-
+    
     def p_goal_compilation_unit(self, p):
         '''goal : PLUSPLUS compilation_unit'''
         p[0] = p[2]
