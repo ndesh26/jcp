@@ -626,10 +626,12 @@ class Tac(object):
 
         elif node.name == "FieldAccessExpr":
             arg = self.generate_tac(node.children[0])
-            dst = symbol_table.get_temp(node.type, self.table)
+            dst = symbol_table.get_temp('int', self.table)
             if arg['offset'] < 0:
                 arg1_addr = True
             else:
+                arg1_addr = False
+            if node.children[0].name in ["ArrayAccess", "FieldAccessExpr"]:
                 arg1_addr = False
             binop = BinOp(op="+", arg1=arg, arg2={'value': node.sym_entry['offset'], 'type': "int", 'arraylen': []}, dst=dst, arg1_addr=arg1_addr)
             self.code.append(binop)
@@ -644,14 +646,14 @@ class Tac(object):
             length = len(node.arraylen)- node.dims
             for i in node.arraylen[length:]:
                 size *= i
-            dst = symbol_table.get_temp(node.type, self.table)
+            dst = symbol_table.get_temp('int', self.table)
             multi = BinOp(op="*", arg1={'value': size, 'type': "int", 'arraylen': []}, arg2=index, dst=dst)
             if arg1['offset'] < 0:
                 arg1_addr = True
             else:
                 arg1_addr = False
-            if node.children[0].name == "ArrayAccess":
-                arg1_addr = False 
+            if node.children[0].name in ["ArrayAccess", "FieldAccessExpr"]:
+                arg1_addr = False
 
             binop = BinOp(op="+", arg1=arg1, arg2=dst, dst=dst, arg1_addr=arg1_addr)
             self.code.append(multi)
