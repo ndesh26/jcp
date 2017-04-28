@@ -288,7 +288,7 @@ class Ret(Ins):
     def __tox86__(self):
         if self.value:
             if 'offset' in self.value:
-                move = '\tmov eax, [ebp{}]'.format(self.value['offset']) + ' ;' + self.__repr__()
+                move = '\tmov eax, ' + ('[ebp{}]'.format(self.value['offset']) if self.value['offset'] < 0 else '[ebp+{}]'.format(self.value['offset'])) + ' ;' + self.__repr__()
             else:
                 move = '\tmov eax, {}'.format(self.value['value']) + ' ;' + self.__repr__()
             move += '\n\tmov [ebp+{}], eax'.format(self.arg_size+8)
