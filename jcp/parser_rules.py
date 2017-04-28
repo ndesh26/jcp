@@ -2214,6 +2214,8 @@ class ClassParser(object):
                 print("line {}: variable '{}' (type '{}') initialized to type '{}'".format(node.lineno, node.value, p[2].type, node.type))
                 p[3].type = "error"
             node.type = p[2].type
+            if node.dims == 0:
+                node.dims = p[2].dims
             node.modifiers = p[1].modifiers
             if symbol_table.get_entry(node.value):
                 print("line {}: variable '{}' is already declared".format(node.lineno, node.value))
