@@ -517,6 +517,16 @@ class Tac(object):
             for_false = Label(label=for_false_label+":")
             self.code.append(for_false)
 
+        elif node.name == "DoWhileStmt":
+            while_true_lbl = symbol_table.get_target()
+            while_next_lbl = symbol_table.get_target()
+            begin_label = Label(label=while_true_lbl+":")
+            self.code.append(begin_label)
+            self.generate_tac(node.children[0], true_lbl=while_true_lbl, false_lbl=while_next_lbl)
+            self.generate_tac(node.children[1], true_lbl=while_true_lbl, false_lbl=while_next_lbl)
+            next_label = Label(label=while_next_lbl+":")
+            self.code.append(next_label)
+
         elif node.name == "SwitchStmt":
             arg1 = self.generate_tac(node.children[0])
             switch_end_lbl = symbol_table.get_target()
