@@ -134,6 +134,9 @@ class SymbolTable:
     def get_entry(self, name):
         return self.table.get_method_entry(name)
 
+    def get_entry_in_method(self, name):
+        return self.table.get_entry(name)
+
     def get_width(self):
         return self.table.get_width()
 

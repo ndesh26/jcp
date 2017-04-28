@@ -1038,13 +1038,15 @@ class StatementParser(object):
             p[1].dims = entry['dims']
             p[1].arraylen = entry['arraylen']
             p[1].modifiers = entry['modifiers']
+            p[1].sym_entry = entry
             entry = symbol_table.lookup_method(p[1].type, p[3])
             if entry:
                 p[3] = Node("ObjectMethodExpr", value=p[2]+p[3], children=[p[1]], type=entry['type'], sym_entry=entry)
+                p[5].children = [p[1]]+ p[5].children
                 p[0] = Node("MethodInvocation", children=[p[3]]+p[5].children)
                 p[0].type = p[3].type.split(" ", 1)[0]
                 args = p[3].type.split(" ", 1)[1][1:-1].split(",", len(p[5].children)-1)
-                for arg, node in zip(args, p[5].children):
+                for arg, node in zip(args[1:], p[5].children[1:]):
                     if arg != node.type:
                         print("line {}: the function is expecting arg of type '{}' but the arg provided is of type '{}'".format(p.lineno(2), arg, node.type))
             else:
@@ -1616,6 +1618,9 @@ class StatementParser(object):
             else:
                 print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                 p[1].type = "error"
+            if entry and symbol_table.get_entry_in_method(p[1].value) == None:
+                this = Node("DeclsRefExpr", value="this", sym_entry=symbol_table.get_entry('this'))
+                p[1] = Node("FieldAccessExpr", value='.' + p[1].value, type=p[1].type, children=[this], modifiers=p[1].modifiers, arraylen=p[1].arraylen, dims=p[1].dims, sym_entry=entry)
         if p[3].type != "int":
             print("line {}: the array index in not of type int".format(p.lineno(2)))
         if p[1].dims < 1:
@@ -2380,7 +2385,8 @@ class ClassParser(object):
                               | modifiers_opt type NAME '(' '''
         if len(p) == 5:
             symbol_table.begin_scope(name=p[3], category="method")
-            symbol_table.insert('this', {'value': 'this', 'type':'int', 'dims':0, 'arraylen':[], 'modifiers':[]})
+            entry = symbol_table.insert('this', {'value': 'this', 'type':'int', 'dims':0, 'arraylen':[], 'modifiers':[]})
+            entry['offset'] += 8
             p[0] = Node("MethodName", value=p[3], type=p[2].type, modifiers=p[1].modifiers)
         else:
             #TODO:Not done because of type_parameters
