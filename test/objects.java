@@ -6,7 +6,7 @@ class player{
 class team{
     player []players = new player[6];
 
-    void print_position(){
+    void print_position(int i){
         printInt(this.players[0].position);
     }
 
