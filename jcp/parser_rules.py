@@ -199,7 +199,7 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
-            p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
+            p[0] = Node("BinaryOperator", value=p[2], type="bool", children=[p[1], p[3]])
 
     def p_conditional_or_expression_not_name(self, p):
         '''conditional_or_expression_not_name : conditional_and_expression_not_name
@@ -219,7 +219,7 @@ class ExpressionParser(object):
                 else:
                     print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
-            p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
+            p[0] = Node("BinaryOperator", value=p[2], type="bool", children=[p[1], p[3]])
 
     def p_conditional_and_expression(self, p):
         '''conditional_and_expression : inclusive_or_expression
@@ -227,7 +227,7 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
-            p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
+            p[0] = Node("BinaryOperator", value=p[2], type="bool", children=[p[1], p[3]])
 
     def p_conditional_and_expression_not_name(self, p):
         '''conditional_and_expression_not_name : inclusive_or_expression_not_name
@@ -247,7 +247,7 @@ class ExpressionParser(object):
                 else:
                     print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
-            p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
+            p[0] = Node("BinaryOperator", value=p[2], type="bool", children=[p[1], p[3]])
 
 
     def p_inclusive_or_expression(self, p):
@@ -365,7 +365,7 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
-            p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
+            p[0] = Node("BinaryOperator", value=p[2], type="bool", children=[p[1], p[3]])
 
     def p_equality_expression_not_name(self, p):
         '''equality_expression_not_name : instanceof_expression_not_name
@@ -387,7 +387,7 @@ class ExpressionParser(object):
                 else:
                     print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
-            p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
+            p[0] = Node("BinaryOperator", value=p[2], type="bool", children=[p[1], p[3]])
 
     def p_instanceof_expression(self, p):
         '''instanceof_expression : relational_expression
@@ -427,7 +427,7 @@ class ExpressionParser(object):
             p[0] = p[1]
         elif len(p) == 4:
             if p[1].type in ["int", "float", "char"] and p[3].type in ["int", "float", "char"]:
-                p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
+                p[0] = Node("BinaryOperator", value=p[2], type="bool", children=[p[1], p[3]])
             else:
                 print("line {}: incompatible operator '{}' with operand of type '{}' and '{}'".format(p.lineno(2), p[2], p[1].type, p[3].type))
                 p[0] = Node("BinaryOperator", value=p[2], type="error", children=[p[1], p[3]])
@@ -457,7 +457,7 @@ class ExpressionParser(object):
                     print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
             if p[1].type in ["int", "float", "char"] and p[3].type in ["int", "float", "char"]:
-                p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
+                p[0] = Node("BinaryOperator", value=p[2], type="bool", children=[p[1], p[3]])
             else:
                 print("line {}: incompatible operator '{}' with operand of type '{}' and '{}'".format(p.lineno(2), p[2], p[1].type, p[3].type))
                 p[0] = Node("BinaryOperator", value=p[2], type="error", children=[p[1], p[3]])
@@ -1084,11 +1084,13 @@ class StatementParser(object):
         '''if_then_statement : IF '(' expression ')' statement'''
         if p[5].name == "":
             p[5].name = "NullStmt"
-        if p[3].type == "int" or p[3].type == "bool":
+        if p[3].type == "bool":
             p[0] = Node("IfStmt", children=[p[3],p[5]])
         else:
-            print("line {}: condition in if statment is not of type int".format(p.lineno(2)))
-            print("line {}: there will be an implicit conversion form '{}' to 'int'".format(p.lineno(2), p[3].type))
+            tmp = Node("ImplicitCastExpr", type=p[3].type, children=[p[3]])
+            p[0] = Node("IfStmt", type="error", children=[p[3], p[5]])
+            print("line {}: condition in if statment is not of type bool".format(p.lineno(2)))
+            # print("line {}: there will be an implicit conversion form '{}' to 'int'".format(p.lineno(2), p[3].type))
 
     def p_if_then_else_statement(self, p):
         '''if_then_else_statement : IF '(' expression ')' statement_no_short_if ELSE statement'''
@@ -1096,13 +1098,13 @@ class StatementParser(object):
             p[5].name = "NullStmt"
         if p[7].name == "":
             p[7].name = "NullStmt"
-        if p[3].type == "int" or p[3].type == "bool":
+        if p[3].type == "bool":
             p[0] = Node("IfStmt", children=[p[3], p[5], p[7]])
         else:
-            tmp = Node("ImplicitCastExpr", type="int", children=[p[3]])
-            p[0] = Node("IfStmt", children=[p[3], p[5], p[7]])
-            print("line {}: condition in if statement is not of type int".format(p.lineno(2)))
-            print("line {}: there will be an implicit conversion form '{}' to 'int'".format(p.lineno(2), p[3].type))
+            tmp = Node("ImplicitCastExpr", type=p[3].type, children=[p[3]])
+            p[0] = Node("IfStmt", type="error", children=[p[3], p[5], p[7]])
+            print("line {}: condition in if statement is not of type bool".format(p.lineno(2)))
+            # print("line {}: there will be an implicit conversion form '{}' to 'int'".format(p.lineno(2), p[3].type))
 
     def p_if_then_else_statement_no_short_if(self, p):
         '''if_then_else_statement_no_short_if : IF '(' expression ')' statement_no_short_if ELSE statement_no_short_if'''
@@ -1110,37 +1112,37 @@ class StatementParser(object):
             p[5].name = "NullStmt"
         if p[7].name == "":
             p[7].name = "NullStmt"
-        if p[3].type == "int" or p[3].type == "bool":
+        if p[3].type == "bool":
             p[0] = Node("IfStmt", children=[p[3], p[5], p[7]])
         else:
-            tmp = Node("ImplicitCastExpr", type="int", children=[p[3]])
-            p[0] = Node("IfStmt", children=[p[3], p[5], p[7]])
-            print("line {}: condition in if statement is not of type int".format(p.lineno(2)))
-            print("line {}: there will be an implicit conversion form '{}' to 'int'".format(p.lineno(2), p[3].type))
+            tmp = Node("ImplicitCastExpr", type=p[3].type, children=[p[3]])
+            p[0] = Node("IfStmt", type="error", children=[p[3], p[5], p[7]])
+            print("line {}: condition in if statement is not of type bool".format(p.lineno(2)))
+            # print("line {}: there will be an implicit conversion form '{}' to 'int'".format(p.lineno(2), p[3].type))
 
     def p_while_statement(self, p):
         '''while_statement : WHILE '(' expression ')' statement'''
         if p[5].name == "":
             p[5].name = "NullStmt"
-        if p[3].type == "int" or p[3].type == "bool":
+        if p[3].type == "bool":
             p[0] = Node("WhileStmt", children=[p[3],p[5]])
         else:
-            tmp = Node("ImplicitCastExpr", type="int", children=[p[3]])
-            p[0] = Node("WhileStmt", children=[tmp,p[5]])
-            print("line {}: condition in while statement is not of type int".format(p.lineno(2)))
-            print("line {}: there will be an implicit conversion form '{}' to 'int'".format(p.lineno(2), p[3].type))
+            tmp = Node("ImplicitCastExpr", type=p[3].type, children=[p[3]])
+            p[0] = Node("WhileStmt", type="error", children=[p[3], p[5], p[7]])
+            print("line {}: condition in while statement is not of type bool".format(p.lineno(2)))
+            # print("line {}: there will be an implicit conversion form '{}' to 'int'".format(p.lineno(2), p[3].type))
 
     def p_while_statement_no_short_if(self, p):
         '''while_statement_no_short_if : WHILE '(' expression ')' statement_no_short_if'''
         if p[5].name == "":
             p[5].name = "NullStmt"
-        if p[3].type == "int" or p[3].type == "bool":
+        if p[3].type == "bool":
             p[0] = Node("WhileStmt", children=[p[3],p[5]])
         else:
-            tmp = Node("ImplicitCastExpr", type="int", children=[p[3]])
+            tmp = Node("ImplicitCastExpr", type=p[3].type, children=[p[3]])
             p[0] = Node("WhileStmt", children=[tmp,p[5]])
-            print("line {}: condition in while statement is not of type int".format(p.lineno(2)))
-            print("line {}: there will be an implicit conversion form '{}' to 'int'".format(p.lineno(2), p[3].type))
+            print("line {}: condition in while statement is not of type bool".format(p.lineno(2)))
+            # print("line {}: there will be an implicit conversion form '{}' to 'int'".format(p.lineno(2), p[3].type))
 
     def p_for_statement(self, p):
         '''for_statement : FOR '(' for_init_opt ';' expression_opt ';' for_update_opt ')' statement'''
@@ -1152,7 +1154,10 @@ class StatementParser(object):
             p[7].name = "NullStmt"
         if p[9].name == "":
             p[9].name = "NullStmt"
-        p[0] = Node("ForStmt", children=[p[3], p[5], p[7], p[9]])
+        if p[5].type == 'bool':
+            p[0] = Node("ForStmt", children=[p[3], p[5], p[7], p[9]])
+        else:
+            p[0] = Node("ForStmt", type="error", children=[p[3], p[5], p[7], p[9]])
         if p[3].name == "Decls":
             for node in p[3].children:
                 symbol_table.remove(node.value)
@@ -1167,7 +1172,10 @@ class StatementParser(object):
             p[7].name = "NullStmt"
         if p[9].name == "":
             p[9].name = "NullStmt"
-        p[0] = Node("ForStmt", children=[p[3], p[5], p[7], p[9]])
+        if p[5].type == 'bool':
+            p[0] = Node("ForStmt", children=[p[3], p[5], p[7], p[9]])
+        else:
+            p[0] = Node("ForStmt", type="error", children=[p[3], p[5], p[7], p[9]])
 
     def p_for_init_opt(self, p):
         '''for_init_opt : for_init
@@ -1192,6 +1200,8 @@ class StatementParser(object):
         '''expression_opt : expression
                           | empty'''
         p[0] = p[1]
+        if not p[1].type:
+            p[0].type = 'void'
 
     def p_for_update_opt(self, p):
         '''for_update_opt : for_update
