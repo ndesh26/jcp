@@ -1,5 +1,5 @@
 printInt:
-        mov eax, [esp+4]
+        mov eax, [esp+8]
         xor esi, esi
         cmp eax, 0
         jge loop

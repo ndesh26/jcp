@@ -116,26 +116,30 @@ class AssignOp(Ins):
         return '\t' + dst + ' = ' + arg
 
     def __tox86__(self):
-        if 'offset' in self.arg.keys():
-            if self.arg_addr:
-                source = '\t' + 'mov eax, ebp' + ' ;' + self.__repr__()
-                source += '\n\t' + ('sub eax, {}'.format(-self.arg['offset']) if self.arg['offset'] < 0 else 'mov eax, {}'.format(self.arg['offset']))
-            elif self.arg_pointer:
-                source = '\t' + 'mov ebx, ' + ('[ebp{}]'.format(self.arg['offset']) if self.arg['offset'] < 0 else '[ebp+{}]'.format(self.arg['offset'])) + ' ;' + self.__repr__()
-                source += '\n\tmov eax, [ebx]'
+        if 'offset' in self.arg:
+            value = self.arg['offset']
+        value2= self.dst['offset']
+        source = ''
+        for i in range(0, type_width(self.arg), 4):
+            if 'offset' in self.arg.keys():
+                if self.arg_addr:
+                    source += '\n\t' + 'mov eax, ebp' + ' ;' + self.__repr__()
+                    source += '\n\t' + ('sub eax, {}'.format(-value-i) if (value+i)< 0 else 'mov eax, {}'.format(value+i))
+                elif self.arg_pointer:
+                    source += '\n\t' + 'mov ebx, ' + ('[ebp{}]'.format(value+i) if value+i < 0 else '[ebp+{}]'.format(value+i)) + ' ;' + self.__repr__()
+                    source += '\n\tmov eax, [ebx]'
+                else:
+                    source += '\n\t' + 'mov eax, ' + ('[ebp{}]'.format(value+i) if value+i < 0 else '[ebp+{}]'.format(value+i))
             else:
-                source = '\t' + 'mov eax, ' + ('[ebp{}]'.format(self.arg['offset']) if self.arg['offset'] < 0 else '[ebp+{}]'.format(self.arg['offset']))
-        else:
-            source = '\t' + 'mov eax, ' + '{}'.format(self.arg['value'])
-            source += ' ;' + self.__repr__()
+                source += '\n\t' + 'mov eax, ' + '{}'.format(self.arg['value'])
+                source += ' ;' + self.__repr__()
 
-        if self.dst_pointer:
-            store = '\t' + 'mov ' + ('ebx, [ebp{}]'.format(self.dst['offset']) if self.dst['offset'] < 0 else 'ebx, [ebp+{}]'.format(self.dst['offset']))
-            store += '\n\tmov [ebx], eax'
-        else:
-            store = '\t' + 'mov ' + ('[ebp{}], eax'.format(self.dst['offset']) if self.dst['offset'] < 0 else '[ebp+{}], eax'.format(self.dst['offset']))
-        block = "\n".join([source, store])
-        return block
+            if self.dst_pointer:
+                source += '\n\t' + 'mov ' + ('ebx, [ebp{}]'.format(value2+i) if value2+i < 0 else 'ebx, [ebp+{}]'.format(value2+i))
+                source += '\n\tmov [ebx], eax'
+            else:
+                source += '\n\t' + 'mov ' + ('[ebp{}], eax'.format(value2+i) if value2+i < 0 else '[ebp+{}], eax'.format(value2+i))
+        return source
 
 class Label(Ins):
     def __init__(self, label=""):

@@ -1009,10 +1009,11 @@ class StatementParser(object):
         entry = symbol_table.get_entry(p[1])
         if entry:
             p[1] = Node("DeclsRefExpr", value=p[1], type=entry['type'], modifiers=entry['modifiers'], sym_entry=entry)
+            p[3].children = [Node("DeclsRefExpr", value='this', sym_entry=symbol_table.get_entry('this'))]+ p[3].children
             p[0] = Node("MethodInvocation", children=[p[1]]+p[3].children)
             p[0].type = p[1].type.split(" ", 1)[0]
             args = p[1].type.split(" ", 1)[1][1:-1].split(",", len(p[3].children)-1)
-            for arg, node in zip(args, p[3].children):
+            for arg, node in zip(args[1:], p[3].children[1:]):
                 if arg != node.type:
                     print("line {}: the function is expecting arg of type '{}' but the arg provided is of type '{}'".format(p.lineno(1), arg, node.type))
         else:
