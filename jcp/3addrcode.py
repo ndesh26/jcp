@@ -650,11 +650,12 @@ class Tac(object):
                 arg1_addr = True
             else:
                 arg1_addr = False
+            if node.children[0].name == "ArrayAccess":
+                arg1_addr = False 
+
             binop = BinOp(op="+", arg1=arg1, arg2=dst, dst=dst, arg1_addr=arg1_addr)
-            # assignop = AssignOp(arg=dst, dst=dst, arg_pointer=True)
             self.code.append(multi)
             self.code.append(binop)
-            # self.code.append(assignop)
             return dst
 
         else:
