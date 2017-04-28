@@ -1040,10 +1040,10 @@ class StatementParser(object):
             p[1].modifiers = entry['modifiers']
             entry = symbol_table.lookup_method(p[1].type, p[3])
             if entry:
-                p[3] = Node("ObjectMethodExpr", value=p[2]+p[3], children=[p[1]], type=entry['type'])
+                p[3] = Node("ObjectMethodExpr", value=p[2]+p[3], children=[p[1]], type=entry['type'], sym_entry=entry)
                 p[0] = Node("MethodInvocation", children=[p[3]]+p[5].children)
                 p[0].type = p[3].type.split(" ", 1)[0]
-                args = p[1].type.split(" ", 1)[1][1:-1].split(",", len(p[5].children)-1)
+                args = p[3].type.split(" ", 1)[1][1:-1].split(",", len(p[5].children)-1)
                 for arg, node in zip(args, p[5].children):
                     if arg != node.type:
                         print("line {}: the function is expecting arg of type '{}' but the arg provided is of type '{}'".format(p.lineno(2), arg, node.type))

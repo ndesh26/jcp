@@ -38,8 +38,13 @@ class BinOp(Ins):
     def __tox86__(self):
         if 'offset' in self.arg1.keys():
             if self.arg1_addr:
+<<<<<<< Updated upstream
                 source_1 = '\t' + 'mov eax, ebp' + ' ;' + self.__repr__()
                 source_1 += '\n\t' + 'add eax, ' + '{}'.format(self.arg1['offset'])
+=======
+                source_1 = '\t' + 'mov eax, ebp\n'
+                source_1 += '\t' + ('sub eax, {}'.format(-self.arg1['offset']) if self.arg1['offset'] < 0 else 'mov eax, {}'.format(self.arg1['offset']))
+>>>>>>> Stashed changes
             else:
                 source_1 = '\t' + 'mov eax, ' + ('[ebp{}]'.format(self.arg1['offset']) if self.arg1['offset'] < 0 else '[ebp+{}]'.format(self.arg1['offset'])) + ' ;' + self.__repr__()
         else:
@@ -47,7 +52,7 @@ class BinOp(Ins):
         if 'offset' in self.arg2.keys():
             if self.arg2_addr:
                 source_2 = '\t' + 'mov eax, ebp\n'
-                source_2 += '\t' + 'add eax, ' + '{}'.format(self.arg2['offset'])
+                source_2 += '\t' + ('sub eax, {}'.format(-self.arg1['offset']) if self.arg1['offset'] < 0 else 'mov eax, {}'.format(self.arg1['offset']))
             else:
                 source_2 = '\t' + 'mov ebx, ' + ('[ebp{}]'.format(self.arg2['offset']) if self.arg2['offset'] < 0 else '[ebp+{}]'.format(self.arg2['offset']))
         else:
@@ -118,11 +123,13 @@ class AssignOp(Ins):
     def __tox86__(self):
         if 'offset' in self.arg.keys():
             if self.arg_addr:
+<<<<<<< Updated upstream
                 source = '\t' + 'mov eax, ebp' + ' ;' + self.__repr__()
-                source += '\n\t' + ('sub eax, {}'.format(-self.arg['offset']) if self.arg['offset'] < 0 else 'mov eax, {}'.format(self.arg['offset']))
-            elif self.arg_pointer:
-                source = '\t' + 'mov ebx, ' + ('[ebp{}]'.format(self.arg['offset']) if self.arg['offset'] < 0 else '[ebp+{}]'.format(self.arg['offset'])) + ' ;' + self.__repr__()
-                source += '\n\tmov eax, [ebx]'
+                source += '\n\t' + 'add eax, ' + '{}'.format(self.arg['offset'])
+=======
+                source = '\t' + 'mov eax, ebp\n'
+                source += '\t' + ('sub eax, {}'.format(-self.arg['offset']) if self.arg['offset'] < 0 else 'mov eax, {}'.format(self.arg['offset']))
+>>>>>>> Stashed changes
             else:
                 source = '\t' + 'mov eax, ' + ('[ebp{}]'.format(self.arg['offset']) if self.arg['offset'] < 0 else '[ebp+{}]'.format(self.arg['offset']))
         else:
@@ -182,15 +189,12 @@ class PushParam(Ins):
 
     def __tox86__(self):
         if 'offset' in self.param.keys():
-            value = self.param['offset']
-            move = ''
-            for i in range(type_width(self.param) -4 , -1, -4):
-                move += '\tmov eax, [ebp{}]'.format(value+i) if (value+i) < 0 else '\tmov eax, [ebp+{}]'.format(value+i)+ ' ;' + self.__repr__()
-                move += '\n\tpush eax\n'
+            move = '\tmov eax, ' + ('[ebp{}]'.format(self.param['offset']) if self.param['offset'] < 0 else '[ebp+{}]'.format(self.param['offset'])) + ' ;' + self.__repr__()
         else:
             move = '\tmov eax, {}'.format(self.param['value']) + ' ;' + self.__repr__()
-            move += '\n\tpush eax'
-        return move 
+        push = '\tpush eax'
+        block = "\n".join([move, push])
+        return block
 
 class PopParam(Ins):
     def __init__(self, width, dst=None):
@@ -251,11 +255,12 @@ class Cmp(Ins):
         if 'offset' in self.arg1.keys():
             source_1 = '\t' + 'mov eax, ' + ('[ebp{}]'.format(self.arg1['offset']) if self.arg1['offset'] < 0 else '[ebp+{}]'.format(self.arg1['offset'])) + ' ;' + self.__repr__()
         else:
-            source_1 = '\t' + 'mov eax, ' + '{}'.format(self.arg1['value']) + ' ;' + self.__repr__()
+            source_1 = '\t' + 'mov eax, ' + '{}'.format(self.arg1['value']) + ' ;' + self__repr__()
         if 'offset' in self.arg2.keys():
             source_2 = '\t' + 'mov ebx, ' + ('[ebp{}]'.format(self.arg2['offset']) if self.arg2['offset'] < 0 else '[ebp+{}]'.format(self.arg2['offset']))
         else:
             source_2 = '\t' + 'mov ebx, ' + '{}'.format(self.arg2['value'])
+        print(source_2)
         compare = '\t' + 'cmp eax, ebx'
         block = "\n".join([source_1, source_2, compare])
         return block
@@ -271,7 +276,7 @@ class Jmp(Ins):
 
     def __tox86__(self):
         jump_map = {'JL': 'jl', 'JG': 'jg', 'JGE': 'jge', 'JLE': 'jle', 'JE': 'je', 'JNE': 'jne', 'JMP': 'jmp'}
-        return '\t' + jump_map[self.cond] + ' ' + self.target + ' ;' + self.__repr__()
+        return '\t' + jump_map[self.cond] + ' ' + self.target + ' ;' + self__repr__()
 
 class Ret(Ins):
     def __init__(self, value, arg_size):
@@ -280,27 +285,18 @@ class Ret(Ins):
         self.arg_size = arg_size
 
     def __repr__(self):
-        if not self.value:
-            return '\tReturn'
-        else: 
-            return '\tReturn {}'.format(self.value['value'])
+        return '\tReturn {}'.format(self.value['value'])
 
     def __tox86__(self):
-        if self.value:
-            if 'offset' in self.value:
-                move = '\tmov eax, [ebp{}]'.format(self.value['offset']) + ' ;' + self.__repr__()
-            else:
-                move = '\tmov eax, {}'.format(self.value['value']) + ' ;' + self.__repr__()
-            move += '\n\tmov [ebp+{}], eax'.format(self.arg_size+8)
-            frame_deallocate = '\tmov esp, ebp'
-            remove = '\tpop ebp'
-            ret = '\tret'
-            block = "\n".join([move, frame_deallocate, remove, ret])
+        if 'offset' in self.value:
+            move = '\tmov eax, [ebp{}]'.format(self.value['offset']) + ' ;' + self.__repr__()
         else:
-            frame_deallocate = '\tmov esp, ebp' + ' ;' + self.__repr__()
-            remove = '\tpop ebp'
-            ret = '\tret'
-            block = "\n".join([frame_deallocate, remove, ret])
+            move = '\tmov eax, {}'.format(self.value['value']) + ' ;' + self.__repr__()
+        move += '\n\tmov [ebp+{}], eax'.format(self.arg_size+8)
+        frame_deallocate = '\tmov esp, ebp'
+        remove = '\tpop ebp'
+        ret = '\tret'
+        block = "\n".join([move, frame_deallocate, remove, ret])
         return block
 
 class Tac(object):
@@ -583,10 +579,8 @@ class Tac(object):
             dst = symbol_table.get_temp(node.type, self.table)
             multi = BinOp(op="*", arg1={'value': size, 'type': "int", 'arraylen': []}, arg2=index, dst=dst)
             binop = BinOp(op="+", arg1=arg1, arg2=dst, dst=dst, arg1_addr=True)
-            assignop = AssignOp(arg=dst, dst=dst, arg_pointer=True)
             self.code.append(multi)
             self.code.append(binop)
-            self.code.append(assignop)
             return dst
 
         else:
