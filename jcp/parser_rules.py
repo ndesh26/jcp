@@ -711,7 +711,7 @@ class ExpressionParser(object):
                                 | THIS
                                 | '(' expression_not_name ')' '''
         if len(p) == 2:
-            p[0] = p[1]
+            p[0] = Node("DeclsRefExpr", value='this')
         elif len(p) == 4:
             if p[2].type == "":
                 entry = symbol_table.get_entry(p[2].value)
@@ -1577,6 +1577,9 @@ class StatementParser(object):
                     entry = None
                 if entry:
                     p[0] = Node("FieldAccessExpr", value=p[2] + p[3].value, type=entry['type'], children=[p[1]], modifiers=entry['modifiers'], arraylen=entry['arraylen'], dims=entry['dims'], sym_entry=entry)
+                elif p[1].value == 'this':
+                    entry = symbol_table.get_entry(p[3].value)
+                    p[0] = Node("FieldAccessExpr", value=p[2] + p[3].value, type=entry['type'], children=[p[1]], modifiers=entry['modifiers'], arraylen=entry['arraylen'], dims=entry['dims'], sym_entry=entry)
                 else:
                     print("line {}: there is no field named '{}' for object of type '{}'".format(p.lineno(2), p[3].value, p[1].type))
                     p[0] = Node("FieldAccessExpr", value=p[2] + p[3].value, type="error", children=[p[1]])
@@ -1636,8 +1639,13 @@ class StatementParser(object):
             print("line {}: the variable is indexed more than the dimension it has".format(p.lineno(2)))
             p[0] = Node("ArrayAccess", children=[p[1],p[3]], type="error", arraylen=p[1].arraylen, modifiers=p[1].modifiers, dims=0)
             return
+        if p[1].dims == 1:
+            p[0] = Node("ArrayAccess",value=p[1].value ,children=[p[1],p[3]], type=p[1].type, arraylen=p[1].arraylen, modifiers=p[1].modifiers, dims=0)
+            if (p[0].arraylen and isinstance(p[3].value, int) and p[3].value >= p[0].arraylen[0]):
+                print("line {}: the array index '{}' is out of range".format(p.lineno(2), p[3].value))
+            return
         p[0] = Node("ArrayAccess", children=[p[1],p[3]], type=p[1].type, arraylen=p[1].arraylen, modifiers=p[1].modifiers, dims=p[1].dims-1)
-        if (p[0].arraylen and p[3].value >= p[0].arraylen[-p[0].dims+1]):
+        if (p[0].arraylen[0] and p[3].value >= p[0].arraylen[-p[0].dims+1]):
             print("line {}: the array index '{}' is out of range".format(p.lineno(2), p[3].value))
 
     def p_array_access2(self, p):
@@ -2355,6 +2363,10 @@ class ClassParser(object):
             p[0] = Node("MethodHeader", children=[p[1], p[2], p[4]])
         p[0].type = p[1].type + " ("
         length = len(p[2].children)
+        if length == 0:
+            p[0].type += "int"
+        else:
+            p[0].type += "int,"
         for node in p[2].children:
             if node == p[2].children[length - 1]:
                 p[0].type += node.type
@@ -2368,6 +2380,7 @@ class ClassParser(object):
                               | modifiers_opt type NAME '(' '''
         if len(p) == 5:
             symbol_table.begin_scope(name=p[3], category="method")
+            symbol_table.insert('this', {'value': 'this', 'type':'int', 'dims':0, 'arraylen':[], 'modifiers':[]})
             p[0] = Node("MethodName", value=p[3], type=p[2].type, modifiers=p[1].modifiers)
         else:
             #TODO:Not done because of type_parameters
