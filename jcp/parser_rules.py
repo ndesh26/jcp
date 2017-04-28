@@ -1344,7 +1344,12 @@ class StatementParser(object):
 
     def p_do_statement(self, p):
         '''do_statement : DO statement WHILE '(' expression ')' ';' '''
-        p[0] = Node("DoWhileStmt", children=[p[2], p[5]])
+        if p[5].type == "bool":
+            p[0] = Node("DoWhileStmt", children=[p[2],p[5]])
+        else:
+            tmp = Node("ImplicitCastExpr", type=p[5].type, children=[p[5]])
+            p[0] = Node("DoWhileStmt", type="error", children=[p[2], p[5]])
+            print("line {}: condition in while statement is not of type bool".format(p.lineno(2)))
 
     def p_break_statement(self, p):
         '''break_statement : BREAK ';'
