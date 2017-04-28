@@ -241,21 +241,39 @@ class Call(Ins):
         return '\tcall {}'.format(self.func['value']) + ' ;' + self.__repr__()
 
 class Cmp(Ins):
-    def __init__(self, arg1, arg2):
+    def __init__(self, arg1, arg2, arg1_pointer=False, arg2_pointer=False):
         Ins(self)
         self.arg1 = arg1
         self.arg2 = arg2
+        self.arg1_pointer = arg1_pointer
+        self.arg2_pointer = arg2_pointer
 
     def __repr__(self):
-        return '\tCMP {}, {}'.format(self.arg1['value'], self.arg2['value'])
+        if self.arg1_pointer:
+            arg1 = '*({})'.format(self.arg1['value'])
+        else:
+            arg1 = '{}'.format(self.arg1['value'])
+        if self.arg2_pointer:
+            arg2 = '*({})'.format(self.arg2['value'])
+        else:
+            arg2 = '{}'.format(self.arg2['value'])
+        return '\tCMP {}, {}'.format(arg1, arg2)
 
     def __tox86__(self):
         if 'offset' in self.arg1.keys():
-            source_1 = '\t' + 'mov eax, ' + ('[ebp{}]'.format(self.arg1['offset']) if self.arg1['offset'] < 0 else '[ebp+{}]'.format(self.arg1['offset'])) + ' ;' + self.__repr__()
+            if self.arg1_pointer:
+                source_1 = '\t' + 'mov ebx, ' + ('[ebp{}]'.format(self.arg1['offset']) if self.arg1['offset'] < 0 else '[ebp+{}]'.format(self.arg1['offset'])) + ' ;' + self.__repr__()
+                source_1 += '\n\tmov eax, [ebx]'
+            else:
+                source_1 = '\t' + 'mov eax, ' + ('[ebp{}]'.format(self.arg1['offset']) if self.arg1['offset'] < 0 else '[ebp+{}]'.format(self.arg1['offset'])) + ' ;' + self.__repr__()
         else:
             source_1 = '\t' + 'mov eax, ' + '{}'.format(self.arg1['value']) + ' ;' + self.__repr__()
         if 'offset' in self.arg2.keys():
-            source_2 = '\t' + 'mov ebx, ' + ('[ebp{}]'.format(self.arg2['offset']) if self.arg2['offset'] < 0 else '[ebp+{}]'.format(self.arg2['offset']))
+            if self.arg1_pointer:
+                source_2 = '\t' + 'mov ecx, ' + ('[ebp{}]'.format(self.arg2['offset']) if self.arg2['offset'] < 0 else '[ebp+{}]'.format(self.arg2['offset'])) + ' ;' + self.__repr__()
+                source_2 += '\n\tmov ebx, [ecx]'
+            else:
+                source_2 = '\t' + 'mov ebx, ' + ('[ebp{}]'.format(self.arg2['offset']) if self.arg2['offset'] < 0 else '[ebp+{}]'.format(self.arg2['offset']))
         else:
             source_2 = '\t' + 'mov ebx, ' + '{}'.format(self.arg2['value'])
         compare = '\t' + 'cmp eax, ebx'
@@ -344,7 +362,17 @@ class Tac(object):
             elif node.value in ["<", ">", ">=", "<=", "==", "!="]:
                 arg1 = self.generate_tac(node.children[0])
                 arg2 = self.generate_tac(node.children[1])
-                cmp = Cmp(arg1=arg1, arg2=arg2)
+                if node.children[0].name  in ["ArrayAccess", "FieldAccessExpr"]:
+                    arg1_pointer = True
+                else:
+                    arg1_pointer = False
+
+                if node.children[1].name  in ["ArrayAccess", "FieldAccessExpr"]:
+                    arg2_pointer = True
+                else:
+                    arg2_pointer = False
+
+                cmp = Cmp(arg1=arg1, arg2=arg2, arg1_pointer=arg1_pointer, arg2_pointer=arg2_pointer)
                 self.code.append(cmp)
                 cond_map = {'<': 'JL', '>': 'JG', '>=': 'JGE', '<=': 'JLE', '==': 'JE', '!=': 'JNE'}
                 true_jmp = Jmp(cond=cond_map[node.value], target=true_lbl)
@@ -496,7 +524,17 @@ class Tac(object):
             for case in node.children[1:]:
                 arg2 = self.generate_tac(case.children[0])
                 if case.name != "DefaultStmt":
-                    cmp = Cmp(arg1=arg1, arg2=arg2)
+                    if node.children[0].name  in ["ArrayAccess", "FieldAccessExpr"]:
+                        arg1_pointer = True
+                    else:
+                        arg1_pointer = False
+
+                    if node.children[1].name  in ["ArrayAccess", "FieldAccessExpr"]:
+                        arg2_pointer = True
+                    else:
+                        arg2_pointer = False
+
+                    cmp = Cmp(arg1=arg1, arg2=arg2, arg1_pointer=arg1_pointer, arg2_pointer=arg2_pointer)
                     self.code.append(cmp)
                     goto_cond = Jmp(cond='JNE', target=switch_next_lbl)
                     self.code.append(goto_cond)
