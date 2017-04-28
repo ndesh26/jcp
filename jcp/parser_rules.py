@@ -2847,7 +2847,7 @@ class CompilationUnitParser(object):
 
 class JavaParser(ExpressionParser, NameParser, LiteralParser, TypeParser, ClassParser, StatementParser, CompilationUnitParser):
     tokens = lexer.tokens
-    
+
     def p_goal_compilation_unit(self, p):
         '''goal : PLUSPLUS compilation_unit'''
         p[0] = p[2]

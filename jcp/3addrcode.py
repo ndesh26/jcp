@@ -131,7 +131,7 @@ class AssignOp(Ins):
 
         if self.dst_pointer:
             store = '\t' + 'mov ' + ('ebx, [ebp{}]'.format(self.dst['offset']) if self.dst['offset'] < 0 else 'ebx, [ebp+{}]'.format(self.dst['offset']))
-            store += '\n\tmov [ebx], eax' 
+            store += '\n\tmov [ebx], eax'
         else:
             store = '\t' + 'mov ' + ('[ebp{}], eax'.format(self.dst['offset']) if self.dst['offset'] < 0 else '[ebp+{}], eax'.format(self.dst['offset']))
         block = "\n".join([source, store])
@@ -192,7 +192,7 @@ class PushParam(Ins):
         else:
             move = '\tmov eax, {}'.format(self.param['value']) + ' ;' + self.__repr__()
             move += '\n\tpush eax'
-        return move 
+        return move
 
 class PopParam(Ins):
     def __init__(self, width, dst=None):
