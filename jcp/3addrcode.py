@@ -182,11 +182,13 @@ class PushParam(Ins):
 
     def __tox86__(self):
         if 'offset' in self.param.keys():
-            value = self.param['offset']
-            move = ''
-            for i in range(type_width(self.param) -4 , -1, -4):
-                move += '\tmov eax, [ebp{}]'.format(value+i) if (value+i) < 0 else '\tmov eax, [ebp+{}]'.format(value+i)+ ' ;' + self.__repr__()
-                move += '\n\tpush eax\n'
+            if self.param['type'] in ['int', 'float', 'char'] and self.param['arraylen'] == []:
+                move = '\tmov eax, [ebp{}]'.format(self.param['offset']) if (self.param['offset']) < 0 else '\tmov eax, [ebp+{}]'.format(self.param['offset'])+ ' ;' + self.__repr__()
+                move += '\n\tpush eax'
+            else:
+                move = '\t' + 'mov eax, ebp' + ' ;' + self.__repr__()
+                move += '\n\t' + ('sub eax, {}'.format(-self.param['offset']) if self.param['offset'] < 0 else 'mov eax, {}'.format(self.arg['offset']))
+                move += '\n\tpush eax'
         else:
             move = '\tmov eax, {}'.format(self.param['value']) + ' ;' + self.__repr__()
             move += '\n\tpush eax'
@@ -282,7 +284,7 @@ class Ret(Ins):
     def __repr__(self):
         if not self.value:
             return '\tReturn'
-        else: 
+        else:
             return '\tReturn {}'.format(self.value['value'])
 
     def __tox86__(self):
@@ -311,12 +313,12 @@ class Tac(object):
     def generate_tac(self, node, parent=None, true_lbl=None, false_lbl=None, end_lbl=None, start_lbl=None):
         if node.name == "BinaryOperator":
             if node.value == "=":
-                if node.children[0].name == "ArrayAccess":
+                if node.children[0].name in ["ArrayAccess", "FieldAccessExpr"]:
                     dst_pointer = True
                 else:
                     dst_pointer = False
 
-                if node.children[1].name == "ArrayAccess":
+                if node.children[1].name  in ["ArrayAccess", "FieldAccessExpr"]:
                     arg_pointer = True
                 else:
                     arg_pointer = False
@@ -404,7 +406,11 @@ class Tac(object):
             elif node.children and node.children[0].name is not "ArrayInitialization":
                 arg1 = node.sym_entry
                 arg2 = self.generate_tac(node.children[0])
-                assignop = AssignOp(arg=arg2, dst=arg1)
+                if node.children[0].name  in ["ArrayAccess", "FieldAccessExpr"]:
+                    arg_pointer = True
+                else:
+                    arg_pointer = False
+                assignop = AssignOp(arg=arg2, dst=arg1, arg_pointer=arg_pointer)
                 self.code.append(assignop)
 
         elif node.name == "InitListExpr":
@@ -532,6 +538,12 @@ class Tac(object):
             if len(node.children) != 1:
                 for i in range(len(node.children) - 1, 0, -1):
                     param = self.generate_tac(node.children[i])
+                    if node.children[i].name  in ["ArrayAccess", "FieldAccessExpr"]:
+                        arg_pointer = True
+                        dst = symbol_table.get_temp(param['type'], self.table)
+                        assignop = AssignOp(arg=param, dst=dst, arg_pointer=True)
+                        self.code.append(assignop)
+                        param = dst
                     k += type_width(param['type'])
                     self.code.append(PushParam(param))
             call = Call(func=node.children[0].sym_entry)
@@ -566,10 +578,14 @@ class Tac(object):
 
         elif node.name == "FieldAccessExpr":
             arg = self.generate_tac(node.children[0])
-            field = copy.deepcopy(node.sym_entry)
-            field['value'] = arg['value'] + '.' + field['value']
-            field['offset'] += arg['offset']
-            return field
+            dst = symbol_table.get_temp(node.type, self.table)
+            if arg['offset'] < 0:
+                arg1_addr = True
+            else:
+                arg1_addr = False
+            binop = BinOp(op="+", arg1=arg, arg2={'value': node.sym_entry['offset'], 'type': "int", 'arraylen': []}, dst=dst, arg1_addr=arg1_addr)
+            self.code.append(binop)
+            return dst
 
         elif node.name == "ArrayAccess":
             arg1 = self.generate_tac(node.children[0])
@@ -582,11 +598,15 @@ class Tac(object):
                 size *= i
             dst = symbol_table.get_temp(node.type, self.table)
             multi = BinOp(op="*", arg1={'value': size, 'type': "int", 'arraylen': []}, arg2=index, dst=dst)
-            binop = BinOp(op="+", arg1=arg1, arg2=dst, dst=dst, arg1_addr=True)
-            assignop = AssignOp(arg=dst, dst=dst, arg_pointer=True)
+            if arg1['offset'] < 0:
+                arg1_addr = True
+            else:
+                arg1_addr = False
+            binop = BinOp(op="+", arg1=arg1, arg2=dst, dst=dst, arg1_addr=arg1_addr)
+            # assignop = AssignOp(arg=dst, dst=dst, arg_pointer=True)
             self.code.append(multi)
             self.code.append(binop)
-            self.code.append(assignop)
+            # self.code.append(assignop)
             return dst
 
         else:
