@@ -1637,7 +1637,7 @@ class StatementParser(object):
                 print("line {}: the array index '{}' is out of range".format(p.lineno(2), p[3].value))
             return
         p[0] = Node("ArrayAccess",value=p[1].value, children=[p[1],p[3]], type=p[1].type, arraylen=p[1].arraylen, modifiers=p[1].modifiers, dims=p[1].dims-1)
-        if (p[0].arraylen and p[3].value >= p[0].arraylen[-p[0].dims+1]):
+        if (p[0].arraylen and isinstance(p[3].value, int) and p[3].value >= p[0].arraylen[-p[0].dims+1]):
             print("line {}: the array index '{}' is out of range".format(p.lineno(2), p[3].value))
 
     def p_array_access1(self, p):
