@@ -124,6 +124,18 @@ class ExpressionParser(object):
             p[0] = Node("BinaryOperator", value=p[2].value, type="error", children=[p[1], p[3]])
         elif p[1].type == p[3].type and p[1].dims == 0:
             p[0] = Node("BinaryOperator", value=p[2].value, children=[p[1], p[3]])
+        elif p[1].type == 'char' and p[3].type == 'int' and p[2].type == '=':
+            p[0] = Node("BinaryOperator", value=p[2].value, children=[p[1], p[3]])
+        elif p[1].type == 'int' and p[3].type == 'char' and p[2].type == '=':
+            p[0] = Node("BinaryOperator", value=p[2].value, children=[p[1], p[3]])
+        elif p[1].type == 'float' and p[3].type == 'int' and p[2].type == '=':
+            p[0] = Node("BinaryOperator", value=p[2].value, children=[p[1], p[3]])
+        elif p[1].type == 'int' and p[3].type == 'float' and p[2].type == '=':
+            p[0] = Node("BinaryOperator", value=p[2].value, children=[p[1], p[3]])
+        elif p[1].type == 'double' and p[3].type == 'int' and p[2].type == '=':
+            p[0] = Node("BinaryOperator", value=p[2].value, children=[p[1], p[3]])
+        elif p[1].type == 'int' and p[3].type == 'double' and p[2].type == '=':
+            p[0] = Node("BinaryOperator", value=p[2].value, children=[p[1], p[3]])
         else:
             print("line {}: Type mismatch".format(p[2].lineno))
             p[0] = Node("BinaryOperator", value=p[2].value, type="error", children=[p[1], p[3]])
@@ -881,8 +893,9 @@ class StatementParser(object):
         '''local_variable_declaration : type variable_declarators'''
         for node in p[2].children:
             if (node.type != "") and (node.type == "" or node.type != p[1].type):
-                print("line {}: variable '{}' (type '{}') initialized to type '{}'".format(node.lineno, node.value, p[1].type, node.type))
-                p[2].type = "error"
+                if not (p[1].type == 'char' and node.type == 'int') or (p[1].type == 'int' and node.type == 'char') or (p[1].type == 'int' and node.type == 'float') or (p[1].type == 'float' and node.type == 'int') or(p[1].type == 'int' and node.type == 'double') or (p[1].type == 'double' and node.type == 'int'):
+                    print("line {}: variable '{}' (type '{}') initialized to type '{}'".format(node.lineno, node.value, p[1].type, node.type))
+                    p[2].type = "error"
             node.type = p[1].type
             if node.dims == 0:
                 node.dims = p[1].dims
@@ -902,8 +915,9 @@ class StatementParser(object):
         '''local_variable_declaration : modifiers type variable_declarators'''
         for node in p[3].children:
             if (node.type != "") and (node.type == "" or node.type != p[2].type):
-                print("line {}: variable '{}' (type '{}') initialized to type '{}'".format(node.lineno, node.value, p[2].type, node.type))
-                p[3].type = "error"
+                if not (p[2].type == 'char' and node.type == 'int') or (p[2].type == 'int' and node.type == 'char') or (p[2].type == 'int' and node.type == 'float') or (p[2].type == 'float' and node.type == 'int') or(p[2].type == 'int' and node.type == 'double') or (p[2].type == 'double' and node.type == 'int'):
+                    print("line {}: variable '{}' (type '{}') initialized to type '{}'".format(node.lineno, node.value, p[2].type, node.type))
+                    p[3].type = "error"
             node.type = p[2].type
             node.modifiers = p[1].modifiers
             if symbol_table.get_entry(node.value):
@@ -2228,8 +2242,9 @@ class ClassParser(object):
         '''field_declaration : modifiers_opt type variable_declarators ';' '''
         for node in p[3].children:
             if (node.type != "") and (node.type == "" or node.type != p[2].type):
-                print("line {}: variable '{}' (type '{}') initialized to type '{}'".format(node.lineno, node.value, p[2].type, node.type))
-                p[3].type = "error"
+                if not (p[2].type == 'char' and node.type == 'int') or (p[2].type == 'int' and node.type == 'char') or (p[2].type == 'int' and node.type == 'float') or (p[2].type == 'float' and node.type == 'int') or(p[2].type == 'int' and node.type == 'double') or (p[2].type == 'double' and node.type == 'int'):
+                    print("line {}: variable '{}' (type '{}') initialized to type '{}'".format(node.lineno, node.value, p[2].type, node.type))
+                    p[3].type = "error"
             node.type = p[2].type
             if node.dims == 0:
                 node.dims = p[2].dims
