@@ -133,7 +133,7 @@ class AssignOp(Ins):
             value = self.arg['offset']
         value2= self.dst['offset']
         source = ''
-        for i in range(0, type_width(self.arg), 4):
+        for i in range(0, min(type_width(self.arg), type_width(self.dst)), 4):
             if 'offset' in self.arg.keys():
                 if self.arg_addr:
                     source += '\n\t' + 'mov eax, ebp' + ' ;' + self.__repr__()
