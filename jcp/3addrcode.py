@@ -617,6 +617,9 @@ class Tac(object):
         elif node.name == "IntegerLiteral":
             return {'value': node.value, 'type': "int", 'arraylen': []}
 
+        elif node.name == "CharLiteral":
+            return {'value': ord(node.value[1]), 'type': "char", 'arraylen': []}
+
         elif node.name == "Boolean":
             if node.value == "true":
                 goto = Jmp(cond='JMP', target=true_lbl)

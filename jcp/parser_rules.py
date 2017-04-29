@@ -7,6 +7,7 @@ from ast import literal_eval
 ast = ""
 symbol_table = st.SymbolTable()
 symbol_table.insert('printInt', {'value': 'printInt', 'type':'void (int)', 'modifiers': ''})
+symbol_table.insert('printChar', {'value': 'printChar', 'type':'void (char)', 'modifiers': ''})
 symbol_table.insert('printlnInt', {'value': 'printlnInt', 'type':'void (int)', 'modifiers': ''})
 symbol_table.insert('scanInt', {'value': 'scanInt', 'type':'int ()', 'modifiers': ''})
 nat = []

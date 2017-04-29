@@ -1,4 +1,5 @@
 global printInt
+global printChar
 global printlnInt
 global scanInt 
 extern scanf
@@ -48,6 +49,17 @@ next:
         jmp  next
         
 exit:
+        ret
+
+printChar:
+        mov eax, [esp+8]
+        push eax
+        mov  eax, 4
+        mov  ecx, esp
+        mov  ebx, 1
+        mov  edx, 1
+        int  0x80
+        add  esp, 4
         ret
 
 printlnInt:

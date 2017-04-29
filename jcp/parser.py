@@ -36,7 +36,7 @@ else:
     tac.generate_tac(result)
     tac.print_tac()
     sys.stdout = open(outfile+".s", "w")
-    print("global main\nextern printInt\nextern printlnInt\nextern scanInt\nsection .text\n")
+    print("global main\nextern printInt\nextern printlnInt\nextern scanInt\nextern printChar\nsection .text\n")
     tac.print_x86()
     sys.stdout.close()
     call('nasm -f elf32 ' + outfile + '.s', shell=True)

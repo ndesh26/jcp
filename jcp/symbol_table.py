@@ -4,7 +4,7 @@
 
 import csv
 
-width = {'int':4, 'float':8, 'short':4, 'long':8, 'double':8, 'char':1}
+width = {'int':4, 'float':8, 'short':4, 'long':8, 'double':8, 'char':4}
 temp_no = 0
 target_no = 0
 
