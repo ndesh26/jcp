@@ -9,7 +9,7 @@ class Ins(object):
         self.op = op
 
 class BinOp(Ins):
-    def __init__(self, label="", op="", arg1=None, arg2=None, dst=None, arg1_addr=False, arg2_addr=False, dst_addr=False):
+    def __init__(self, label="", op="", arg1=None, arg2=None, dst=None, arg1_addr=False, arg2_addr=False, dst_addr=False, arg1_pointer=False, arg2_pointer=False):
         Ins.__init__(self, label, op)
         self.arg1 = arg1
         self.arg2 = arg2
@@ -17,15 +17,21 @@ class BinOp(Ins):
         self.arg1_addr = arg1_addr
         self.arg2_addr = arg2_addr
         self.dst_addr = dst_addr
+        self.arg1_pointer = arg1_pointer
+        self.arg2_pointer = arg2_pointer
 
     def __repr__(self):
         if self.arg1_addr:
             arg1 = '&{}'.format(self.arg1['value'])
+        elif self.arg1_pointer:
+            arg1 = '*({})'.format(self.arg1['value'])
         else:
             arg1 = '{}'.format(self.arg1['value'])
 
         if self.arg2_addr:
             arg2 = '&{}'.format(self.arg2['value'])
+        elif self.arg2_pointer:
+            arg2 = '*({})'.format(self.arg2['value'])
         else:
             arg2 = '{}'.format(self.arg2['value'])
 
@@ -40,6 +46,9 @@ class BinOp(Ins):
             if self.arg1_addr:
                 source_1 = '\t' + 'mov eax, ebp' + ' ;' + self.__repr__()
                 source_1 += '\n\t' + 'add eax, ' + '{}'.format(self.arg1['offset'])
+            elif self.arg1_pointer:
+                source_1 = '\n\t' + 'mov ebx, ' + ('[ebp{}]'.format(self.arg1['offset']) if self.arg1['offset'] < 0 else '[ebp+{}]'.format(self.arg1['offset'])) + ' ;' + self.__repr__()
+                source_1 += '\n\tmov eax, [ebx]'
             else:
                 source_1 = '\t' + 'mov eax, ' + ('[ebp{}]'.format(self.arg1['offset']) if self.arg1['offset'] < 0 else '[ebp+{}]'.format(self.arg1['offset'])) + ' ;' + self.__repr__()
         else:
@@ -48,13 +57,17 @@ class BinOp(Ins):
             if self.arg2_addr:
                 source_2 = '\t' + 'mov eax, ebp\n'
                 source_2 += '\t' + 'add eax, ' + '{}'.format(self.arg2['offset'])
+            elif self.arg2_pointer:
+                source_2 = '\n\t' + 'mov ebx, ' + ('[ebp{}]'.format(self.arg2['offset']) if self.arg2['offset'] < 0 else '[ebp+{}]'.format(self.arg2['offset'])) + ' ;' + self.__repr__()
+                source_2 += '\n\tmov ebx, [ebx]'
             else:
                 source_2 = '\t' + 'mov ebx, ' + ('[ebp{}]'.format(self.arg2['offset']) if self.arg2['offset'] < 0 else '[ebp+{}]'.format(self.arg2['offset']))
         else:
             source_2 = '\t' + 'mov ebx, ' + '{}'.format(self.arg2['value'])
-        op_map = {'+': 'add', '-': 'sub', '*': 'imul', '/': 'div'}
-        if op_map[self.op] in ['imul', 'div']:
-            operation = '\t' + op_map[self.op] + ' ebx'
+        op_map = {'+': 'add', '-': 'sub', '*': 'imul', '/': 'idiv'}
+        if op_map[self.op] in ['imul', 'idiv']:
+            operation = '\txor edx, edx'
+            operation += '\n\t' + op_map[self.op] + ' ebx'
         else:
             operation = '\t' + op_map[self.op] + ' eax, ebx'
         store = '\t' + 'mov ' + ('[ebp{}], eax'.format(self.dst['offset']) if self.dst['offset'] < 0 else '[ebp+{}], eax'.format(self.dst['offset']))
@@ -273,7 +286,7 @@ class Cmp(Ins):
         else:
             source_1 = '\t' + 'mov eax, ' + '{}'.format(self.arg1['value']) + ' ;' + self.__repr__()
         if 'offset' in self.arg2.keys():
-            if self.arg1_pointer:
+            if self.arg2_pointer:
                 source_2 = '\t' + 'mov ecx, ' + ('[ebp{}]'.format(self.arg2['offset']) if self.arg2['offset'] < 0 else '[ebp+{}]'.format(self.arg2['offset'])) + ' ;' + self.__repr__()
                 source_2 += '\n\tmov ebx, [ecx]'
             else:
@@ -385,10 +398,21 @@ class Tac(object):
                 self.code.append(goto_false)
 
             else:
+                if node.children[0].name in ["ArrayAccess", "FieldAccessExpr"]:
+                    arg1_pointer = True
+                else:
+                    arg1_pointer = False
+
+                if node.children[1].name  in ["ArrayAccess", "FieldAccessExpr"]:
+                    arg2_pointer = True
+                else:
+                    arg2_pointer = False
+
                 arg1 = self.generate_tac(node.children[0])
                 arg2 = self.generate_tac(node.children[1])
                 dst = symbol_table.get_temp(node.type, self.table)
-                binop = BinOp(op=node.value, arg1=arg1, arg2=arg2, dst=dst)
+                binop = BinOp(op=node.value, arg1=arg1, arg2=arg2, dst=dst, arg1_pointer=arg1_pointer, arg2_pointer=arg2_pointer)
+
                 self.code.append(binop)
                 return dst
 
