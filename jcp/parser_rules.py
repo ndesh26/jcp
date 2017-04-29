@@ -6,11 +6,19 @@ from ast import literal_eval
 
 ast = ""
 symbol_table = st.SymbolTable()
-symbol_table.insert('printInt', {'value': 'printInt', 'type':'void (int)', 'modifiers': ''})
-symbol_table.insert('printChar', {'value': 'printChar', 'type':'void (char)', 'modifiers': ''})
-symbol_table.insert('printlnInt', {'value': 'printlnInt', 'type':'void (int)', 'modifiers': ''})
-symbol_table.insert('scanInt', {'value': 'scanInt', 'type':'int ()', 'modifiers': ''})
+symbol_table.insert('printInt', {'value': 'printInt', 'type':'void (this,int)', 'modifiers': ''})
+symbol_table.insert('printChar', {'value': 'printChar', 'type':'void (this,char)', 'modifiers': ''})
+symbol_table.insert('printlnInt', {'value': 'printlnInt', 'type':'void (this,int)', 'modifiers': ''})
+symbol_table.insert('printString', {'value': 'printString', 'type':'void (this,string)', 'modifiers': ''})
+symbol_table.insert('scanInt', {'value': 'scanInt', 'type':'int (this)', 'modifiers': ''})
+symbol_table.insert('open', {'value': 'open', 'type':'int (this,string)', 'modifiers': ''})
+symbol_table.insert('create', {'value': 'create', 'type':'int (this,string)', 'modifiers': ''})
+symbol_table.insert('close', {'value': 'close', 'type':'void (this,int)', 'modifiers': ''})
+symbol_table.insert('writeChar', {'value': 'writeChar', 'type':'void (this,int,char)', 'modifiers': ''})
+symbol_table.insert('readChar', {'value': 'readChar', 'type':'char (this,int)', 'modifiers': ''})
 nat = []
+data = {}
+str_label = 1
 
 class Node:
     def __init__(self, name="", value="", type="", children=None, modifiers=None, dims=0, arraylen=None, sym_entry=None, lineno=0):
@@ -1769,7 +1777,11 @@ class LiteralParser(object):
 
     def p_literal3(self, p):
         '''literal : STRING_LITERAL'''
-        p[0] = Node("StringLiteral", value=p[1], type="string")
+        global str_label
+        label = 'str{}'.format(str_label)
+        data[label] = p[1]
+        str_label += 1
+        p[0] = Node("StringLiteral", value=p[1], type="string", sym_entry=label)
 
     def p_literal4(self, p):
         '''literal : TRUE

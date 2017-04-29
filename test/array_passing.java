@@ -6,6 +6,7 @@ class array{
 
     public static void main(){
         int x[] = {1,2,3,4};
+        x[0] = 5;
         printInt(x[0]);
     }
 }

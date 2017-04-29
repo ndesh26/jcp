@@ -4,7 +4,7 @@ class large_expressions{
         int b = 2;
         int c = 3;
         int d = 10;
-        int i = d/b+a*c;
+        int i = d/b+a*c + d*b+a/c +b*c+a*d;
         printInt(i);
     }
 }

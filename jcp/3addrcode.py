@@ -1,6 +1,7 @@
 import copy
 
 from parser_rules import symbol_table
+from parser_rules import data
 from symbol_table import type_width
 
 class Ins(object):
@@ -204,11 +205,15 @@ class PushParam(Ins):
                 move += '\n\tpush eax'
             else:
                 move = '\t' + 'mov eax, ebp' + ' ;' + self.__repr__()
-                move += '\n\t' + ('sub eax, {}'.format(-self.param['offset']) if self.param['offset'] < 0 else 'mov eax, {}'.format(self.arg['offset']))
+                move += '\n\t' + ('sub eax, {}'.format(-self.param['offset']) if self.param['offset'] < 0 else 'mov eax, {}'.format(self.param['offset']))
                 move += '\n\tpush eax'
         else:
-            move = '\tmov eax, {}'.format(self.param['value']) + ' ;' + self.__repr__()
-            move += '\n\tpush eax'
+            if self.param['type'] == 'string':
+                move = '\tmov eax, {}'.format(self.param['pointer'])
+                move += '\n\tpush eax'
+            else:
+                move = '\tmov eax, {}'.format(self.param['value']) + ' ;' + self.__repr__()
+                move += '\n\tpush eax'
         return move
 
 class PopParam(Ins):
@@ -644,6 +649,9 @@ class Tac(object):
         elif node.name == "CharLiteral":
             return {'value': ord(node.value[1]), 'type': "char", 'arraylen': []}
 
+        elif node.name == "StringLiteral":
+            return {'value': node.value, 'type': "string", 'arraylen': [], 'pointer': node.sym_entry}
+
         elif node.name == "Boolean":
             if node.value == "true":
                 goto = Jmp(cond='JMP', target=true_lbl)
@@ -702,3 +710,7 @@ class Tac(object):
     def print_x86(self):
         for ins in self.code:
             print(ins.__tox86__())
+        print('section .data')
+        for label in data:
+            print('{} db {}'.format(label, data[label]))
+

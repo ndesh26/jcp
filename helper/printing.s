@@ -1,8 +1,10 @@
 global printInt
 global printChar
 global printlnInt
+global printString
 global scanInt 
 extern scanf
+extern printf 
 
 SECTION .data
 formatin: db "%d", 0
@@ -124,4 +126,9 @@ scanInt:
         push ebx
         ret
 
-        
+printString:
+        mov eax, [esp+8]
+        push eax
+        call printf
+        pop eax
+        ret
