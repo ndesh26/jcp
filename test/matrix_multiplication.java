@@ -18,12 +18,12 @@ class matrix_multiplication{
                 }
             }
         }
-        char c = ' ';
+        char c = 10;
         /* Show the result */
         for (i = 0; i < 3; i++) {
             for (k = 0; k < 2; k++) {
                 printInt(result[i][k]);
-                printChar(c);
+                printChar(' ');
             }
             printChar(c);
         }
