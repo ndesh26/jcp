@@ -3,29 +3,30 @@ import sys
 import ply.yacc as yacc
 from subprocess import call
 from parser_rules import JavaParser
+from parser_rules import ast
 import ptg
 code = __import__('3addrcode')
 
 if len(sys.argv) < 2:
-    print("Usage: {} [-g] filename".format(sys.argv[0]))
+    print("Usage: {} [-g, -t, -s] filename".format(sys.argv[0]))
     exit()
 
-if sys.argv[1] == "-g":
+if "-g" in sys.argv:
     debug = 1
 else:
     debug = 0
 # Build the parser
 parser = yacc.yacc(module=JavaParser(), start='goal')
-if len(sys.argv) == 3:
-    if type(sys.argv[2]) == str:
-        _file = open(sys.argv[2])
-        outfile = sys.argv[2].split(".")[0]
-    content = _file.read()
-else:
-    if type(sys.argv[1]) == str:
-        _file = open(sys.argv[1])
-        outfile = sys.argv[1].split(".")[0]
-    content = _file.read()
+# if len(sys.argv) == 3:
+    # if type(sys.argv[2]) == str:
+        # _file = open(sys.argv[2])
+        # outfile = sys.argv[2].split(".")[0]
+    # content = _file.read()
+# else:
+if type(sys.argv[len(sys.argv)-1]) == str:
+    _file = open(sys.argv[len(sys.argv)-1])
+    outfile = sys.argv[len(sys.argv)-1].split(".")[0]
+content = _file.read()
 if not os.path.exists("csv"):
     os.makedirs("csv")
 result = parser.parse("++"+content, debug=debug)
@@ -34,10 +35,14 @@ if result.type == "error":
 else:
     tac = code.Tac()
     tac.generate_tac(result)
-    tac.print_tac()
-    sys.stdout = open(outfile+".s", "w")
-    print("global main\nextern printInt\nextern printlnInt\nextern scanInt\nextern printChar\nsection .text\n")
-    tac.print_x86()
-    sys.stdout.close()
-    call('nasm -f elf32 ' + outfile + '.s', shell=True)
-    call('cc -m32 ' + outfile + '.o helper/printing.o -o ' + outfile, shell=True)
+    if "-t" in sys.argv:
+        sys.stdout = open(outfile+".tac", 'w')
+        tac.print_tac()
+        sys.stdout.close()
+    if "-s" in sys.argv:
+        sys.stdout = open(outfile+".s", 'w')
+        print("global main\nextern printInt\nextern printlnInt\nextern scanInt\nextern printChar\nsection .text\n")
+        tac.print_x86()
+        sys.stdout.close()
+        call('nasm -f elf32 ' + outfile + '.s', shell=True)
+        call('cc -m32 ' + outfile + '.o helper/printing.o -o ' + outfile, shell=True)
