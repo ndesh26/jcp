@@ -2275,7 +2275,7 @@ class ClassParser(object):
 
     def p_constructor_declaration(self, p):
         '''constructor_declaration : constructor_header method_body'''
-        symbol_table.print_table("csv/" + p[1].children[0].value + "_constructor.csv")
+        # symbol_table.print_table("csv/" + p[1].children[0].value + "_constructor.csv")
         symbol_table.end_scope()
         p[0] = Node("ConstrDecl", children=[p[1], p[2]])
 
@@ -2379,7 +2379,7 @@ class ClassParser(object):
                 print("line {}: control reaches end of non-void function '{}'".format(p[2].lineno, p[1].children[0].value))
             if p[2].value == "" and p[1].type.split(" ", 1)[0] == "void":
                 p[2].children += [Node("ReturnStmt", children=[Node()])]
-            symbol_table.print_table("csv/" + symbol_table.get_class_name() + "_" + p[1].children[0].value + "_method.csv")
+            # symbol_table.print_table("csv/" + symbol_table.get_class_name() + "_" + p[1].children[0].value + "_method.csv")
             symbol_table.end_scope()
             p[0] = Node("MethodDecl", children=[p[1],p[2]])
             if p[1].type == "error" or p[2].type == "error":
@@ -2908,20 +2908,20 @@ class JavaParser(ExpressionParser, NameParser, LiteralParser, TypeParser, ClassP
     def p_goal_compilation_unit(self, p):
         '''goal : PLUSPLUS compilation_unit'''
         p[0] = p[2]
-        p[0].print_tree()
-        target = open("ast.txt", 'w')
-        target.write(ast)
-        target.close()
-        p[0].print_png()
+        # p[0].print_tree()
+        # target = open("ast.txt", 'w')
+        # target.write(ast)
+        # target.close()
+        # p[0].print_png()
 
     def p_goal_expression(self, p):
         '''goal : MINUSMINUS expression'''
         p[0] = p[2]
-        p[0].print_tree()
-        target = open("ast.txt", 'w')
-        target.write(ast)
-        target.close()
-        p[0].print_png()
+        # p[0].print_tree()
+        # target = open("ast.txt", 'w')
+        # target.write(ast)
+        # target.close()
+        # p[0].print_png()
 
     def p_goal_statement(self, p):
         '''goal : '*' block_statement'''

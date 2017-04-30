@@ -17,32 +17,31 @@ else:
     debug = 0
 # Build the parser
 parser = yacc.yacc(module=JavaParser(), start='goal')
-# if len(sys.argv) == 3:
-    # if type(sys.argv[2]) == str:
-        # _file = open(sys.argv[2])
-        # outfile = sys.argv[2].split(".")[0]
-    # content = _file.read()
-# else:
+
+# Read the file
 if type(sys.argv[len(sys.argv)-1]) == str:
     _file = open(sys.argv[len(sys.argv)-1])
     outfile = sys.argv[len(sys.argv)-1].split(".")[0]
 content = _file.read()
-if not os.path.exists("csv"):
-    os.makedirs("csv")
+
+# activate the parser
 result = parser.parse("++"+content, debug=debug)
-if result.type == "error":
+if result==None or result.type == "error":
     print("Program Terminated")
 else:
+    # Generate TAC
     tac = code.Tac()
     tac.generate_tac(result)
     sys.stdout = open(outfile+".tac", 'w')
     tac.print_tac()
     sys.stdout.close()
+    # Generate X86
     sys.stdout = open(outfile+".s", 'w')
     print("global main\nextern printInt\nextern printlnInt\nextern scanInt\nextern printChar\n")
     print("extern open\nextern close\nextern create\nextern readChar\nextern writeChar\nsection .text\n")
     tac.print_x86()
     sys.stdout.close()
+    # compile and link the binary
     call('nasm -f elf32 ' + outfile + '.s', shell=True)
     call('nasm -f elf32 helper/printing.s', shell=True)
     call('nasm -f elf32 helper/fileio.s', shell=True)
