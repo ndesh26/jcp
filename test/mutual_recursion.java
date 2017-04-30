@@ -12,7 +12,7 @@ class mutual_recursion{
     }
     int even_function(int n){
         int even;
-        if (n==0){
+        if (n==1){
             even = 0;
         }
         else{
@@ -21,6 +21,6 @@ class mutual_recursion{
         return even;
     }
     public static void main(){
-        printInt(odd_function(3));
+        printInt(even_function(8));
     }
 }
