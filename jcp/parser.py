@@ -8,7 +8,7 @@ import ptg
 code = __import__('3addrcode')
 
 if len(sys.argv) < 2:
-    print("Usage: {} [-g, -t, -s] filename".format(sys.argv[0]))
+    print("Usage: {} [-g] filename".format(sys.argv[0]))
     exit()
 
 if "-g" in sys.argv:
@@ -35,14 +35,15 @@ if result.type == "error":
 else:
     tac = code.Tac()
     tac.generate_tac(result)
-    if "-t" in sys.argv:
-        sys.stdout = open(outfile+".tac", 'w')
-        tac.print_tac()
-        sys.stdout.close()
-    if "-s" in sys.argv:
-        sys.stdout = open(outfile+".s", 'w')
-        print("global main\nextern printInt\nextern printlnInt\nextern scanInt\nextern printChar\nsection .text\n")
-        tac.print_x86()
-        sys.stdout.close()
-        call('nasm -f elf32 ' + outfile + '.s', shell=True)
-        call('cc -m32 ' + outfile + '.o helper/printing.o -o ' + outfile, shell=True)
+    sys.stdout = open(outfile+".tac", 'w')
+    tac.print_tac()
+    sys.stdout.close()
+    sys.stdout = open(outfile+".s", 'w')
+    print("global main\nextern printInt\nextern printlnInt\nextern scanInt\nextern printChar\n")
+    print("extern open\nextern close\nextern create\nextern readChar\nextern writeChar\nsection .text\n")
+    tac.print_x86()
+    sys.stdout.close()
+    call('nasm -f elf32 ' + outfile + '.s', shell=True)
+    call('nasm -f elf32 helper/printing.s', shell=True)
+    call('nasm -f elf32 helper/fileio.s', shell=True)
+    call('cc -m32 ' + outfile + '.o helper/printing.o helper/fileio.o -o ' + outfile, shell=True)
