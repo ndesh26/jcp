@@ -63,6 +63,7 @@ class Table:
         self.width = 0
         self.arg_size = 0
         self.args = True
+        self.constructor = ''
 
     def lookup(self, name):
         if name in self.entries:
@@ -131,6 +132,16 @@ class Table:
 
     def get_arg_size(self):
         return self.arg_size
+
+    def set_constructor(self, constructor):
+        self.constructor = constructor
+        # print(self.name)
+        # print(constructor)
+
+    def get_constructor(self):
+        # print(self.constructor)
+        # print(self.name)
+        return self.constructor
 
 class SymbolTable:
 
@@ -236,3 +247,9 @@ class SymbolTable:
 
     def get_arg_size(self):
         return self.table.get_arg_size()
+
+    def get_class_constructor(self, name):
+        return self.classes[name].get_constructor();
+
+    def set_class_constructor(self, name):
+        self.table.set_constructor(name);

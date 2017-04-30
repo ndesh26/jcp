@@ -1553,6 +1553,9 @@ class StatementParser(object):
     def p_class_instance_creation_expression2(self, p):
         '''class_instance_creation_expression : NEW class_type '(' argument_list_opt ')' class_body_opt'''
         p[0] = Node("ClassInstantiation", type=p[2].type, children=[p[4], p[6]])
+        constructor = Node("DeclsRefExpr", value=symbol_table.get_class_constructor(p[2].type), type=p[2].type+" (int)", sym_entry=symbol_table.lookup_method(p[2].type, symbol_table.get_class_constructor(p[2].type)))
+        constructor_call = Node("MethodInvocation", children=[constructor], type=p[2].type)
+        p[0].children = [constructor_call]
 
     def p_class_instance_creation_expression3(self, p):
         '''class_instance_creation_expression : primary '.' NEW type_arguments class_type '(' argument_list_opt ')' class_body_opt'''
@@ -2171,9 +2174,25 @@ class ClassParser(object):
 
     def p_class_declaration(self, p):
         '''class_declaration : class_header class_body'''
+        symbol_table.set_class_constructor(p[1].children[0].value+"_implicit_constructor")
+        symbol_table.begin_scope(name=p[1].children[0].value+"_implicit_constructor", category='method')
+        entry = symbol_table.insert_up(p[1].children[0].value+"_implicit_constructor", {'value': p[1].children[0].value+"_implicit_constructor", 'type':p[1].children[0].value+" ()", 'modifiers': ''})
+        symbol_table.table.arg_size = 0
+        symbol_table.table.width = 0
+        symbol_table.table.args = False
+        symbol_table.end_scope()
         symbol_table.insert_class(p[1].children[0].value)
         symbol_table.end_scope()
+        size = Node("IntegerLiteral", value=symbol_table.get_class_width(p[1].children[0].value), type="int")
+        this = Node("IntegerLiteral", value=0)
+        mem = Node("DeclsRefExpr", value="mem", type="int (int)", sym_entry=symbol_table.get_entry('mem'))
+        mem_call = Node("MethodInvocation", children=[mem, this, size], type="int")
+        return_node = Node("ReturnStmt", type=p[1].children[0].value, children=[mem_call])
+        body = Node("MethodBody", children=[return_node])
+        header = Node("MethodHeader", value=p[1].children[0].value+"_implicit_constructor", type=p[1].children[0].value+" ()", sym_entry=entry)
+        decl = Node("MethodDecl", children=[header, body], sym_entry=entry)
         p[0] = Node("ClassDecl", type=p[2].type, children=[p[1],p[2]])
+        p[2].children.append(decl)
 
     def p_class_header(self, p):
         '''class_header : class_header_name class_header_extends_opt class_header_implements_opt'''

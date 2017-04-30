@@ -681,7 +681,7 @@ class Tac(object):
                 arg1_addr = False
             if node.children[0].name in ["ArrayAccess", "FieldAccessExpr"]:
                 arg1_addr = False
-            binop = BinOp(op="+", arg1=arg, arg2={'value': node.sym_entry['offset'], 'type': "int", 'arraylen': []}, dst=dst, arg1_addr=arg1_addr)
+            binop = BinOp(op="+", arg1=arg, arg2={'value': node.sym_entry['offset'], 'type': "int", 'arraylen': []}, dst=dst)
             self.code.append(binop)
             return dst
 
@@ -706,6 +706,13 @@ class Tac(object):
             binop = BinOp(op="+", arg1=arg1, arg2=dst, dst=dst)
             self.code.append(multi)
             self.code.append(binop)
+            return dst
+
+        elif node.name == "ClassInstantiation":
+            dst = symbol_table.get_temp(node.type, self.table)
+            arg = self.generate_tac(node.children[0])
+            assignop = AssignOp(arg=arg, dst=dst)
+            self.code.append(assignop)
             return dst
 
         else:
