@@ -16,6 +16,7 @@ symbol_table.insert('create', {'value': 'create', 'type':'int (this,string)', 'm
 symbol_table.insert('close', {'value': 'close', 'type':'void (this,int)', 'modifiers': ''})
 symbol_table.insert('writeChar', {'value': 'writeChar', 'type':'void (this,int,char)', 'modifiers': ''})
 symbol_table.insert('readChar', {'value': 'readChar', 'type':'char (this,int)', 'modifiers': ''})
+symbol_table.insert('mem', {'value': 'mem', 'type':'int (this,int)', 'modifiers': ''})
 nat = []
 data = {}
 str_label = 1
@@ -1017,7 +1018,16 @@ class StatementParser(object):
     def p_array_initializer2(self, p):
         '''array_initializer : '{' variable_initializers '}'
                              | '{' variable_initializers ',' '}' '''
-        p[0] = p[2]
+        width = st.type_width(p[2].type)
+        for i in p[2].arraylen:
+            width *= i
+        size = Node("IntegerLiteral", value=width, type="int")
+        print(size.value)
+        this = Node("DeclsRefExpr", value='this', sym_entry=symbol_table.get_entry('this'))
+        mem = Node("DeclsRefExpr", value="mem", type="int (int)", sym_entry=symbol_table.get_entry('mem'))
+        mem_call = Node("MethodInvocation", children=[mem, this, size], type="int")
+        p[0] = Node("ArrayInitialization", type=p[2].type, dims=p[2].dims, arraylen=p[2].arraylen)
+        p[0].children = [mem_call, p[2]]
 
     def p_variable_initializers(self, p):
         '''variable_initializers : variable_initializer
@@ -1712,7 +1722,18 @@ class StatementParser(object):
     def p_array_creation_without_array_initializer(self, p):
         '''array_creation_without_array_initializer : NEW primitive_type dim_with_or_without_exprs
                                                     | NEW class_or_interface_type dim_with_or_without_exprs'''
-        p[0] = Node("ArrayInitialization", type=p[2].type, children=[p[3]], dims=p[3].dims, arraylen=p[3].arraylen)
+
+        p[0] = Node("ArrayInitialization", type=p[2].type, dims=p[3].dims, arraylen=p[3].arraylen)
+        width = st.type_width(p[2].type)
+        for i in p[3].arraylen:
+            width *= i
+        size = Node("IntegerLiteral", value=width, type="int")
+        print(size.value)
+        this = Node("DeclsRefExpr", value='this', sym_entry=symbol_table.get_entry('this'))
+        mem = Node("DeclsRefExpr", value="mem", type="int (int)", sym_entry=symbol_table.get_entry('mem'))
+        mem_call = Node("MethodInvocation", children=[mem, this, size], type="int")
+        p[0].children = [mem_call]
+
 
 class NameParser(object):
 
@@ -2908,11 +2929,11 @@ class JavaParser(ExpressionParser, NameParser, LiteralParser, TypeParser, ClassP
     def p_goal_compilation_unit(self, p):
         '''goal : PLUSPLUS compilation_unit'''
         p[0] = p[2]
-        # p[0].print_tree()
-        # target = open("ast.txt", 'w')
-        # target.write(ast)
-        # target.close()
-        # p[0].print_png()
+        p[0].print_tree()
+        target = open("ast.txt", 'w')
+        target.write(ast)
+        target.close()
+        p[0].print_png()
 
     def p_goal_expression(self, p):
         '''goal : MINUSMINUS expression'''

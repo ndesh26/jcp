@@ -457,12 +457,21 @@ class Tac(object):
         elif node.name == "VarDecl":
             if node.children and node.children[0].name == "InitListExpr":
                 arg1 = node.sym_entry
-                element = symbol_table.get_temp(node.type, self.table)
-                size = {'value': type_width(node.type), 'type': node.type, 'arraylen': []}
+                arg = self.generate_tac(node.children[0].children[0])
+                assignop = AssignOp(arg=arg, dst=dst)
+                self.code.append(assignop)
                 index = symbol_table.get_temp(node.type, self.table)
                 indexop = AssignOp(arg=arg1, dst=index, arg_addr=True)
                 self.code.append(indexop)
                 self.generate_tac(node.children[0], parent=index)
+
+            elif node.children and  node.children[0].name == "ArrayInitialization":
+                dst = node.sym_entry
+                arg = self.generate_tac(node.children[0].children[0])
+                assignop = AssignOp(arg=arg, dst=dst)
+                self.code.append(assignop)
+                if len(node.children[0].children) == 2:
+                    self.generate_tac(node.children[0].children[1], parent=arg)
 
             elif node.children and node.children[0].name is not "ArrayInitialization":
                 arg1 = node.sym_entry
@@ -694,7 +703,7 @@ class Tac(object):
             if node.children[0].name in ["ArrayAccess", "FieldAccessExpr"]:
                 arg1_addr = False
 
-            binop = BinOp(op="+", arg1=arg1, arg2=dst, dst=dst, arg1_addr=arg1_addr)
+            binop = BinOp(op="+", arg1=arg1, arg2=dst, dst=dst)
             self.code.append(multi)
             self.code.append(binop)
             return dst

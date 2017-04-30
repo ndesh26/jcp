@@ -14,6 +14,21 @@ def type_width(name):
         if name in width:
             return width[name]
         else:
+            return 4
+    else:
+        if (name["type"] in width):
+            return width[name["type"]]
+        elif "(" in name["type"]:
+            return 0
+        else:
+            return 4
+
+def total_width(name):
+    global width
+    if (isinstance(name, str)):
+        if name in width:
+            return width[name]
+        else:
             return 0
     else:
         if (name["type"] in width):
@@ -146,8 +161,8 @@ class SymbolTable:
         return self.table.get_width()
 
     def insert(self, name, attributes={}):
-        if type_width(attributes) == 0:
-            attributes['width'] = self.get_class_width(attributes['type'])
+        # if type_width(attributes) == 0:
+            # attributes['width'] = self.get_class_width(attributes['type'])
         return self.table.insert(name, attributes)
 
     def print_table(self, file):
