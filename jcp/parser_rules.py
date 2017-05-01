@@ -16,7 +16,7 @@ symbol_table.insert('create', {'value': 'create', 'type':'int (this,string)', 'm
 symbol_table.insert('close', {'value': 'close', 'type':'void (this,int)', 'modifiers': ''})
 symbol_table.insert('writeChar', {'value': 'writeChar', 'type':'void (this,int,char)', 'modifiers': ''})
 symbol_table.insert('readChar', {'value': 'readChar', 'type':'char (this,int)', 'modifiers': ''})
-symbol_table.insert('mem', {'value': 'mem', 'type':'int (this,int)', 'modifiers': ''})
+symbol_table.insert('mem', {'value': 'mem', 'type':'int (int)', 'modifiers': ''})
 nat = []
 data = {}
 str_label = 1
@@ -1023,9 +1023,8 @@ class StatementParser(object):
             width *= i
         size = Node("IntegerLiteral", value=width, type="int")
         print(size.value)
-        this = Node("DeclsRefExpr", value='this', sym_entry=symbol_table.get_entry('this'))
         mem = Node("DeclsRefExpr", value="mem", type="int (int)", sym_entry=symbol_table.get_entry('mem'))
-        mem_call = Node("MethodInvocation", children=[mem, this, size], type="int")
+        mem_call = Node("MethodInvocation", children=[mem, size], type="int")
         p[0] = Node("ArrayInitialization", type=p[2].type, dims=p[2].dims, arraylen=p[2].arraylen)
         p[0].children = [mem_call, p[2]]
 
@@ -1731,10 +1730,9 @@ class StatementParser(object):
         for i in p[3].arraylen:
             width *= i
         size = Node("IntegerLiteral", value=width, type="int")
-        print(size.value)
-        this = Node("DeclsRefExpr", value='this', sym_entry=symbol_table.get_entry('this'))
+        print(symbol_table.get_entry('this'))
         mem = Node("DeclsRefExpr", value="mem", type="int (int)", sym_entry=symbol_table.get_entry('mem'))
-        mem_call = Node("MethodInvocation", children=[mem, this, size], type="int")
+        mem_call = Node("MethodInvocation", children=[mem, size], type="int")
         p[0].children = [mem_call]
 
 
@@ -2184,9 +2182,8 @@ class ClassParser(object):
         symbol_table.insert_class(p[1].children[0].value)
         symbol_table.end_scope()
         size = Node("IntegerLiteral", value=symbol_table.get_class_width(p[1].children[0].value), type="int")
-        this = Node("IntegerLiteral", value=0)
         mem = Node("DeclsRefExpr", value="mem", type="int (int)", sym_entry=symbol_table.get_entry('mem'))
-        mem_call = Node("MethodInvocation", children=[mem, this, size], type="int")
+        mem_call = Node("MethodInvocation", children=[mem, size], type="int")
         return_node = Node("ReturnStmt", type=p[1].children[0].value, children=[mem_call])
         body = Node("MethodBody", children=[return_node])
         header = Node("MethodHeader", value=p[1].children[0].value+"_implicit_constructor", type=p[1].children[0].value+" ()", sym_entry=entry)

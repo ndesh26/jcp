@@ -200,13 +200,8 @@ class PushParam(Ins):
 
     def __tox86__(self):
         if 'offset' in self.param.keys():
-            if self.param['type'] in ['int', 'float', 'char'] and self.param['arraylen'] == []:
-                move = '\tmov eax, [ebp{}]'.format(self.param['offset']) if (self.param['offset']) < 0 else '\tmov eax, [ebp+{}]'.format(self.param['offset'])+ ' ;' + self.__repr__()
-                move += '\n\tpush eax'
-            else:
-                move = '\t' + 'mov eax, ebp' + ' ;' + self.__repr__()
-                move += '\n\t' + ('sub eax, {}'.format(-self.param['offset']) if self.param['offset'] < 0 else 'mov eax, {}'.format(self.param['offset']))
-                move += '\n\tpush eax'
+            move = '\tmov eax, [ebp{}]'.format(self.param['offset']) if (self.param['offset']) < 0 else '\tmov eax, [ebp+{}]'.format(self.param['offset'])+ ' ;' + self.__repr__()
+            move += '\n\tpush eax'
         else:
             if self.param['type'] == 'string':
                 move = '\tmov eax, {}'.format(self.param['pointer'])
@@ -453,7 +448,6 @@ class Tac(object):
                 self.code.append(unaryop)
                 return dst
 
-
         elif node.name == "VarDecl":
             if node.children and node.children[0].name == "InitListExpr":
                 arg1 = node.sym_entry
@@ -489,6 +483,7 @@ class Tac(object):
                 for child in node.children:
                     arg2 = self.generate_tac(child)
                     assignop = AssignOp(arg=arg2, dst=parent, dst_pointer=True)
+                    print(parent)
                     indexinc = BinOp(op="+", arg1=parent, arg2=size, dst=parent)
                     self.code.append(assignop)
                     self.code.append(indexinc)
