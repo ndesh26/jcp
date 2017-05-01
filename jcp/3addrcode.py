@@ -501,7 +501,7 @@ class Tac(object):
                 arg1 = self.generate_tac(node.children[0], true_lbl=if_true_lbl, false_lbl=if_next_lbl)
                 true_label = Label(label=if_true_lbl+":")
                 self.code.append(true_label)
-                arg1 = self.generate_tac(node.children[1])
+                arg1 = self.generate_tac(node.children[1], end_lbl=end_lbl)
                 end = Label(label=if_next_lbl+":")
                 self.code.append(end)
             else:
@@ -511,12 +511,12 @@ class Tac(object):
                 arg1 = self.generate_tac(node.children[0], true_lbl=if_true_lbl, false_lbl=if_false_lbl)
                 true_label = Label(label=if_true_lbl+":")
                 self.code.append(true_label)
-                arg1 = self.generate_tac(node.children[1])
+                arg1 = self.generate_tac(node.children[1], end_lbl=end_lbl)
                 goto = Jmp(cond='JMP', target=if_next_lbl)
                 self.code.append(goto)
                 false_label = Label(label=if_false_lbl+":")
                 self.code.append(false_label)
-                arg1 = self.generate_tac(node.children[2])
+                arg1 = self.generate_tac(node.children[2], end_lbl=end_lbl)
                 end = Label(label=if_next_lbl+":")
                 self.code.append(end)
 
