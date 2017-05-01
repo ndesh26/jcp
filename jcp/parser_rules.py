@@ -145,6 +145,8 @@ class ExpressionParser(object):
             p[0] = Node("BinaryOperator", value=p[2].value, children=[p[1], p[3]])
         elif p[1].type == 'int' and p[3].type == 'double' and p[2].type == '=':
             p[0] = Node("BinaryOperator", value=p[2].value, children=[p[1], p[3]])
+        elif p[1].type == 'null' or p[3].type == 'null':
+            p[0] = Node("BinaryOperator", value=p[2].value, children=[p[1], p[3]])
         else:
             print("line {}: Type mismatch".format(p[2].lineno))
             p[0] = Node("BinaryOperator", value=p[2].value, type="error", children=[p[1], p[3]])
@@ -1161,7 +1163,7 @@ class StatementParser(object):
         '''while_statement : WHILE '(' expression ')' statement'''
         if p[5].name == "":
             p[5].name = "NullStmt"
-        if p[3].type == "bool":
+        if p[3].type == "bool" or "boolean":
             p[0] = Node("WhileStmt", children=[p[3],p[5]])
         else:
             tmp = Node("ImplicitCastExpr", type=p[3].type, children=[p[3]])
@@ -1407,7 +1409,7 @@ class StatementParser(object):
     def p_return_statement(self, p):
         '''return_statement : RETURN expression_opt ';' '''
         p[0] = Node("ReturnStmt", children=[p[2]])
-        if p[2].type != symbol_table.get_method_return_type():
+        if p[2].type != symbol_table.get_method_return_type() and not symbol_table.get_method_return_type() == 'boolean':
             print("line {}: the return statement returns expressions of type '{}' instead of '{}'".format(p.lineno(1), p[2].type, symbol_table.get_method_return_type()))
 
     def p_synchronized_statement(self, p):
@@ -1866,7 +1868,10 @@ class TypeParser(object):
                           | CHAR
                           | FLOAT
                           | DOUBLE'''
-        p[0] = Node("Type", type=p[1])
+        if p[1] == 'BOOLEAN':
+            p[0] = Node("Type", type="bool")
+        else:
+            p[0] = Node("Type", type=p[1])
 
     def p_reference_type(self, p):
         '''reference_type : class_or_interface_type
