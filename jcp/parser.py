@@ -29,6 +29,12 @@ result = parser.parse("++"+content, debug=debug)
 if result==None or result.type == "error":
     print("Program Terminated")
 else:
+    if not os.path.exists("bin"):
+        os.makedirs("bin")
+    if not os.path.exists("assembly"):
+        os.makedirs("assembly")
+    if not os.path.exists("tac"):
+        os.makedirs("tac")
     # Generate TAC
     tac = code.Tac()
     tac.generate_tac(result)
