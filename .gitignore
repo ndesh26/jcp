@@ -5,6 +5,7 @@ __pycache__/
 
 # C extensions
 *.so
+*.o
 
 # Distribution / packaging
 .Python
@@ -101,3 +102,6 @@ ast.txt
 csv
 check.c
 out.png
+bin/
+assembly/
+tac/
