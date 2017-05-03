@@ -2364,7 +2364,7 @@ class ClassParser(object):
 
     def p_constructor_declaration(self, p):
         '''constructor_declaration : constructor_header method_body'''
-        symbol_table.print_table(p[1].children[0].value + "_constructor.csv")
+        # symbol_table.print_table(p[1].children[0].value + "_constructor.csv")
         size = Node("IntegerLiteral", value=symbol_table.table.parent_table.get_width(), type="int")
         mem = Node("DeclsRefExpr", value="mem", type="int (int)", sym_entry=symbol_table.get_entry('mem'))
         mem_call = Node("MethodInvocation", children=[mem, size], type="int")
