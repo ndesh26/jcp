@@ -448,6 +448,13 @@ class Tac(object):
                 self.code.append(unaryop)
                 return dst
 
+        elif node.name == "ArrayInitialization":
+            dst = symbol_table.get_temp(node.type, self.table)
+            arg = self.generate_tac(node.children[0])
+            assignop = AssignOp(arg=arg, dst=dst)
+            self.code.append(assignop)
+            return dst
+
         elif node.name == "VarDecl":
             if node.children and node.children[0].name == "InitListExpr":
                 arg1 = node.sym_entry
@@ -483,7 +490,6 @@ class Tac(object):
                 for child in node.children:
                     arg2 = self.generate_tac(child)
                     assignop = AssignOp(arg=arg2, dst=parent, dst_pointer=True)
-                    print(parent)
                     indexinc = BinOp(op="+", arg1=parent, arg2=size, dst=parent)
                     self.code.append(assignop)
                     self.code.append(indexinc)
@@ -501,7 +507,7 @@ class Tac(object):
                 arg1 = self.generate_tac(node.children[0], true_lbl=if_true_lbl, false_lbl=if_next_lbl)
                 true_label = Label(label=if_true_lbl+":")
                 self.code.append(true_label)
-                arg1 = self.generate_tac(node.children[1], end_lbl=end_lbl)
+                arg1 = self.generate_tac(node.children[1], end_lbl=end_lbl, start_lbl=start_lbl)
                 end = Label(label=if_next_lbl+":")
                 self.code.append(end)
             else:
@@ -511,12 +517,12 @@ class Tac(object):
                 arg1 = self.generate_tac(node.children[0], true_lbl=if_true_lbl, false_lbl=if_false_lbl)
                 true_label = Label(label=if_true_lbl+":")
                 self.code.append(true_label)
-                arg1 = self.generate_tac(node.children[1], end_lbl=end_lbl)
+                arg1 = self.generate_tac(node.children[1], end_lbl=end_lbl, start_lbl=start_lbl)
                 goto = Jmp(cond='JMP', target=if_next_lbl)
                 self.code.append(goto)
                 false_label = Label(label=if_false_lbl+":")
                 self.code.append(false_label)
-                arg1 = self.generate_tac(node.children[2], end_lbl=end_lbl)
+                arg1 = self.generate_tac(node.children[2], end_lbl=end_lbl, start_lbl=start_lbl)
                 end = Label(label=if_next_lbl+":")
                 self.code.append(end)
 
@@ -539,6 +545,7 @@ class Tac(object):
         elif node.name == "ForStmt":
             self.generate_tac(node.children[0].children[0])
             for_cond_label = symbol_table.get_target()
+            for_update_label = symbol_table.get_target()
             for_true_label = symbol_table.get_target()
             for_false_label = symbol_table.get_target()
             for_cond = Label(label=for_cond_label+":")
@@ -547,7 +554,9 @@ class Tac(object):
             for_true = Label(label=for_true_label+":")
             self.code.append(for_true)
             self.generate_tac(node.children[3],
-                              end_lbl=for_false_label, start_lbl=for_cond_label)
+                              end_lbl=for_false_label, start_lbl=for_update_label)
+            for_update = Label(label=for_update_label+":")
+            self.code.append(for_update)
             self.generate_tac(node.children[2])
             goto_cond = Jmp(cond='JMP', target=for_cond_label)
             self.code.append(goto_cond)
@@ -616,6 +625,17 @@ class Tac(object):
             end_func = EndFunc()
             self.code.append(end_func)
 
+        elif node.name == "ConstrDecl":
+            func = Label(label=node.children[0].sym_entry['value']+":")
+            self.code.append(func)
+            begin_func = BeginFunc()
+            self.code.append(begin_func)
+            self.table = node.children[0].sym_entry['table'];
+            self.generate_tac(node.children[1])
+            begin_func.width = node.children[0].sym_entry['table'].get_width() - node.children[0].sym_entry['table'].get_arg_size()
+            end_func = EndFunc()
+            self.code.append(end_func)
+
         elif node.name == "MethodInvocation":
             k = 0
             if node.type != "void":
@@ -656,13 +676,21 @@ class Tac(object):
         elif node.name == "StringLiteral":
             return {'value': node.value, 'type': "string", 'arraylen': [], 'pointer': node.sym_entry}
 
+        elif node.name == "Null":
+            return {'value': 0, 'arraylen': [], 'type': ""}
+
         elif node.name == "Boolean":
             if node.value == "true":
-                goto = Jmp(cond='JMP', target=true_lbl)
-            else:
-                goto = Jmp(cond='JMP', target=false_lbl)
-            self.code.append(goto)
-            return {'value': node.value, 'type': "bool", 'arraylen': []}
+                if true_lbl:
+                    goto = Jmp(cond='JMP', target=true_lbl)
+                    self.code.append(goto)
+                node.value = 1
+            elif node.value == "false":
+                if false_lbl:
+                    goto = Jmp(cond='JMP', target=false_lbl)
+                    self.code.append(goto)
+                node.value = 0
+            return {'value': node.value, 'type': "boolean", 'arraylen': []}
 
         elif node.name == "DeclsRefExpr":
             return node.sym_entry
@@ -670,13 +698,10 @@ class Tac(object):
         elif node.name == "FieldAccessExpr":
             arg = self.generate_tac(node.children[0])
             dst = symbol_table.get_temp('int', self.table)
-            if arg['offset'] < 0:
-                arg1_addr = True
-            else:
-                arg1_addr = False
+            arg1_addr = False
             if node.children[0].name in ["ArrayAccess", "FieldAccessExpr"]:
-                arg1_addr = False
-            binop = BinOp(op="+", arg1=arg, arg2={'value': node.sym_entry['offset'], 'type': "int", 'arraylen': []}, dst=dst)
+                arg1_addr = True
+            binop = BinOp(op="+", arg1=arg, arg2={'value': node.sym_entry['offset'], 'type': "int", 'arraylen': []}, dst=dst, arg1_pointer=arg1_addr)
             self.code.append(binop)
             return dst
 
@@ -684,21 +709,16 @@ class Tac(object):
             arg1 = self.generate_tac(node.children[0])
             index = self.generate_tac(node.children[1])
             size = type_width(node.type)
-            if size == 0:
-                size = symbol_table.get_class_width(node.type)
             length = len(node.arraylen)- node.dims
             for i in node.arraylen[length:]:
                 size *= i
             dst = symbol_table.get_temp('int', self.table)
             multi = BinOp(op="*", arg1={'value': size, 'type': "int", 'arraylen': []}, arg2=index, dst=dst)
-            if arg1['offset'] < 0:
-                arg1_addr = True
-            else:
-                arg1_addr = False
-            if node.children[0].name in ["ArrayAccess", "FieldAccessExpr"]:
-                arg1_addr = False
+            arg1_pointer = False
+            if node.children[0].name in ["FieldAccessExpr"]:
+                arg1_pointer = True
 
-            binop = BinOp(op="+", arg1=arg1, arg2=dst, dst=dst)
+            binop = BinOp(op="+", arg1=arg1, arg2=dst, dst=dst, arg1_pointer=arg1_pointer)
             self.code.append(multi)
             self.code.append(binop)
             return dst
@@ -723,5 +743,5 @@ class Tac(object):
             print(ins.__tox86__())
         print('section .data')
         for label in data:
-            print('{} db {}'.format(label, data[label]))
+            print('{} db {},0'.format(label, data[label]))
 

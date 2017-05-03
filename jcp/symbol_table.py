@@ -104,7 +104,7 @@ class Table:
     def print_table(self, file):
         if file:
             with open(file, 'w') as csvfile:
-                list = ['Name', 'Type', 'Array Length', 'Modifiers', 'Dims']
+                list = ['Name', 'Type', 'Array Length', 'Modifiers', 'Dims', 'Offset']
                 wr = csv.writer(csvfile, delimiter=',')
                 wr.writerow(list)
                 for key, value in self.entries.items():
@@ -114,8 +114,9 @@ class Table:
                             'Array Length': self.entries[key].get('arraylen'),
                             'Modifiers': self.entries[key].get('modifiers'),
                             'Dims': self.entries[key].get('dims'),
+                            'Offset': self.entries[key].get('offset'),
                             }
-                    fields = ('Name', 'Type', 'Array Length', 'Modifiers', 'Dims')
+                    fields = ('Name', 'Type', 'Array Length', 'Modifiers', 'Dims', 'Offset')
                     cwriter = csv.DictWriter(csvfile, fields, delimiter=',')
                     cwriter.writerow(d)
         else:
@@ -163,7 +164,7 @@ class SymbolTable:
     def get_entry_in_method(self, name):
         current_table = self.table
         while(current_table != None):
-            if current_table.category == "method":
+            if current_table.category in ["method", "constructor"]:
                 return current_table.get_entry(name)
             current_table = current_table.parent_table
         return None
@@ -192,6 +193,11 @@ class SymbolTable:
         return self.classes[name].get_width();
 
     def lookup_method(self, name, method):
+        if name not in self.classes:
+            if method in self.table.parent_table.entries:
+                return self.table.parent_table.entries[method]
+            else:
+                return None
         if self.classes[name].lookup(method):
             return self.classes[name].entries[method]
         else:

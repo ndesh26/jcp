@@ -131,7 +131,7 @@ class ExpressionParser(object):
         '''assignment : postfix_expression assignment_operator assignment_expression'''
         if p[1].type == "error":
             p[0] = Node("BinaryOperator", value=p[2].value, type="error", children=[p[1], p[3]])
-        elif p[1].type == p[3].type and p[1].dims == 0:
+        elif p[1].type == p[3].type:# and p[1].dims == 0:
             p[0] = Node("BinaryOperator", value=p[2].value, children=[p[1], p[3]])
         elif p[1].type == 'char' and p[3].type == 'int' and p[2].type == '=':
             p[0] = Node("BinaryOperator", value=p[2].value, children=[p[1], p[3]])
@@ -205,6 +205,9 @@ class ExpressionParser(object):
                 else:
                     print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
+                if entry and symbol_table.get_entry_in_method(p[1].value) == None:
+                    this = Node("DeclsRefExpr", value="this", sym_entry=symbol_table.get_entry('this'))
+                    p[1] = Node("FieldAccessExpr", value='.' + p[1].value, type=p[1].type, children=[this], modifiers=p[1].modifiers, arraylen=p[1].arraylen, dims=p[1].dims, sym_entry=entry)
             if p[3].type == p[5].type:
                 p[0] = Node("ConditionalOperator", value="", type=p[3].type, children=[p[1], p[3], p[5]])
             elif p[3].type == "string" or p[3].type == "float" or p[3].type == "char":
@@ -225,7 +228,8 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
-            p[0] = Node("BinaryOperator", value=p[2], type="bool", children=[p[1], p[3]])
+            p[0] = Node("BinaryOperator", value=p[2], type="boolean", children=[p[1], p[3]])
+
 
     def p_conditional_or_expression_not_name(self, p):
         '''conditional_or_expression_not_name : conditional_and_expression_not_name
@@ -245,7 +249,10 @@ class ExpressionParser(object):
                 else:
                     print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
-            p[0] = Node("BinaryOperator", value=p[2], type="bool", children=[p[1], p[3]])
+                if entry and symbol_table.get_entry_in_method(p[1].value) == None:
+                    this = Node("DeclsRefExpr", value="this", sym_entry=symbol_table.get_entry('this'))
+                    p[1] = Node("FieldAccessExpr", value='.' + p[1].value, type=p[1].type, children=[this], modifiers=p[1].modifiers, arraylen=p[1].arraylen, dims=p[1].dims, sym_entry=entry)
+            p[0] = Node("BinaryOperator", value=p[2], type="boolean", children=[p[1], p[3]])
 
     def p_conditional_and_expression(self, p):
         '''conditional_and_expression : inclusive_or_expression
@@ -253,7 +260,7 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
-            p[0] = Node("BinaryOperator", value=p[2], type="bool", children=[p[1], p[3]])
+            p[0] = Node("BinaryOperator", value=p[2], type="boolean", children=[p[1], p[3]])
 
     def p_conditional_and_expression_not_name(self, p):
         '''conditional_and_expression_not_name : inclusive_or_expression_not_name
@@ -273,7 +280,10 @@ class ExpressionParser(object):
                 else:
                     print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
-            p[0] = Node("BinaryOperator", value=p[2], type="bool", children=[p[1], p[3]])
+                if entry and symbol_table.get_entry_in_method(p[1].value) == None:
+                    this = Node("DeclsRefExpr", value="this", sym_entry=symbol_table.get_entry('this'))
+                    p[1] = Node("FieldAccessExpr", value='.' + p[1].value, type=p[1].type, children=[this], modifiers=p[1].modifiers, arraylen=p[1].arraylen, dims=p[1].dims, sym_entry=entry)
+            p[0] = Node("BinaryOperator", value=p[2], type="boolean", children=[p[1], p[3]])
 
 
     def p_inclusive_or_expression(self, p):
@@ -306,6 +316,9 @@ class ExpressionParser(object):
                 else:
                     print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
+                if entry and symbol_table.get_entry_in_method(p[1].value) == None:
+                    this = Node("DeclsRefExpr", value="this", sym_entry=symbol_table.get_entry('this'))
+                    p[1] = Node("FieldAccessExpr", value='.' + p[1].value, type=p[1].type, children=[this], modifiers=p[1].modifiers, arraylen=p[1].arraylen, dims=p[1].dims, sym_entry=entry)
             if p[1].type in ["int", "char"] and p[3].type in ["int", "char"]:
                 p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
             else:
@@ -342,6 +355,9 @@ class ExpressionParser(object):
                 else:
                     print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
+                if entry and symbol_table.get_entry_in_method(p[1].value) == None:
+                    this = Node("DeclsRefExpr", value="this", sym_entry=symbol_table.get_entry('this'))
+                    p[1] = Node("FieldAccessExpr", value='.' + p[1].value, type=p[1].type, children=[this], modifiers=p[1].modifiers, arraylen=p[1].arraylen, dims=p[1].dims, sym_entry=entry)
             if p[1].type in ["int", "char"] and p[3].type in ["int", "char"]:
                 p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
             else:
@@ -378,6 +394,9 @@ class ExpressionParser(object):
                 else:
                     print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
+                if entry and symbol_table.get_entry_in_method(p[1].value) == None:
+                    this = Node("DeclsRefExpr", value="this", sym_entry=symbol_table.get_entry('this'))
+                    p[1] = Node("FieldAccessExpr", value='.' + p[1].value, type=p[1].type, children=[this], modifiers=p[1].modifiers, arraylen=p[1].arraylen, dims=p[1].dims, sym_entry=entry)
             if p[1].type in ["int", "char"] and p[3].type in ["int", "char"]:
                 p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
             else:
@@ -391,7 +410,7 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         elif len(p) == 4:
-            p[0] = Node("BinaryOperator", value=p[2], type="bool", children=[p[1], p[3]])
+            p[0] = Node("BinaryOperator", value=p[2], type="boolean", children=[p[1], p[3]])
 
     def p_equality_expression_not_name(self, p):
         '''equality_expression_not_name : instanceof_expression_not_name
@@ -413,7 +432,10 @@ class ExpressionParser(object):
                 else:
                     print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
-            p[0] = Node("BinaryOperator", value=p[2], type="bool", children=[p[1], p[3]])
+                if entry and symbol_table.get_entry_in_method(p[1].value) == None:
+                    this = Node("DeclsRefExpr", value="this", sym_entry=symbol_table.get_entry('this'))
+                    p[1] = Node("FieldAccessExpr", value='.' + p[1].value, type=p[1].type, children=[this], modifiers=p[1].modifiers, arraylen=p[1].arraylen, dims=p[1].dims, sym_entry=entry)
+            p[0] = Node("BinaryOperator", value=p[2], type="boolean", children=[p[1], p[3]])
 
     def p_instanceof_expression(self, p):
         '''instanceof_expression : relational_expression
@@ -441,6 +463,9 @@ class ExpressionParser(object):
                 else:
                     print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
+                if entry and symbol_table.get_entry_in_method(p[1].value) == None:
+                    this = Node("DeclsRefExpr", value="this", sym_entry=symbol_table.get_entry('this'))
+                    p[1] = Node("FieldAccessExpr", value='.' + p[1].value, type=p[1].type, children=[this], modifiers=p[1].modifiers, arraylen=p[1].arraylen, dims=p[1].dims, sym_entry=entry)
             p[0] = Node("BinaryOperator", value=p[2], type="", children=[p[1], p[3]])
 
     def p_relational_expression(self, p):
@@ -453,7 +478,7 @@ class ExpressionParser(object):
             p[0] = p[1]
         elif len(p) == 4:
             if p[1].type in ["int", "float", "char"] and p[3].type in ["int", "float", "char"]:
-                p[0] = Node("BinaryOperator", value=p[2], type="bool", children=[p[1], p[3]])
+                p[0] = Node("BinaryOperator", value=p[2], type="boolean", children=[p[1], p[3]])
             else:
                 print("line {}: incompatible operator '{}' with operand of type '{}' and '{}'".format(p.lineno(2), p[2], p[1].type, p[3].type))
                 p[0] = Node("BinaryOperator", value=p[2], type="error", children=[p[1], p[3]])
@@ -482,8 +507,11 @@ class ExpressionParser(object):
                 else:
                     print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
+                if entry and symbol_table.get_entry_in_method(p[1].value) == None:
+                    this = Node("DeclsRefExpr", value="this", sym_entry=symbol_table.get_entry('this'))
+                    p[1] = Node("FieldAccessExpr", value='.' + p[1].value, type=p[1].type, children=[this], modifiers=p[1].modifiers, arraylen=p[1].arraylen, dims=p[1].dims, sym_entry=entry)
             if p[1].type in ["int", "float", "char"] and p[3].type in ["int", "float", "char"]:
-                p[0] = Node("BinaryOperator", value=p[2], type="bool", children=[p[1], p[3]])
+                p[0] = Node("BinaryOperator", value=p[2], type="boolean", children=[p[1], p[3]])
             else:
                 print("line {}: incompatible operator '{}' with operand of type '{}' and '{}'".format(p.lineno(2), p[2], p[1].type, p[3].type))
                 p[0] = Node("BinaryOperator", value=p[2], type="error", children=[p[1], p[3]])
@@ -528,6 +556,9 @@ class ExpressionParser(object):
                 else:
                     print("line {}: the variable '{}' is undeclared".format(p.lineno(2), p[1].value))
                     p[1].type = "error"
+                if entry and symbol_table.get_entry_in_method(p[1].value) == None:
+                    this = Node("DeclsRefExpr", value="this", sym_entry=symbol_table.get_entry('this'))
+                    p[1] = Node("FieldAccessExpr", value='.' + p[1].value, type=p[1].type, children=[this], modifiers=p[1].modifiers, arraylen=p[1].arraylen, dims=p[1].dims, sym_entry=entry)
             if p[1].type == "int" and p[3].type == "int":
                 p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
             elif p[1].type == "float" and p[3].type == "int":
@@ -575,6 +606,9 @@ class ExpressionParser(object):
                 else:
                     print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
                     p[1].type = "error"
+                if entry and symbol_table.get_entry_in_method(p[1].value) == None:
+                    this = Node("DeclsRefExpr", value="this", sym_entry=symbol_table.get_entry('this'))
+                    p[1] = Node("FieldAccessExpr", value='.' + p[1].value, type=p[1].type, children=[this], modifiers=p[1].modifiers, arraylen=p[1].arraylen, dims=p[1].dims, sym_entry=entry)
             if p[1].type == "int" and p[3].type == "int":
                 p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
             elif (p[1].type == "float" and p[3].type == "int") or (p[1].type == "int" and p[3].type == "float"):
@@ -626,6 +660,9 @@ class ExpressionParser(object):
                 else:
                     print("line {}: the variable '{}' is undeclared".format(p.lineno(1), p[1].value))
                     p[1].type = "error"
+                if entry and symbol_table.get_entry_in_method(p[1].value) == None:
+                    this = Node("DeclsRefExpr", value="this", sym_entry=symbol_table.get_entry('this'))
+                    p[1] = Node("FieldAccessExpr", value='.' + p[1].value, type=p[1].type, children=[this], modifiers=p[1].modifiers, arraylen=p[1].arraylen, dims=p[1].dims, sym_entry=entry)
             if p[1].type == "int" and p[3].type == "int":
                 p[0] = Node("BinaryOperator", value=p[2], type="int", children=[p[1], p[3]])
             elif (p[1].type == "float" and p[3].type == "int") or (p[1].type == "int" and p[3].type == "float"):
@@ -702,6 +739,9 @@ class ExpressionParser(object):
             else:
                 print("line {}: the variable '{}' is undeclared".format(p[1].lineno, p[1].value))
                 p[1].type = "error"
+            if entry and symbol_table.get_entry_in_method(p[1].value) == None:
+                this = Node("DeclsRefExpr", value="this", sym_entry=symbol_table.get_entry('this'))
+                p[1] = Node("FieldAccessExpr", value='.' + p[1].value, type=p[1].type, children=[this], modifiers=p[1].modifiers, arraylen=p[1].arraylen, dims=p[1].dims, sym_entry=entry)
         p[0] = p[1]
 
     def p_postfix_expression_not_name(self, p):
@@ -1024,7 +1064,6 @@ class StatementParser(object):
         for i in p[2].arraylen:
             width *= i
         size = Node("IntegerLiteral", value=width, type="int")
-        print(size.value)
         mem = Node("DeclsRefExpr", value="mem", type="int (int)", sym_entry=symbol_table.get_entry('mem'))
         mem_call = Node("MethodInvocation", children=[mem, size], type="int")
         p[0] = Node("ArrayInitialization", type=p[2].type, dims=p[2].dims, arraylen=p[2].arraylen)
@@ -1123,12 +1162,12 @@ class StatementParser(object):
         '''if_then_statement : IF '(' expression ')' statement'''
         if p[5].name == "":
             p[5].name = "NullStmt"
-        if p[3].type == "bool":
+        if p[3].type == "boolean":
             p[0] = Node("IfStmt", children=[p[3],p[5]])
         else:
             tmp = Node("ImplicitCastExpr", type=p[3].type, children=[p[3]])
             p[0] = Node("IfStmt", type="error", children=[p[3], p[5]])
-            print("line {}: condition in if statment is not of type bool".format(p.lineno(2)))
+            print("line {}: condition in if statment is not of type boolean".format(p.lineno(2)))
             # print("line {}: there will be an implicit conversion form '{}' to 'int'".format(p.lineno(2), p[3].type))
 
     def p_if_then_else_statement(self, p):
@@ -1137,12 +1176,12 @@ class StatementParser(object):
             p[5].name = "NullStmt"
         if p[7].name == "":
             p[7].name = "NullStmt"
-        if p[3].type == "bool":
+        if p[3].type == "boolean":
             p[0] = Node("IfStmt", children=[p[3], p[5], p[7]])
         else:
             tmp = Node("ImplicitCastExpr", type=p[3].type, children=[p[3]])
             p[0] = Node("IfStmt", type="error", children=[p[3], p[5], p[7]])
-            print("line {}: condition in if statement is not of type bool".format(p.lineno(2)))
+            print("line {}: condition in if statement is not of type boolean".format(p.lineno(2)))
             # print("line {}: there will be an implicit conversion form '{}' to 'int'".format(p.lineno(2), p[3].type))
 
     def p_if_then_else_statement_no_short_if(self, p):
@@ -1151,36 +1190,36 @@ class StatementParser(object):
             p[5].name = "NullStmt"
         if p[7].name == "":
             p[7].name = "NullStmt"
-        if p[3].type == "bool":
+        if p[3].type == "boolean":
             p[0] = Node("IfStmt", children=[p[3], p[5], p[7]])
         else:
             tmp = Node("ImplicitCastExpr", type=p[3].type, children=[p[3]])
             p[0] = Node("IfStmt", type="error", children=[p[3], p[5], p[7]])
-            print("line {}: condition in if statement is not of type bool".format(p.lineno(2)))
+            print("line {}: condition in if statement is not of type boolean".format(p.lineno(2)))
             # print("line {}: there will be an implicit conversion form '{}' to 'int'".format(p.lineno(2), p[3].type))
 
     def p_while_statement(self, p):
         '''while_statement : WHILE '(' expression ')' statement'''
         if p[5].name == "":
             p[5].name = "NullStmt"
-        if p[3].type == "bool" or "boolean":
+        if p[3].type == "boolean":
             p[0] = Node("WhileStmt", children=[p[3],p[5]])
         else:
             tmp = Node("ImplicitCastExpr", type=p[3].type, children=[p[3]])
             p[0] = Node("WhileStmt", type="error", children=[p[3], p[5]])
-            print("line {}: condition in while statement is not of type bool".format(p.lineno(2)))
+            print("line {}: condition in while statement is not of type boolean".format(p.lineno(2)))
             # print("line {}: there will be an implicit conversion form '{}' to 'int'".format(p.lineno(2), p[3].type))
 
     def p_while_statement_no_short_if(self, p):
         '''while_statement_no_short_if : WHILE '(' expression ')' statement_no_short_if'''
         if p[5].name == "":
             p[5].name = "NullStmt"
-        if p[3].type == "bool":
+        if p[3].type == "boolean":
             p[0] = Node("WhileStmt", children=[p[3],p[5]])
         else:
             tmp = Node("ImplicitCastExpr", type=p[3].type, children=[p[3]])
             p[0] = Node("WhileStmt", children=[tmp,p[5]])
-            print("line {}: condition in while statement is not of type bool".format(p.lineno(2)))
+            print("line {}: condition in while statement is not of type boolean".format(p.lineno(2)))
             # print("line {}: there will be an implicit conversion form '{}' to 'int'".format(p.lineno(2), p[3].type))
 
     def p_for_statement(self, p):
@@ -1193,11 +1232,11 @@ class StatementParser(object):
             p[7].name = "NullStmt"
         if p[9].name == "":
             p[9].name = "NullStmt"
-        if p[5].type == 'bool':
+        if p[5].type == 'boolean':
             p[0] = Node("ForStmt", children=[p[3], p[5], p[7], p[9]])
         else:
             p[0] = Node("ForStmt", type="error", children=[p[3], p[5], p[7], p[9]])
-            print("line {}: condition in while statement is not of type bool".format(p.lineno(2)))
+            print("line {}: condition in while statement is not of type boolean".format(p.lineno(2)))
         if p[3].name == "Decls":
             for node in p[3].children:
                 symbol_table.remove(node.value)
@@ -1212,7 +1251,7 @@ class StatementParser(object):
             p[7].name = "NullStmt"
         if p[9].name == "":
             p[9].name = "NullStmt"
-        if p[5].type == 'bool':
+        if p[5].type == 'boolean':
             p[0] = Node("ForStmt", children=[p[3], p[5], p[7], p[9]])
         else:
             p[0] = Node("ForStmt", type="error", children=[p[3], p[5], p[7], p[9]])
@@ -1298,13 +1337,13 @@ class StatementParser(object):
         '''assert_statement : ASSERT expression ';'
                             | ASSERT expression ':' expression ';' '''
         if len(p) == 4:
-            if p[2].type == "int" or p[2].type == "bool":
+            if p[2].type == "int" or p[2].type == "boolean":
                 p[0] = Node("AssertStmt", children=[p[2]])
             else:
                 print("line {}: assert Statement has type mismatch".format(p.lineno(1)))
                 p[0] = Node("AssertStmt", type="error", children=[p[2]])
         elif len(p) == 6:
-            if (p[2].type == "int" or p[2].type == "bool") and p[4].type == "string":
+            if (p[2].type == "int" or p[2].type == "boolean") and p[4].type == "string":
                 p[0] = Node("AssertStmt", children=[p[2],p[4]])
             else:
                 p[0] = Node("AssertStmt", type="error", children=[p[2],p[4]])
@@ -1383,12 +1422,12 @@ class StatementParser(object):
 
     def p_do_statement(self, p):
         '''do_statement : DO statement WHILE '(' expression ')' ';' '''
-        if p[5].type == "bool":
+        if p[5].type == "boolean":
             p[0] = Node("DoWhileStmt", children=[p[2],p[5]])
         else:
             tmp = Node("ImplicitCastExpr", type=p[5].type, children=[p[5]])
             p[0] = Node("DoWhileStmt", type="error", children=[p[2], p[5]])
-            print("line {}: condition in while statement is not of type bool".format(p.lineno(2)))
+            print("line {}: condition in while statement is not of type boolean".format(p.lineno(2)))
 
     def p_break_statement(self, p):
         '''break_statement : BREAK ';'
@@ -1555,8 +1594,13 @@ class StatementParser(object):
         '''class_instance_creation_expression : NEW class_type '(' argument_list_opt ')' class_body_opt'''
         p[0] = Node("ClassInstantiation", type=p[2].type, children=[p[4], p[6]])
         constructor = Node("DeclsRefExpr", value=symbol_table.get_class_constructor(p[2].type), type=p[2].type+" (int)", sym_entry=symbol_table.lookup_method(p[2].type, symbol_table.get_class_constructor(p[2].type)))
-        constructor_call = Node("MethodInvocation", children=[constructor], type=p[2].type)
+        constructor_call = Node("MethodInvocation", children=[constructor, Node("DeclsRefExpr", value='this', sym_entry=symbol_table.get_entry('this'))]+p[4].children, type=p[2].type)
         p[0].children = [constructor_call]
+        # p[0].type = p[2].type.split(" ", 1)[0]
+        # args = p[2].type.split(" ", 1)[1][1:-1].split(",", len(p[4].children)-1)
+        # for arg, node in zip(args[1:], p[4].children[1:]):
+            # if arg != node.type:
+                # print("line {}: the function is expecting arg of type '{}' but the arg provided is of type '{}'".format(p.lineno(1), arg, node.type))
 
     def p_class_instance_creation_expression3(self, p):
         '''class_instance_creation_expression : primary '.' NEW type_arguments class_type '(' argument_list_opt ')' class_body_opt'''
@@ -1686,7 +1730,7 @@ class StatementParser(object):
             return
         if p[1].dims == 1:
             p[0] = Node("ArrayAccess",value=p[1].value ,children=[p[1],p[3]], type=p[1].type, arraylen=p[1].arraylen, modifiers=p[1].modifiers, dims=0)
-            if (p[0].arraylen and isinstance(p[3].value, int) and p[3].value >= p[0].arraylen[0]):
+            if (p[0].arraylen and isinstance(p[3].value, int) and p[3].value >= p[0].arraylen[-1]):
                 print("line {}: the array index '{}' is out of range".format(p.lineno(2), p[3].value))
             return
         p[0] = Node("ArrayAccess", children=[p[1],p[3]], type=p[1].type, arraylen=p[1].arraylen, modifiers=p[1].modifiers, dims=p[1].dims-1)
@@ -1724,19 +1768,26 @@ class StatementParser(object):
             p[0] = p[2]
 
     def p_array_creation_without_array_initializer(self, p):
-        '''array_creation_without_array_initializer : NEW primitive_type dim_with_or_without_exprs
-                                                    | NEW class_or_interface_type dim_with_or_without_exprs'''
-
+        '''array_creation_without_array_initializer : NEW primitive_type dim_with_or_without_exprs'''
         p[0] = Node("ArrayInitialization", type=p[2].type, dims=p[3].dims, arraylen=p[3].arraylen)
         width = st.type_width(p[2].type)
         for i in p[3].arraylen:
             width *= i
         size = Node("IntegerLiteral", value=width, type="int")
-        print(symbol_table.get_entry('this'))
         mem = Node("DeclsRefExpr", value="mem", type="int (int)", sym_entry=symbol_table.get_entry('mem'))
         mem_call = Node("MethodInvocation", children=[mem, size], type="int")
         p[0].children = [mem_call]
 
+    def p_array_creation_without_array_initializer1(self, p):
+        '''array_creation_without_array_initializer : NEW class_or_interface_type dim_with_or_without_exprs'''
+        p[0] = Node("ArrayInitialization", type=p[2].type, dims=p[3].dims, arraylen=p[3].arraylen)
+        width = st.type_width(p[2].type)
+        for i in p[3].arraylen:
+            width *= i
+        size = Node("IntegerLiteral", value=width, type="int")
+        mem = Node("DeclsRefExpr", value="mem", type="int (int)", sym_entry=symbol_table.get_entry('mem'))
+        mem_call = Node("MethodInvocation", children=[mem, size], type="int")
+        p[0].children = [mem_call]
 
 class NameParser(object):
 
@@ -1810,7 +1861,7 @@ class LiteralParser(object):
     def p_literal4(self, p):
         '''literal : TRUE
                    | FALSE'''
-        p[0] = Node("Boolean", value=p[1], type="bool")
+        p[0] = Node("Boolean", value=p[1], type="boolean")
 
     def p_literal5(self, p):
         '''literal : NULL'''
@@ -1868,10 +1919,7 @@ class TypeParser(object):
                           | CHAR
                           | FLOAT
                           | DOUBLE'''
-        if p[1] == 'BOOLEAN':
-            p[0] = Node("Type", type="bool")
-        else:
-            p[0] = Node("Type", type=p[1])
+        p[0] = Node("Type", type=p[1])
 
     def p_reference_type(self, p):
         '''reference_type : class_or_interface_type
@@ -1891,8 +1939,6 @@ class TypeParser(object):
         '''class_or_interface : name
                               | generic_type '.' name'''
         if len(p) == 2:
-            if symbol_table.lookup_class(p[1].value) == False:
-                print("line {}: Object '{}' not defined".format(p[1].lineno, p[1].value))
             p[1].type = p[1].value
             p[0] = p[1]
         elif len(p) == 4:
@@ -2177,11 +2223,12 @@ class ClassParser(object):
 
     def p_class_declaration(self, p):
         '''class_declaration : class_header class_body'''
-        symbol_table.set_class_constructor(p[1].children[0].value+"_implicit_constructor")
+        if symbol_table.table.get_constructor() == '':
+            symbol_table.set_class_constructor(p[1].children[0].value+"_implicit_constructor")
         symbol_table.begin_scope(name=p[1].children[0].value+"_implicit_constructor", category='method')
         entry = symbol_table.insert_up(p[1].children[0].value+"_implicit_constructor", {'value': p[1].children[0].value+"_implicit_constructor", 'type':p[1].children[0].value+" ()", 'modifiers': ''})
-        symbol_table.table.arg_size = 0
-        symbol_table.table.width = 0
+        symbol_table.table.arg_size = 4
+        symbol_table.table.width = 4
         symbol_table.table.args = False
         symbol_table.end_scope()
         symbol_table.insert_class(p[1].children[0].value)
@@ -2317,14 +2364,38 @@ class ClassParser(object):
 
     def p_constructor_declaration(self, p):
         '''constructor_declaration : constructor_header method_body'''
-        # symbol_table.print_table("csv/" + p[1].children[0].value + "_constructor.csv")
+        symbol_table.print_table(p[1].children[0].value + "_constructor.csv")
+        size = Node("IntegerLiteral", value=symbol_table.table.parent_table.get_width(), type="int")
+        mem = Node("DeclsRefExpr", value="mem", type="int (int)", sym_entry=symbol_table.get_entry('mem'))
+        mem_call = Node("MethodInvocation", children=[mem, size], type="int")
+        this = Node("DeclsRefExpr", type="int", value="this", sym_entry=symbol_table.get_entry('this'))
+        op = Node("BinaryOperator", value="=", children=[this, mem_call])
         symbol_table.end_scope()
+        symbol_table.set_class_constructor(p[1].children[0].value+"_explicit_constructor");
+        p[2].children += [Node("ReturnStmt", children=[this])]
         p[0] = Node("ConstrDecl", children=[p[1], p[2]])
+        p[2].children = [op] + p[2].children
 
     def p_constructor_header(self, p):
         '''constructor_header : constructor_header_name formal_parameter_list_opt ')' method_header_throws_clause_opt'''
         # TODO: Not done because of nayan
-        p[0] = Node("ConstructorHeader", children=[p[1], p[2], p[4]])
+        if p[4].name == "":
+            p[0] = Node("ConstructorHeader", children=[p[1], p[2]])
+        elif p[4].name != "":
+            p[0] = Node("ConstructorHeader", children=[p[1], p[2], p[4]])
+        p[0].type = p[1].type + " ("
+        length = len(p[2].children)
+        if length == 0:
+            p[0].type += "int"
+        else:
+            p[0].type += "int,"
+        for node in p[2].children:
+            if node == p[2].children[length - 1]:
+                p[0].type += node.type
+            else:
+                p[0].type += node.type + ","
+        p[0].type += ")"
+        p[0].sym_entry = symbol_table.insert_up(p[1].value+"_explicit_constructor", {'value': p[1].value+"_explicit_constructor", 'type':p[0].type, 'modifiers': p[1].modifiers})
 
     def p_constructor_header_name(self, p):
         '''constructor_header_name : modifiers_opt type_parameters NAME '('
@@ -2332,7 +2403,9 @@ class ClassParser(object):
         if len(p) == 4:
             if symbol_table.get_name() != (p[2], "class"):
                 print("lineno {}: Illegal declaration, {} (constructor or method) in class {}".format(p.lineno(2), p[2], symbol_table.table.name))
-            symbol_table.begin_scope(name=p[2], category="constructor")
+            symbol_table.begin_scope(name=p[2]+"_explicit_constructor", category="constructor")
+            entry = symbol_table.insert('this', {'value': 'this', 'type':'int', 'dims':0, 'arraylen':[], 'modifiers':[]})
+            entry['offset'] += 8
             p[0] = Node("DeclsRefExpr", value=p[2], modifiers=p[1].modifiers)
         else:
             # TODO: type_parameters has to be implemented
@@ -2421,7 +2494,6 @@ class ClassParser(object):
                 print("line {}: control reaches end of non-void function '{}'".format(p[2].lineno, p[1].children[0].value))
             if p[2].value == "" and p[1].type.split(" ", 1)[0] == "void":
                 p[2].children += [Node("ReturnStmt", children=[Node()])]
-            # symbol_table.print_table("csv/" + symbol_table.get_class_name() + "_" + p[1].children[0].value + "_method.csv")
             symbol_table.end_scope()
             p[0] = Node("MethodDecl", children=[p[1],p[2]])
             if p[1].type == "error" or p[2].type == "error":
@@ -2439,6 +2511,7 @@ class ClassParser(object):
             p[0] = Node("MethodHeader", children=[p[1], p[2], p[5]])
         elif p[4].name != "" and p[5].name == "":
             p[0] = Node("MethodHeader", children=[p[1], p[2], p[4]])
+        this = Node("DeclsRefExpr", value="this", sym_entry=symbol_table.get_entry('this'))
         p[0].type = p[1].type + " ("
         length = len(p[2].children)
         if length == 0:
@@ -2950,20 +3023,15 @@ class JavaParser(ExpressionParser, NameParser, LiteralParser, TypeParser, ClassP
     def p_goal_compilation_unit(self, p):
         '''goal : PLUSPLUS compilation_unit'''
         p[0] = p[2]
-        p[0].print_tree()
-        target = open("ast.txt", 'w')
-        target.write(ast)
-        target.close()
-        p[0].print_png()
-
-    def p_goal_expression(self, p):
-        '''goal : MINUSMINUS expression'''
-        p[0] = p[2]
         # p[0].print_tree()
         # target = open("ast.txt", 'w')
         # target.write(ast)
         # target.close()
         # p[0].print_png()
+
+    def p_goal_expression(self, p):
+        '''goal : MINUSMINUS expression'''
+        p[0] = p[2]
 
     def p_goal_statement(self, p):
         '''goal : '*' block_statement'''

@@ -37,7 +37,7 @@ else:
     sys.stdout.close()
     # Generate X86
     sys.stdout = open(outfile+".s", 'w')
-    print("global main\nextern printInt\nextern printlnInt\nextern scanInt\nextern printChar\n")
+    print("global main\nextern printInt\nextern printlnInt\nextern scanInt\nextern printChar\nextern printString\n")
     print("extern open\nextern close\nextern create\nextern readChar\nextern writeChar\nextern mem\nsection .text\n")
     tac.print_x86()
     sys.stdout.close()
