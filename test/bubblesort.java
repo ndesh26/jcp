@@ -13,14 +13,19 @@ class bubblesort {
         }
     }  
     public static void main() {
+                char c = 10;
                 int arr[] ={7,6,5,4,3,2,1};
+                printString("unsorted: ");
                 for(int i=0; i < 7; i++){  
                         printInt(arr[i]);  
                 }  
+                printChar(c);
                 sort(arr, 7);//sorting array elements using bubble sort  
+                printString("sorted: ");
                 for(int i=0; i < 7; i++){  
                         printInt(arr[i]);  
                 }  
+                printChar(c);
    
         }  
 } 

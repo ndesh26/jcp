@@ -18,8 +18,8 @@ public class MyBinarySearch {
     public static void main() {
         //MyBinarySearch mbs = new MyBinarySearch();
         int[] arr = {2, 4, 6, 8, 10, 12, 14, 16};
-        printInt(binarySearch(arr, 8, 14));
+        printlnInt(binarySearch(arr, 8, 14));
         int[] arr1 = {6,34,78,123,432,900};
-        printInt(binarySearch(arr1, 6, 432));
+        printlnInt(binarySearch(arr1, 6, 432));
     }
 }
