@@ -32,18 +32,19 @@ else:
     # Generate TAC
     tac = code.Tac()
     tac.generate_tac(result)
-    sys.stdout = open(outfile+".tac", 'w')
+    file_name = outfile[outfile.rfind('/'):]
+    sys.stdout = open("tac/"+file_name+".tac", 'w')
     tac.print_tac()
     sys.stdout.close()
     # Generate X86
-    sys.stdout = open(outfile+".s", 'w')
+    sys.stdout = open("assembly/"+file_name+".s", 'w')
     print("global main\nextern printInt\nextern printlnInt\nextern scanInt\nextern printChar\nextern printString\n")
     print("extern open\nextern close\nextern create\nextern readChar\nextern writeChar\nextern mem\nsection .text\n")
     tac.print_x86()
     sys.stdout.close()
     # compile and link the binary
-    call('nasm -f elf32 ' + outfile + '.s', shell=True)
+    call('nasm -f elf32 assembly/' + file_name + '.s', shell=True)
     call('nasm -f elf32 helper/printing.s', shell=True)
     call('nasm -f elf32 helper/fileio.s', shell=True)
     call('nasm -f elf32 helper/mem.s', shell=True)
-    call('cc -m32 ' + outfile + '.o helper/printing.o helper/fileio.o helper/mem.o -o ' + outfile, shell=True)
+    call('cc -m32 assembly/' + file_name + '.o helper/printing.o helper/fileio.o helper/mem.o -o bin/' + file_name, shell=True)
