@@ -47,3 +47,8 @@ python3 jcp/parser.py [-g] path_to_file/file_name
     * fileio.s: handles the file IO actions
     * mem.s: code for heap allocation
     * printing.s: code for stdio
+
+### Contributors
+
+* Nayan Deshmukh
+* Rohith Mukku
